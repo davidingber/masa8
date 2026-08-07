@@ -19,6 +19,7 @@ const DEFAULT_STATE = {
   timeLog: {},                        // { "2026-W32": שניות } זמן עבודה לפי שבוע
   chapterVideos: {},                  // { "1": "url" } סרטון הקלטה לכל פרק
   medLibrary: null,                   // ספריית מדיטציות לפי נושאים
+  onboarded: false,                   // האם עבר את מסך הקליטה
   createdAt: null,
 };
 
@@ -80,6 +81,12 @@ export function save() {
 export function getState() {
   return state;
 }
+
+// ---- קליטה (Onboarding) ----
+export function isOnboarded() {
+  return !!(state.onboarded || state.name || state.activities.length || state.emotion?.ratings?.length);
+}
+export function setOnboarded() { state.onboarded = true; save(); }
 
 // ---- מטרה ורגש ----
 export function setGoal(goal) { state.goal = goal; save(); }

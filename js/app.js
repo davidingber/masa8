@@ -6,7 +6,7 @@ import { COURSE, ACTIVITY_TYPES, EMOTION_ALTERNATIVES, ALT_EMOTION_POOL,
          WEEK4_SENSATIONS, INTEROCEPTIVE_EXPOSURES,
          DISTORTIONS, THOUGHT_TABLE_COLS,
          EXPOSURE_EMOTIONS, EXPOSURE_RULES, EXPOSURE_EXAMPLES, IMAGINAL_STEPS,
-         VALUES_SUGGESTIONS, COMMUNICATION_PRINCIPLES, ASSERTIVENESS_STEPS } from "./data.js";
+         VALUES_SUGGESTIONS, COMMUNICATION_PRINCIPLES, ASSERTIVENESS_STEPS, DAILY_PRACTICES } from "./data.js";
 import * as S from "./state.js";
 import { renderAvatar, avatarMessage } from "./avatar.js";
 import { askAI } from "./ai.js";
@@ -50,6 +50,7 @@ function renderNav() {
 //  ראוטר
 // ============================================================
 function render() {
+  if (!S.isOnboarded()) { navEl.innerHTML = ""; return renderOnboarding(); }
   renderNav();
   if (route === "home") return renderHome();
   if (route === "chapters") return renderChapters();
@@ -57,6 +58,115 @@ function render() {
   if (route === "library") return renderLibrary();
   if (route === "coach") return renderCoach();
   if (route === "settings") return renderSettings();
+}
+
+// ============================================================
+//  מסך קליטה (Onboarding) — כניסה ראשונה
+// ============================================================
+let onbStep = 0;
+const onb = { name: "", emotion: "", rating: 5, goal: "", breathDone: false, remind: false, remindTime: "09:00" };
+const ONB_EMOTIONS = ["חרדה", "פחד", "בושה", "כעס", "עצב", "אשמה", "בדידות"];
+const ONB_TOTAL = 5;
+
+function captureOnb() {
+  const n = app.querySelector("#onbName"); if (n) onb.name = n.value;
+  const r = app.querySelector("#onbRate"); if (r) onb.rating = +r.value;
+  const g = app.querySelector("#onbGoal"); if (g) onb.goal = g.value;
+  const rt = app.querySelector("#onbRemindTime"); if (rt) onb.remindTime = rt.value;
+  const rc = app.querySelector("#onbRemind"); if (rc) onb.remind = rc.checked;
+}
+
+function renderOnboarding() {
+  const dots = Array.from({ length: ONB_TOTAL }, (_, i) =>
+    `<span class="onb-dot ${i === onbStep ? "on" : ""} ${i < onbStep ? "done" : ""}"></span>`).join("");
+  let body = "";
+  if (onbStep === 0) body = `
+    <div class="onb-emoji">🌱</div>
+    <h2>ברוך הבא למסע 8 השבועות</h2>
+    <p class="onb-sub">מהישרדות פנימית להנהגה עצמית. נכיר אותך בכמה שאלות קצרות — פחות מדקה.</p>
+    <label class="onb-label">איך קוראים לך?</label>
+    <input class="inp" id="onbName" placeholder="השם שלך" value="${esc(onb.name)}">`;
+  if (onbStep === 1) body = `
+    <div class="onb-emoji">💗</div>
+    <h2>איזה רגש הכי מלווה אותך?</h2>
+    <p class="onb-sub">נבחר רגש אחד לעבוד עליו לאורך המסע — ונראה אותו יורד עם הזמן.</p>
+    <div class="chip-row">${ONB_EMOTIONS.map(e =>
+      `<button class="chip ${onb.emotion === e ? "on" : ""}" data-onbemo="${e}">${e}</button>`).join("")}</div>
+    <label class="onb-label">כמה חזק הוא עכשיו? (0–10)</label>
+    <div class="rating-row"><input type="range" id="onbRate" min="0" max="10" value="${onb.rating}">
+      <span class="rate-val" id="onbRateV">${onb.rating}</span></div>`;
+  if (onbStep === 2) body = `
+    <div class="onb-emoji">🎯</div>
+    <h2>מה תרצה שיהיה שונה?</h2>
+    <p class="onb-sub">מטרה אחת קטנה למסע. אפשר גם לדלג ולחזור לזה מאוחר יותר.</p>
+    <textarea class="ta" id="onbGoal" placeholder="למשל: לנסוע באוטובוס בלי חרדה, לישון טוב יותר...">${esc(onb.goal)}</textarea>`;
+  if (onbStep === 3) body = `
+    <div class="onb-emoji">🫁</div>
+    <h2>הניצחון הראשון שלך</h2>
+    <p class="onb-sub">בוא נטען את האווטר בפעם הראשונה. קח נשימה אחת עמוקה ואיטית —
+      שאיפה דרך האף, נשיפה ארוכה דרך הפה.</p>
+    <button class="btn onb-breath ${onb.breathDone ? "done" : ""}" id="onbBreath">
+      ${onb.breathDone ? "✓ נשמתי" : "נשמתי נשימה עמוקה"}</button>`;
+  if (onbStep === 4) body = `
+    <div class="onb-emoji">🔔</div>
+    <h2>רוצה תזכורת יומית קטנה?</h2>
+    <p class="onb-sub">רגע ביום לצעד קטן שטוען את האווטר. אפשר לכבות בכל עת בהגדרות.</p>
+    <label class="onb-check"><input type="checkbox" id="onbRemind" ${onb.remind ? "checked" : ""}> כן, הזכר לי כל יום</label>
+    <label class="onb-label">באיזו שעה?</label>
+    <input class="inp" id="onbRemindTime" type="time" value="${onb.remindTime}">`;
+
+  const isLast = onbStep === ONB_TOTAL - 1;
+  app.innerHTML = `
+    <div class="onboarding">
+      <div class="onb-dots">${dots}</div>
+      <div class="card onb-card">${body}</div>
+      <div class="onb-actions">
+        ${onbStep > 0 ? `<button class="btn ghost2" id="onbBack">חזרה</button>` : ""}
+        ${onbStep === 2 ? `<button class="btn ghost2" id="onbSkip">דלג</button>` : ""}
+        <button class="btn onb-next" id="onbNext">${isLast ? "סיום — בוא נתחיל 🚀" : "המשך"}</button>
+      </div>
+    </div>`;
+
+  const rate = app.querySelector("#onbRate");
+  if (rate) rate.addEventListener("input", () => app.querySelector("#onbRateV").textContent = rate.value);
+  app.querySelectorAll("[data-onbemo]").forEach(b => b.addEventListener("click", () => {
+    captureOnb(); onb.emotion = b.dataset.onbemo; renderOnboarding();
+  }));
+  const breath = app.querySelector("#onbBreath");
+  if (breath) breath.addEventListener("click", () => {
+    onb.breathDone = true; try { navigator.vibrate?.(30); } catch (e) {} renderOnboarding();
+  });
+  const back = app.querySelector("#onbBack");
+  if (back) back.addEventListener("click", () => { captureOnb(); onbStep--; renderOnboarding(); });
+  const skip = app.querySelector("#onbSkip");
+  if (skip) skip.addEventListener("click", () => { onb.goal = ""; onbStep++; renderOnboarding(); });
+  app.querySelector("#onbNext").addEventListener("click", onbNext);
+}
+
+function onbNext() {
+  captureOnb();
+  if (onbStep === 0 && !onb.name.trim()) return toast("איך לקרוא לך? 🙂");
+  if (onbStep === 1 && !onb.emotion) return toast("בחר רגש אחד");
+  if (onbStep === 3 && !onb.breathDone) return toast("קח נשימה אחת עמוקה 🫁");
+  if (onbStep < ONB_TOTAL - 1) { onbStep++; renderOnboarding(); }
+  else finishOnboarding();
+}
+
+async function finishOnboarding() {
+  if (onb.name.trim()) S.setName(onb.name.trim());
+  if (onb.emotion) { S.setEmotion(onb.emotion); S.logEmotionRating(onb.rating); }
+  if (onb.goal.trim()) S.setGoal(onb.goal.trim());
+  if (onb.breathDone) S.logActivity("exercise", "נשימה ראשונה במסע");
+  if (onb.remind) {
+    S.setReminders({ enabled: true, time: onb.remindTime });
+    startReminderLoop();
+    const p = await requestPermission();
+    if (p !== "granted") toast("אפשר התראות בדפדפן כדי לקבל תזכורת");
+  }
+  S.setOnboarded();
+  onbStep = 0;
+  go("home");
+  setTimeout(celebrate, 350);
 }
 
 // ============================================================
@@ -73,6 +183,9 @@ function renderHome() {
   const first = ratings[0]?.value;
   const lastR = ratings[ratings.length - 1]?.value;
   const streak = S.getStreak();
+  const task = getNextTask();
+  const prac = todaysPractice();
+  const pracDone = practiceDoneToday(prac.name);
 
 
   app.innerHTML = `
@@ -93,6 +206,29 @@ function renderHome() {
       <p class="avatar-msg">${avatarMessage(stage)}</p>
       <div class="work-clock" title="זמן העבודה שלך השבוע">⏱️ זמן עבודה השבוע: <b id="workClock">${fmtHM(S.getWeekWorkTime())}</b></div>
       <button class="btn share-btn" id="shareProgress">📤 שיתוף ההתקדמות שלי</button>
+    </section>
+
+    <section class="card today-card">
+      <h3>📌 המשימה של היום</h3>
+      <div class="today-block">
+        <div class="today-tag">משימת השבוע</div>
+        ${task ? `
+          <div class="today-text">${esc(task.text)}</div>
+          <div class="today-meta">שבוע ${task.week} · ${esc(task.title)}</div>
+          <div class="today-actions">
+            <button class="btn" data-tasknav="${task.week}">פתיחה</button>
+            <button class="btn ghost2" data-taskdone="${task.week}:${task.i}">✓ סמן כבוצע</button>
+          </div>`
+        : `<div class="today-text">🎉 סיימת את כל המשימות! אפשר לחזור לכל שבוע ולהעמיק.</div>`}
+      </div>
+      <div class="today-block">
+        <div class="today-tag">תרגול יומי מתחלף</div>
+        <div class="today-text">${prac.icon} <b>${esc(prac.name)}</b> — ${esc(prac.text)}</div>
+        <div class="today-actions">
+          ${pracDone ? `<span class="today-done">✓ בוצע היום — כל הכבוד</span>`
+            : `<button class="btn" id="pracDone">עשיתי ✓</button>`}
+        </div>
+      </div>
     </section>
 
     <section class="quick-actions">
@@ -139,6 +275,21 @@ function renderHome() {
   app.querySelectorAll("[data-qa]").forEach(el =>
     el.addEventListener("click", () => { const [r, p] = QA_NAV[el.dataset.qa]; go(r, p); }));
 
+  // המשימה של היום
+  const tn = app.querySelector("[data-tasknav]");
+  if (tn) tn.addEventListener("click", () => go("chapter", Number(tn.dataset.tasknav)));
+  const td = app.querySelector("[data-taskdone]");
+  if (td) td.addEventListener("click", () => {
+    const [w, i] = td.dataset.taskdone.split(":").map(Number);
+    S.toggleTask(w, i); celebrate(); renderHome();
+  });
+  const pd = app.querySelector("#pracDone");
+  if (pd) pd.addEventListener("click", () => {
+    const p = todaysPractice();
+    S.logActivity(p.logType, "תרגול יומי: " + p.name);
+    celebrate(); renderHome();
+  });
+
   // חגיגה בעליית שלב אווטר (רק כשעולה בתוך המפגש, לא בטעינה ראשונה)
   if (lastAvatarStage !== null && stage > lastAvatarStage) celebrate();
   lastAvatarStage = stage;
@@ -150,6 +301,25 @@ const QA_NAV = {
   meditation: ["library", null],
   values: ["chapter", 8],
 };
+
+// המשימה הפתוחה הבאה — השבוע המוקדם ביותר עם משימה שלא סומנה
+function getNextTask() {
+  for (const c of COURSE.chapters) {
+    for (let i = 0; i < c.tasks.length; i++) {
+      if (!S.isTaskDone(c.week, i)) return { week: c.week, i, text: c.tasks[i], title: c.title };
+    }
+  }
+  return null;
+}
+// תרגול יומי מתחלף — נבחר לפי היום כדי שיהיה יציב לאורך היום ומתחלף כל יום
+function todaysPractice() {
+  const idx = Math.floor(Date.now() / 86400000) % DAILY_PRACTICES.length;
+  return DAILY_PRACTICES[idx];
+}
+function practiceDoneToday(name) {
+  const today = new Date().toISOString().slice(0, 10);
+  return S.getState().activities.some(a => a.note === "תרגול יומי: " + name && a.date.slice(0, 10) === today);
+}
 
 function editGoal() {
   const cur = S.getState().goal;

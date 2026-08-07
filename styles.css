@@ -433,3 +433,33 @@ body{min-height:100vh}
   0%{transform:translateY(-10px) rotate(0deg);opacity:1}
   100%{transform:translateY(106vh) rotate(720deg);opacity:.85}}
 @media (prefers-reduced-motion:reduce){.confetti{display:none}}
+
+/* Onboarding */
+.onboarding{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;
+  justify-content:center;padding:24px 18px 40px;gap:18px}
+.onb-dots{display:flex;justify-content:center;gap:8px}
+.onb-dot{width:9px;height:9px;border-radius:99px;background:var(--line)}
+.onb-dot.done{background:var(--sage)}
+.onb-dot.on{background:var(--teal);transform:scale(1.25)}
+.onb-card{text-align:center;background:linear-gradient(160deg,#fff,#eefbf8);padding:26px 20px}
+.onb-emoji{font-size:52px;margin-bottom:8px}
+.onb-card h2{font-size:22px;margin-bottom:8px}
+.onb-sub{color:var(--subtle);line-height:1.6;margin-bottom:16px}
+.onb-label{display:block;text-align:right;font-size:13px;color:var(--subtle);margin:10px 2px 6px}
+.onb-card .chip-row{justify-content:center;margin-bottom:6px}
+.onb-breath.done{background:var(--sage)}
+.onb-check{display:flex;align-items:center;gap:10px;justify-content:center;font-weight:700;margin:6px 0}
+.onb-check input{width:20px;height:20px;accent-color:var(--teal)}
+.onb-actions{display:flex;gap:10px}
+.onb-actions .onb-next{flex:1}
+
+/* המשימה של היום */
+.today-card{background:linear-gradient(160deg,#fff,#f6fbfa)}
+.today-block{padding:12px 0;border-bottom:1px solid var(--line)}
+.today-block:last-child{border-bottom:none;padding-bottom:2px}
+.today-tag{display:inline-block;font-size:11px;font-weight:800;color:var(--teal);
+  background:#eefaf6;border:1px solid #cdeee5;border-radius:99px;padding:3px 10px;margin-bottom:8px}
+.today-text{line-height:1.55}
+.today-meta{font-size:12px;color:var(--subtle);margin-top:4px}
+.today-actions{display:flex;gap:8px;margin-top:10px;align-items:center}
+.today-done{color:var(--teal);font-weight:700;font-size:14px}
