@@ -421,3 +421,15 @@ body{min-height:100vh}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 @media (max-width:360px){.avatar-svg{width:180px;height:214px}}
+
+/* רצף, שיתוף וחגיגה */
+.streak-chip{display:inline-block;background:#fff4e6;color:#c2410c;border:1px solid #fed7aa;
+  border-radius:999px;padding:5px 14px;font-weight:800;font-size:14px;margin-bottom:10px}
+.share-btn{margin-top:14px;width:100%}
+.confetti-layer{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}
+.confetti{position:absolute;top:-16px;width:10px;height:14px;border-radius:2px;opacity:.95;
+  animation:confetti-fall linear forwards}
+@keyframes confetti-fall{
+  0%{transform:translateY(-10px) rotate(0deg);opacity:1}
+  100%{transform:translateY(106vh) rotate(720deg);opacity:.85}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}}

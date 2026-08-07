@@ -255,3 +255,30 @@ export function resetAll() {
   state = fresh();
   save();
 }
+
+// ---- רצף ימים (streak) ----
+// יום "פעיל" = יום שבו נרשמה פעולה כלשהי או דירוג רגש.
+export function getStreak() {
+  const days = new Set();
+  for (const a of state.activities) if (a.date) days.add(a.date.slice(0, 10));
+  for (const r of (state.emotion?.ratings || [])) if (r.date) days.add(r.date.slice(0, 10));
+  if (!days.size) return 0;
+  const dayMs = 86400000;
+  const key = d => new Date(d).toISOString().slice(0, 10);
+  let cur = new Date();
+  if (!days.has(key(cur))) cur = new Date(cur.getTime() - dayMs); // גרייס: היום עוד לא נעשה — סופרים עד אתמול
+  let streak = 0;
+  while (days.has(key(cur))) { streak++; cur = new Date(cur.getTime() - dayMs); }
+  return streak;
+}
+
+// ---- גיבוי ושחזור ----
+export function exportState() {
+  return JSON.stringify(state, null, 2);
+}
+export function importState(json) {
+  const parsed = JSON.parse(json); // זורק אם לא תקין
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("קובץ לא תקין");
+  localStorage.setItem(KEY, JSON.stringify(parsed)); // load() ימזג ברירות מחדל בטעינה הבאה
+  return true;
+}

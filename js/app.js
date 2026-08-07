@@ -72,6 +72,7 @@ function renderHome() {
   const ratings = st.emotion.ratings;
   const first = ratings[0]?.value;
   const lastR = ratings[ratings.length - 1]?.value;
+  const streak = S.getStreak();
 
 
   app.innerHTML = `
@@ -83,6 +84,7 @@ function renderHome() {
     </header>
 
     <section class="card avatar-card">
+      ${streak > 0 ? `<div class="streak-chip" title="ימים רצופים של עבודה">🔥 ${streak} ${streak === 1 ? "יום" : "ימים"} ברצף</div>` : ""}
       <div class="avatar-wrap">${renderAvatar(charge)}</div>
       <div class="charge-row">
         <div class="charge-bar"><div class="charge-fill" style="width:${charge}%"></div></div>
@@ -90,6 +92,7 @@ function renderHome() {
       </div>
       <p class="avatar-msg">${avatarMessage(stage)}</p>
       <div class="work-clock" title="זמן העבודה שלך השבוע">⏱️ זמן עבודה השבוע: <b id="workClock">${fmtHM(S.getWeekWorkTime())}</b></div>
+      <button class="btn share-btn" id="shareProgress">📤 שיתוף ההתקדמות שלי</button>
     </section>
 
     <section class="quick-actions">
@@ -132,9 +135,15 @@ function renderHome() {
 
   // מאזינים
   app.querySelector("#editGoal").addEventListener("click", editGoal);
+  app.querySelector("#shareProgress").addEventListener("click", shareProgress);
   app.querySelectorAll("[data-qa]").forEach(el =>
     el.addEventListener("click", () => { const [r, p] = QA_NAV[el.dataset.qa]; go(r, p); }));
+
+  // חגיגה בעליית שלב אווטר (רק כשעולה בתוך המפגש, לא בטעינה ראשונה)
+  if (lastAvatarStage !== null && stage > lastAvatarStage) celebrate();
+  lastAvatarStage = stage;
 }
+let lastAvatarStage = null;
 
 // משבצות שאפשר ללחוץ עליהן במסך הבית — ניווט מהיר
 const QA_NAV = {
@@ -146,6 +155,122 @@ function editGoal() {
   const cur = S.getState().goal;
   const v = prompt("מהי המטרה שלך למסע?", cur || "");
   if (v !== null) { S.setGoal(v.trim()); renderHome(); }
+}
+
+// ---- חגיגה: קונפטי + רטט ----
+function celebrate() {
+  try { navigator.vibrate?.([18, 40, 18]); } catch (e) {}
+  const colors = ["#0f766e", "#14b8a6", "#e9b949", "#e07a5f", "#84b59f", "#5b8def", "#c07bb0"];
+  const layer = document.createElement("div");
+  layer.className = "confetti-layer";
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement("i");
+    s.className = "confetti";
+    s.style.left = (Math.random() * 100) + "vw";
+    s.style.background = colors[i % colors.length];
+    s.style.animationDelay = (Math.random() * 0.25) + "s";
+    s.style.animationDuration = (0.9 + Math.random() * 0.8) + "s";
+    layer.appendChild(s);
+  }
+  document.body.appendChild(layer);
+  setTimeout(() => layer.remove(), 2000);
+}
+
+// ---- כרטיס התקדמות לשיתוף (canvas → Web Share / הורדה) ----
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function svgToImage(svg) {
+  return new Promise((resolve, reject) => {
+    const sized = svg.replace("<svg ", '<svg width="210" height="250" ');
+    const url = URL.createObjectURL(new Blob([sized], { type: "image/svg+xml" }));
+    const im = new Image();
+    im.onload = () => { resolve(im); URL.revokeObjectURL(url); };
+    im.onerror = reject;
+    im.src = url;
+  });
+}
+
+async function shareProgress() {
+  const st = S.getState();
+  const charge = S.computeCharge();
+  const stage = S.avatarStage(charge);
+  const streak = S.getStreak();
+  const stt = S.stats();
+  const ratings = st.emotion.ratings;
+  const first = ratings[0]?.value, last = ratings[ratings.length - 1]?.value;
+
+  const W = 1080, H = 1080, F = "'Segoe UI',Arial,sans-serif";
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, "#0f766e"); bg.addColorStop(1, "#0b4f49");
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  roundRectPath(ctx, 64, 64, W - 128, H - 128, 52); ctx.fillStyle = "#ffffff"; ctx.fill();
+
+  ctx.direction = "rtl"; ctx.textAlign = "center";
+  ctx.fillStyle = "#0f766e"; ctx.font = "700 48px " + F;
+  ctx.fillText("מסע 8 השבועות", W / 2, 176);
+  ctx.fillStyle = "#6a8189"; ctx.font = "400 30px " + F;
+  ctx.fillText("מהישרדות פנימית להנהגה עצמית", W / 2, 224);
+
+  try {
+    const img = await svgToImage(renderAvatar(charge));
+    ctx.drawImage(img, W / 2 - 165, 250, 330, 392);
+  } catch (e) {}
+
+  let y = 706;
+  if (first != null && last != null && last < first) {
+    ctx.fillStyle = "#0f766e"; ctx.font = "800 58px " + F;
+    ctx.fillText(`${st.emotion.name}: מ-${first} ל-${last}`, W / 2, y);
+    ctx.fillStyle = "#6a8189"; ctx.font = "400 30px " + F;
+    ctx.fillText("עוצמת הרגש ירדה מאז תחילת המסע", W / 2, y + 44);
+  } else {
+    ctx.fillStyle = "#0f766e"; ctx.font = "800 52px " + F;
+    ctx.fillText(st.name ? `${st.name} במסע 💪` : "התחלתי את המסע 💪", W / 2, y);
+  }
+
+  // שורת נתונים: רצף · שלב · פעולות
+  y = 840;
+  const stats = [
+    ["🔥", streak, streak === 1 ? "יום ברצף" : "ימים ברצף"],
+    ["⭐", `${stage}/5`, "שלב האווטר"],
+    ["✓", stt.total, "פעולות שטענו"],
+  ];
+  const colW = (W - 200) / 3;
+  stats.forEach((s, i) => {
+    const cx = 100 + colW * (i + 0.5);
+    ctx.fillStyle = "#0f766e"; ctx.font = "800 56px " + F;
+    ctx.fillText(`${s[0]} ${s[1]}`, cx, y);
+    ctx.fillStyle = "#6a8189"; ctx.font = "400 26px " + F;
+    ctx.fillText(s[2], cx, y + 40);
+  });
+
+  ctx.fillStyle = "#0f766e"; ctx.font = "600 30px " + F;
+  ctx.fillText("davidingber.github.io/masa8", W / 2, H - 116);
+
+  canvas.toBlob(async (blob) => {
+    if (!blob) return toast("לא הצלחתי ליצור את התמונה");
+    const file = new File([blob], "masa8-progress.png", { type: "image/png" });
+    const data = { files: [file], title: "מסע 8 השבועות", text: "ההתקדמות שלי במסע 8 השבועות 💪" };
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share(data); return; }
+      catch (e) { if (e.name === "AbortError") return; }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "masa8-progress.png";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast("התמונה ירדה — אפשר לשתף אותה 📤");
+  }, "image/png");
 }
 
 // ============================================================
@@ -255,6 +380,7 @@ function renderChapter(week) {
   app.querySelectorAll(".task input").forEach(cb =>
     cb.addEventListener("change", () => {
       S.toggleTask(week, Number(cb.dataset.i));
+      if (cb.checked) celebrate();
       renderChapter(week);
     }));
   mountToolHandlers(c);
@@ -2546,6 +2672,17 @@ function renderSettings() {
       </div>
     </section>
 
+    <section class="card">
+      <h3>💾 גיבוי ושחזור</h3>
+      <p class="subtle">ההתקדמות נשמרת רק במכשיר הזה. הורד קובץ גיבוי מדי פעם — כדי לא לאבד
+        אותה אם תנקה את הדפדפן או תחליף מכשיר.</p>
+      <div class="med-actions">
+        <button class="btn" id="backupDownload">⬇ הורדת קובץ גיבוי</button>
+        <button class="btn ghost2" id="backupRestore">⬆ שחזור מקובץ</button>
+      </div>
+      <input type="file" id="backupFile" accept="application/json,.json" hidden>
+    </section>
+
     <section class="card danger">
       <h3>איפוס</h3>
       <button class="btn ghost" id="reset">איפוס כל הנתונים במכשיר</button>
@@ -2612,6 +2749,30 @@ function renderSettings() {
   });
   app.querySelector("#reset").addEventListener("click", () => {
     if (confirm("לאפס את כל ההתקדמות? אין חזרה.")) { S.resetAll(); go("home"); }
+  });
+
+  // גיבוי ושחזור
+  app.querySelector("#backupDownload").addEventListener("click", () => {
+    const stamp = new Date().toISOString().slice(0, 10);
+    const url = URL.createObjectURL(new Blob([S.exportState()], { type: "application/json" }));
+    const a = document.createElement("a"); a.href = url; a.download = `masa8-backup-${stamp}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast("קובץ הגיבוי ירד ✓");
+  });
+  const backupFile = app.querySelector("#backupFile");
+  app.querySelector("#backupRestore").addEventListener("click", () => backupFile.click());
+  backupFile.addEventListener("change", () => {
+    const file = backupFile.files[0];
+    if (!file) return;
+    if (!confirm("שחזור יחליף את כל ההתקדמות הנוכחית בקובץ הגיבוי. להמשיך?")) { backupFile.value = ""; return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try { S.importState(reader.result); toast("שוחזר בהצלחה ✓"); setTimeout(() => location.reload(), 600); }
+      catch (e) { toast("קובץ גיבוי לא תקין"); }
+      backupFile.value = "";
+    };
+    reader.readAsText(file);
   });
 }
 
