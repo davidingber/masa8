@@ -109,7 +109,7 @@ function untilUtc(date) {
  * חוזר שבועי לאותו יום.
  * @param {{events: Array<{day,time,activity}>, email?:string}} opts
  */
-export function buildWeeklyICS({ events, email }) {
+export function buildWeeklyICS({ events, email, label = "פעילות מהנה" }) {
   const lines = [
     "BEGIN:VCALENDAR", "VERSION:2.0",
     "PRODID:-//Masa8//Weekly Journal//HE", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
@@ -127,7 +127,7 @@ export function buildWeeklyICS({ events, email }) {
       `DTEND:${localStamp(date, Math.floor(endTotal / 60) % 24, endTotal % 60)}`,
       `RRULE:FREQ=WEEKLY;BYDAY=${DAY_CODE[ev.day] || "SU"};UNTIL=${untilFloating(date)}`,
       `SUMMARY:${ics(ev.activity)}`,
-      `DESCRIPTION:${ics("פעילות מהנה — מסע 8 השבועות · יום " + ev.day)}`,
+      `DESCRIPTION:${ics(label + " — מסע 8 השבועות · יום " + ev.day)}`,
     );
     if (email) {
       lines.push(`ORGANIZER;CN=${ics(email)}:mailto:${email}`);
@@ -141,8 +141,8 @@ export function buildWeeklyICS({ events, email }) {
 }
 
 /** מוריד .ics של כל השבוע */
-export function downloadWeeklyICS({ events, email }) {
-  const content = buildWeeklyICS({ events, email });
+export function downloadWeeklyICS({ events, email, label }) {
+  const content = buildWeeklyICS({ events, email, label });
   const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -208,7 +208,7 @@ export function googleDailyUrl({ title, description, time }) {
  * לא כולל מייל ב-URL מטעמי פרטיות; נפתח בחשבון שהמשתמש מחובר אליו,
  * והמשתמש מאשר בעצמו את השמירה.
  */
-export function googleEventUrl({ day, time, activity }) {
+export function googleEventUrl({ day, time, activity, label = "פעילות מהנה" }) {
   const [h, m] = (time || "09:00").split(":").map(Number);
   const date = nextDateForDay(DAY_IDX[day] ?? 0);
   const s = localStamp(date, h, m);
@@ -217,7 +217,7 @@ export function googleEventUrl({ day, time, activity }) {
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: activity,
-    details: "פעילות מהנה — מסע 8 השבועות · יום " + day,
+    details: label + " — מסע 8 השבועות · יום " + day,
     dates: `${s}/${e}`,
     recur: `RRULE:FREQ=WEEKLY;BYDAY=${DAY_CODE[day] || "SU"};UNTIL=${untilUtc(date)}`,
     ctz: Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Jerusalem",
