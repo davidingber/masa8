@@ -134,6 +134,8 @@ body{min-height:100vh}
 .log-line{background:var(--bg);border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.5}
 .tool-placeholder .subtle{margin-bottom:6px}
 .tools-note{font-size:12px;color:var(--subtle);text-align:center;line-height:1.6;padding:0 8px}
+.chapter-footer{display:flex;justify-content:center;margin:18px 0 8px}
+.chapter-footer .back-all{width:100%;max-width:420px}
 .ext-tool{display:block;color:var(--teal);font-weight:700;padding:8px 0;text-decoration:none}
 
 /* תתי-כלים בשבוע 1 */

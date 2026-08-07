@@ -234,9 +234,14 @@ function renderChapter(week) {
     </section>
 
     <p class="tools-note">כלים בגישה זו: ${c.tools}</p>
+
+    <div class="chapter-footer">
+      <button class="btn ghost2 back-all" id="backAll">↩ חזרה לכל הפרקים</button>
+    </div>
   `;
 
   app.querySelector("#back").addEventListener("click", () => go("chapters"));
+  app.querySelector("#backAll").addEventListener("click", () => go("chapters"));
   app.querySelectorAll(".task input").forEach(cb =>
     cb.addEventListener("change", () => {
       S.toggleTask(week, Number(cb.dataset.i));
@@ -445,7 +450,7 @@ function toolWeek2(c) {
     <div class="tool-block">
       <h4>יומן מיפוי המעגל</h4>
       <p class="hint">מלא מקרה אחר מקרה. כל מקרה עוקב אחרי הרצף:
-        <b>טריגר → מחשבה → תחושה → פרשנות → תגובה</b>. אפשר להוסיף כמה מקרים שרוצים.</p>
+        <b>טריגר → מחשבה → רגש → תחושה → תגובה</b>. אפשר להוסיף כמה מקרים שרוצים.</p>
       <div id="cycleCases">${rows.map((r, i) => cycleCase(r, i)).join("")}</div>
       <button class="btn ghost2 add-case" id="addCase">＋ הוספת מקרה</button>
       <div class="activation-actions">
@@ -558,7 +563,7 @@ function openCyclePrint(rows, empty) {
       @media print{.noprint{display:none}}
     </style></head><body>
     <h1>יומן מיפוי מעגל ההישרדות</h1>
-    <p class="sub">מסע 8 השבועות · שבוע 2 — טריגר → מחשבה → תחושה → פרשנות → תגובה</p>
+    <p class="sub">מסע 8 השבועות · שבוע 2 — טריגר → מחשבה → רגש → תחושה → תגובה</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><thead><tr><th class="n">#</th>${head}</tr></thead><tbody>${body}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -570,7 +575,7 @@ function openCyclePrint(rows, empty) {
 }
 
 // ============================================================
-//  שבוע 3 — הרחקת מחשבות (דיפיוז'ן) + מסגור מחדש NLP
+//  שבוע 3 — הרחקת מחשבות (אי הזדהות) + מסגור מחדש NLP
 // ============================================================
 let week3Tab = "defusion";
 const W3_TABS = [
@@ -630,13 +635,13 @@ function w3Reframe() {
   const saved = S.getToolData(3, "reframe") || [];
   return `
     <div class="tool-block">
-      <p class="hint">מסגור מחדש בשישה שלבים מגישת NLP — עבודה עם החלק שאחראי על ההתנהגות הלא רצויה.
+      <p class="hint">מסגור מחדש מגישת NLP (שלבים 0–6) — עבודה עם החלק שאחראי על ההתנהגות הלא רצויה.
         השאלות מימין, מקום לתשובות משמאל.</p>
       <div class="reframe-list">
         ${NLP_REFRAME_STEPS.map((s, i) => `
           <div class="reframe-row">
             <div class="reframe-q">
-              <span class="step-num">${i + 1}</span>
+              <span class="step-num">${i}</span>
               <div><div class="q-text">${s.q}</div>${s.hint ? `<div class="q-hint">${s.hint}</div>` : ""}</div>
             </div>
             <div class="reframe-a">
@@ -674,7 +679,7 @@ function mountWeek3Handlers() {
   app.querySelectorAll("[data-w3tab]").forEach(b =>
     b.addEventListener("click", () => { stashWeek3Drafts(); week3Tab = b.dataset.w3tab; renderChapter(3); }));
 
-  // דיפיוז'ן
+  // אי הזדהות
   const stv = app.querySelector("#saveThird");
   if (stv) stv.addEventListener("click", () => {
     const v = app.querySelector("#thirdPerson").value.trim();
@@ -714,7 +719,7 @@ function openReframePrint(answers) {
   const today = new Date().toLocaleDateString("he-IL");
   const rows = NLP_REFRAME_STEPS.map((s, i) => `
     <tr>
-      <td class="n">${i + 1}</td>
+      <td class="n">${i}</td>
       <td class="q">${esc(s.q)}${s.hint ? `<div class="h">${esc(s.hint)}</div>` : ""}</td>
       <td class="a">${esc(answers[i] || "")}</td>
     </tr>`).join("");
@@ -1261,7 +1266,7 @@ function w6Guided() {
           <input class="inp" id="fWord" value="${esc(d.word || "")}" placeholder="המילה שעולה מהתחושה..."></div></div>
 
       <div class="focus-step"><span class="fs-num">3</span>
-        <div><b>בחן:</b> האם זו באמת המילה שמרגישה נכון מתוך התחושה? שהות איתה כמה רגעים.</div></div>
+        <div><b>בחן:</b> האם זו באמת המילה שמרגישה נכון מתוך התחושה? לשהות איתה כמה רגעים.</div></div>
 
       <div class="focus-step"><span class="fs-num">4</span>
         <div><b>שים לב</b> למה שעולה מתוך התחושה כשאתה נשאר איתה.</div></div>
@@ -2364,9 +2369,14 @@ function lastRating(st) {
 let coachTool = "alt-thoughts";
 let coachThreads = {}; // toolId -> messages
 
+// מאמנים שלא מוצגים במסך "מאמן AI" (thought-checker עדיין משמש את הכלי בשבוע 5)
+const HIDDEN_COACH_TOOLS = ["emotion-helper", "thought-checker"];
+
 function renderCoach() {
   const st = S.getState();
   const prompts = st.aiPrompts;
+  const coachEntries = Object.entries(prompts).filter(([id]) => !HIDDEN_COACH_TOOLS.includes(id));
+  if (HIDDEN_COACH_TOOLS.includes(coachTool)) coachTool = coachEntries[0]?.[0] || "alt-thoughts";
   const thread = coachThreads[coachTool] || [];
 
   app.innerHTML = `
@@ -2374,7 +2384,7 @@ function renderCoach() {
       <div class="subtle">${st.apiKey ? "מחובר ל-Claude" : "מצב הדגמה — ללא מפתח API"}</div></div></header>
 
     <div class="tool-tabs">
-      ${Object.entries(prompts).map(([id, t]) => `
+      ${coachEntries.map(([id, t]) => `
         <button class="tool-tab ${coachTool === id ? "on" : ""}" data-tool="${id}">
           ${t.icon} ${t.name}</button>`).join("")}
     </div>
