@@ -73,6 +73,9 @@ function renderHome() {
   const first = ratings[0]?.value;
   const lastR = ratings[ratings.length - 1]?.value;
 
+  const topValues = (S.getToolData(8, "values") || []).filter(Boolean);
+  const meds = S.getMeditations();
+
   app.innerHTML = `
     <header class="topbar">
       <div>
@@ -121,6 +124,24 @@ function renderHome() {
       ` : `<p class="subtle">בשבוע 1 תבחר רגש ותדרג אותו. כאן נראה אותו יורד לאורך הזמן.</p>`}
     </section>
 
+    <section class="card">
+      <div class="card-head"><h3>🧭 מיקוד בערכים</h3>
+        <button class="link-btn" id="focusValues">${topValues.length ? "עריכה" : "בחירה"}</button></div>
+      ${topValues.length ? `
+        <p class="hint">הערכים שמובילים אותך — תן להם להנחות אותך היום:</p>
+        <div class="chip-row values-focus">
+          ${topValues.map((v, i) => `<span class="chip ${i < 3 ? "on" : ""}">${i < 3 ? "★ " : ""}${esc(v)}</span>`).join("")}
+        </div>`
+        : `<p class="subtle">עוד לא בחרת ערכים. בשבוע 8 תבחר ותדרג את הערכים שלך — והם יופיעו כאן כמיקוד יומי.</p>`}
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h3>🎧 האזנה למדיטציות</h3>
+        <button class="link-btn" id="allMeds">לכל המדיטציות</button></div>
+      <p class="hint">רגע להירגע — תרגול קצר מווסת את מערכת העצבים.</p>
+      ${meds.map(medCard).join("")}
+    </section>
+
     <section class="card summary-card">
       <div class="sum-item"><b>${stt.tasksDone}</b><span>משימות הושלמו</span></div>
       <div class="sum-item"><b>${stt.total}</b><span>פעולות שטענו</span></div>
@@ -130,6 +151,8 @@ function renderHome() {
 
   // מאזינים
   app.querySelector("#editGoal").addEventListener("click", editGoal);
+  app.querySelector("#focusValues").addEventListener("click", () => go("chapter", 8));
+  app.querySelector("#allMeds").addEventListener("click", () => go("library"));
 }
 
 function editGoal() {
