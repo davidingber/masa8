@@ -73,8 +73,6 @@ function renderHome() {
   const first = ratings[0]?.value;
   const lastR = ratings[ratings.length - 1]?.value;
 
-  const topValues = (S.getToolData(8, "values") || []).filter(Boolean);
-  const meds = S.getMeditations();
 
   app.innerHTML = `
     <header class="topbar">
@@ -97,12 +95,13 @@ function renderHome() {
     <section class="quick-actions">
       <h3>הפעולות שביצעת במסע</h3>
       <div class="qa-grid">
-        ${Object.entries(ACTIVITY_TYPES).map(([k, v]) => `
-          <div class="qa-btn static" style="--c:${v.color}">
+        ${Object.entries(ACTIVITY_TYPES).map(([k, v]) => {
+          const nav = QA_NAV[k];
+          return `<div class="qa-btn ${nav ? "tappable" : "static"}" style="--c:${v.color}" ${nav ? `data-qa="${k}"` : ""}>
             <span class="qa-ico">${v.icon}</span>
             <span class="qa-label">${v.label}</span>
             <span class="qa-count">${stt.counts[k] || 0}</span>
-          </div>`).join("")}
+          </div>`; }).join("")}
       </div>
       <p class="qa-note">האווטר נטען מפעולות אמיתיות שאתה מבצע בכלים של כל שבוע.</p>
     </section>
@@ -124,24 +123,6 @@ function renderHome() {
       ` : `<p class="subtle">בשבוע 1 תבחר רגש ותדרג אותו. כאן נראה אותו יורד לאורך הזמן.</p>`}
     </section>
 
-    <section class="card">
-      <div class="card-head"><h3>🧭 מיקוד בערכים</h3>
-        <button class="link-btn" id="focusValues">${topValues.length ? "עריכה" : "בחירה"}</button></div>
-      ${topValues.length ? `
-        <p class="hint">הערכים שמובילים אותך — תן להם להנחות אותך היום:</p>
-        <div class="chip-row values-focus">
-          ${topValues.map((v, i) => `<span class="chip ${i < 3 ? "on" : ""}">${i < 3 ? "★ " : ""}${esc(v)}</span>`).join("")}
-        </div>`
-        : `<p class="subtle">עוד לא בחרת ערכים. בשבוע 8 תבחר ותדרג את הערכים שלך — והם יופיעו כאן כמיקוד יומי.</p>`}
-    </section>
-
-    <section class="card">
-      <div class="card-head"><h3>🎧 האזנה למדיטציות</h3>
-        <button class="link-btn" id="allMeds">לכל המדיטציות</button></div>
-      <p class="hint">רגע להירגע — תרגול קצר מווסת את מערכת העצבים.</p>
-      ${meds.map(medCard).join("")}
-    </section>
-
     <section class="card summary-card">
       <div class="sum-item"><b>${stt.tasksDone}</b><span>משימות הושלמו</span></div>
       <div class="sum-item"><b>${stt.total}</b><span>פעולות שטענו</span></div>
@@ -151,9 +132,15 @@ function renderHome() {
 
   // מאזינים
   app.querySelector("#editGoal").addEventListener("click", editGoal);
-  app.querySelector("#focusValues").addEventListener("click", () => go("chapter", 8));
-  app.querySelector("#allMeds").addEventListener("click", () => go("library"));
+  app.querySelectorAll("[data-qa]").forEach(el =>
+    el.addEventListener("click", () => { const [r, p] = QA_NAV[el.dataset.qa]; go(r, p); }));
 }
+
+// משבצות שאפשר ללחוץ עליהן במסך הבית — ניווט מהיר
+const QA_NAV = {
+  meditation: ["library", null],
+  values: ["chapter", 8],
+};
 
 function editGoal() {
   const cur = S.getState().goal;
@@ -513,10 +500,16 @@ function medCard(m) {
       <div class="med-name">${m.icon || "🎧"} ${esc(m.name)}</div>
       ${m.note ? `<div class="tiny-note">${esc(m.note)}</div>` : ""}
       <div class="med-actions">
-        ${m.link ? `<a class="btn ghost2" href="${esc(m.link)}" target="_blank" rel="noopener">▶ צפייה / האזנה</a>` : ""}
+        ${m.link ? `<a class="btn ghost2 med-log" data-medname="${esc(m.name)}" href="${esc(m.link)}" target="_blank" rel="noopener">▶ צפייה / האזנה</a>` : ""}
         ${m.file ? `<a class="btn ghost2" href="${esc(m.file)}" target="_blank" rel="noopener">⬇ קובץ</a>` : ""}
       </div>
     </div>`;
+}
+
+// כל האזנה למדיטציה נרשמת כפעולה (טוענת את מונה "מדיטציה")
+function mountMedLog() {
+  app.querySelectorAll(".med-log").forEach(a =>
+    a.addEventListener("click", () => S.logActivity("meditation", a.dataset.medname || "מדיטציה")));
 }
 
 function collectCycleRows() {
@@ -829,8 +822,8 @@ function w4Exposure() {
     <div class="tool-block">
       <div class="def-tech">
         <h5>✋ תרגיל 1 — ליטוף היד (3 מחזורים)</h5>
-        <p class="hint">לטף את היד באופן מונוטוני מכף היד עד גב היד, בקצב איטי, כ-2 דקות.
-          אז שים לב לתחושה הלא נעימה כמה שניות — <b>והסכם לה להיות</b> — ואז חזור ללטף. שלושה מחזורים.</p>
+        <p class="hint">לטף את היד באופן מונוטוני מהכתף ועד גב היד, בקצב איטי, כ-2 דקות.
+          ואז שים לב לתחושה הלא נעימה כמה שניות — <b>והסכם לה להיות</b> — ואז חזור ללטף. שלושה מחזורים.</p>
         <div class="timer-display" id="handTimer"><div class="timer-idle">מוכן להתחיל</div></div>
         <button class="btn ghost2" id="handStart">התחל תרגיל מונחה</button>
         <button class="btn ghost2 hidden" id="handStop">עצור</button>
@@ -949,7 +942,7 @@ function mountWeek4Handlers() {
   // תת-כלי 2 — טיימרים מונחים
   const handPhases = [];
   for (let cyc = 1; cyc <= 3; cyc++) {
-    handPhases.push({ label: `מחזור ${cyc} — ליטוף מונוטוני`, seconds: 120, cue: "כף היד → גב היד, קצב איטי" });
+    handPhases.push({ label: `מחזור ${cyc} — ליטוף מונוטוני`, seconds: 120, cue: "מהכתף → גב היד, קצב איטי" });
     handPhases.push({ label: `מחזור ${cyc} — שים לב לתחושה`, seconds: 10, cue: "הסכם לה להיות. רק להרגיש" });
   }
   const hs = app.querySelector("#handStart");
@@ -2096,7 +2089,7 @@ function mountWeek8Handlers() {
   const sv = app.querySelector("#saveValues");
   if (sv) sv.addEventListener("click", () => {
     const vals = collectValues(); S.setToolData(8, "values", vals);
-    if (vals.some(Boolean)) S.logActivity("exercise", "בחירת ערכים");
+    if (vals.some(Boolean)) S.logActivity("values", "בחירת ערכים");
     toast("הערכים נשמרו ✓"); renderChapter(8);
   });
 
@@ -2197,6 +2190,7 @@ function openSchedulePrint(plan) {
 
 function mountToolHandlers(c) {
   const t = c.tool.type;
+  mountMedLog(); // רישום האזנה למדיטציות בכל פרק שמציג אותן
   if (t === "emotion-intention") {
     mountWeek1Handlers();
   } else if (t === "cycle-journal") {
@@ -2485,7 +2479,7 @@ function renderSettings() {
     <section class="card">
       <h3>🧠 הוראות לכלי ה-AI</h3>
       <p class="subtle">כאן אתה מזין מראש איך כל כלי יתנהג. זו ה"אישיות" של המאמן.</p>
-      ${Object.entries(st.aiPrompts).map(([id, t]) => `
+      ${Object.entries(st.aiPrompts).filter(([id]) => !HIDDEN_COACH_TOOLS.includes(id)).map(([id, t]) => `
         <div class="prompt-edit">
           <label class="field">${t.icon} ${t.name}
             <textarea class="ta prompt-ta" data-prompt="${id}" rows="4">${esc(t.prompt)}</textarea>
@@ -2654,13 +2648,14 @@ function renderLibrary() {
           <div class="med-item">
             <div class="med-name">🎧 ${esc(m.name || "מדיטציה")}</div>
             ${m.link || m.file ? `<div class="med-actions">
-              ${m.link ? `<a class="btn ghost2" href="${esc(m.link)}" target="_blank" rel="noopener">▶ האזנה / צפייה</a>` : ""}
+              ${m.link ? `<a class="btn ghost2 med-log" data-medname="${esc(m.name || "מדיטציה")}" href="${esc(m.link)}" target="_blank" rel="noopener">▶ האזנה / צפייה</a>` : ""}
               ${m.file ? `<a class="btn ghost2" href="${esc(m.file)}" target="_blank" rel="noopener">⬇ קובץ</a>` : ""}
             </div>` : `<div class="tiny-note">טרם הוגדר קישור.</div>`}
           </div>`).join("") : `<p class="subtle">אין עדיין מדיטציות בנושא זה.</p>`}
       </section>`).join("")}
     ${lib.length && !hasAny ? `<p class="tools-note">הוסף מדיטציות לנושאים במסך הניהול ⚙️</p>` : ""}
   `;
+  mountMedLog();
 }
 
 function renderLibEditor() {

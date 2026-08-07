@@ -181,6 +181,8 @@ export const ACTIVITY_TYPES = {
   thought:    { label: "החלפת מחשבה",  icon: "🔄", points: 5, color: "var(--sage)" },
   exposure:   { label: "חשיפה לפחד",   icon: "🪜", points: 6, color: "var(--accent)" },
   joy:        { label: "פעילות מהנה",  icon: "🌟", points: 4, color: "var(--gold)" },
+  meditation: { label: "מדיטציה",      icon: "🎧", points: 4, color: "var(--calm)" },
+  values:     { label: "ערכים",        icon: "🧭", points: 5, color: "var(--rose)" },
 };
 
 // ============================================================

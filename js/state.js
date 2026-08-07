@@ -202,7 +202,7 @@ export function avatarStage(charge = computeCharge()) {
 
 // סטטיסטיקות מהירות
 export function stats() {
-  const counts = { exercise: 0, thought: 0, exposure: 0, joy: 0 };
+  const counts = { exercise: 0, thought: 0, exposure: 0, joy: 0, meditation: 0, values: 0 };
   for (const a of state.activities) if (counts[a.type] !== undefined) counts[a.type]++;
   const tasksDone = Object.values(state.chapters)
     .reduce((n, w) => n + (w.tasks ? Object.values(w.tasks).filter(Boolean).length : 0), 0);
