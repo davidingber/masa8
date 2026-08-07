@@ -1418,6 +1418,7 @@ const W7_TABS = [
   { id: "rules",    label: "כללים והכנה" },
   { id: "imaginal", label: "חשיפה בדמיון" },
   { id: "ladder",   label: "סולם פחדים" },
+  { id: "journal",  label: "יומן חשיפות" },
 ];
 
 function toolWeek7(c) {
@@ -1427,7 +1428,103 @@ function toolWeek7(c) {
   if (week7Tab === "rules") body = w7Rules();
   if (week7Tab === "imaginal") body = w7Imaginal();
   if (week7Tab === "ladder") body = w7Ladder();
+  if (week7Tab === "journal") body = w7Journal();
   return tabs + `<div id="w7body">${body}</div>`;
+}
+
+// --- יומן חשיפות שבועי (יום + שעה + החשיפה) + שיתוף ליומן ---
+const EXP_REMINDER = {
+  title: "חשיפה יומית — מסע 8 השבועות",
+  description: "הזמן לחשיפה שתכננת. זכור: הכנה, חשיפה בדמיון, ולהישאר עם התחושה עד שהיא יורדת.",
+};
+function w7Journal() {
+  const st = S.getState();
+  const plan = S.getToolData(7, "expJournal") || {};
+  const table = WEEK_DAYS.map(day => {
+    const cell = plan[day] || {};
+    return `
+      <div class="day-row" data-day="${day}">
+        <div class="day-name">${day}</div>
+        <input class="inp day-time" type="time" value="${esc(cell.time || "")}" aria-label="שעה ל${day}">
+        <input class="inp day-input" value="${esc(cell.action || "")}" placeholder="החשיפה שאבצע...">
+      </div>`;
+  }).join("");
+  return `
+    <div class="tool-block">
+      <p class="hint">שבץ ביומן השבועי את החשיפות שתתרגל — יום, שעה, והחשיפה עצמה. עדיף אותה חשיפה
+        3–5 פעמים עד התרגלות, ורק אז לעלות דרגה.</p>
+      <div id="w7journal" class="week-table">${table}</div>
+      <div class="activation-actions">
+        <button class="btn" id="saveExpJournal">שמירה + טעינת האווטר</button>
+        <button class="btn ghost2" id="pdfExpJournal">⬇ הורדה כ-PDF</button>
+      </div>
+
+      <div class="cal-connect">
+        <h4>🔔 הוספת החשיפות ליומן — לחודש</h4>
+        <div class="gcal-block">
+          <div class="mini-label">📅 הוספה ישירה ליומן Google — לחיצה לכל יום:</div>
+          ${w7JournalGcalLinks(plan)}
+        </div>
+        <div class="ics-block">
+          <div class="mini-label">📥 או קובץ ליומן (Outlook / Apple / iPhone):</div>
+          <input class="inp" id="expEmail" type="email" dir="ltr"
+            placeholder="המייל שלך (לקובץ) — you@example.com" value="${esc(st.reminders.email || "")}">
+          <button class="btn ghost2" id="expIcs">⬇ הורדת קובץ יומן (.ics)</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function w7JournalGcalLinks(plan) {
+  const items = WEEK_DAYS.filter(day => plan[day] && plan[day].action);
+  if (!items.length) return `<p class="subtle">מלא ושמור חשיפות בלוח כדי לקבל קישורים ליומן Google.</p>`;
+  return `<div class="chip-row">` + items.map(day => {
+    const c = plan[day];
+    return `<button class="chip gcal-link" data-gday="${day}">➕ ${day}${c.time ? " " + esc(c.time) : ""} · ${esc(c.action)}</button>`;
+  }).join("") + `</div>`;
+}
+
+function collectExpJournal() {
+  const plan = {};
+  app.querySelectorAll("#w7journal .day-row").forEach(row => {
+    const day = row.dataset.day;
+    const action = row.querySelector(".day-input")?.value.trim();
+    const time = row.querySelector(".day-time")?.value || "";
+    if (action) plan[day] = { time, action };
+  });
+  return plan;
+}
+
+function openExpJournalPrint(plan) {
+  const st = S.getState();
+  const today = new Date().toLocaleDateString("he-IL");
+  const rows = WEEK_DAYS.map(day => {
+    const c = plan[day] || {};
+    return `<tr><td class="d">${day}</td><td class="t">${esc(c.time || "")}</td><td>${esc(c.action || "")}</td><td class="c"></td></tr>`;
+  }).join("");
+  const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
+    <title>יומן חשיפות — שבוע 7</title>
+    <style>
+      body{font-family:"Segoe UI",Arial,sans-serif;color:#20353a;padding:28px;max-width:720px;margin:auto}
+      h1{color:#0f766e;margin:0 0 4px}.sub{color:#6a8189;margin:0 0 16px}
+      .meta{display:flex;gap:24px;color:#6a8189;font-size:13px;margin-bottom:14px}
+      table{width:100%;border-collapse:collapse}
+      th,td{border:1px solid #cfe0dc;padding:10px;text-align:right;font-size:14px}
+      th{background:#eefaf6;color:#0f766e} td.d{font-weight:700;width:80px;background:#f6fbfa}
+      td.t{width:64px;text-align:center;color:#0f766e;font-weight:700} td.c{width:60px}
+      .btn{background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:15px;cursor:pointer;margin-top:16px}
+      @media print{.noprint{display:none}}
+    </style></head><body>
+    <h1>יומן חשיפות שבועי</h1>
+    <p class="sub">מסע 8 השבועות · שבוע 7 — פעולה למרות פחד</p>
+    <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
+    <table><thead><tr><th>יום</th><th>שעה</th><th>החשיפה</th><th>בוצע</th></tr></thead><tbody>${rows}</tbody></table>
+    <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
+    <script>setTimeout(()=>window.print(),400)<\/script>
+    </body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) { toast("אפשר חלונות קופצים כדי להוריד"); return; }
+  w.document.write(html); w.document.close();
 }
 
 // --- כללים + הכנה ---
@@ -1617,6 +1714,41 @@ function mountWeek7Handlers() {
   });
   const pl = app.querySelector("#pdfLadder");
   if (pl) pl.addEventListener("click", () => { S.setToolData(7, "ladder", collectLadder()); openLadderPrint(collectLadder()); });
+
+  // יומן חשיפות
+  app.querySelectorAll("#w7journal .day-input, #w7journal .day-time").forEach(inp =>
+    inp.addEventListener("change", () => S.setToolData(7, "expJournal", collectExpJournal())));
+  const sej = app.querySelector("#saveExpJournal");
+  if (sej) sej.addEventListener("click", () => {
+    S.setToolData(7, "expJournal", collectExpJournal());
+    S.logActivity("exposure", "יומן חשיפות");
+    toast("היומן נשמר ✓"); renderChapter(7);
+  });
+  const pej = app.querySelector("#pdfExpJournal");
+  if (pej) pej.addEventListener("click", () => { S.setToolData(7, "expJournal", collectExpJournal()); openExpJournalPrint(collectExpJournal()); });
+  app.querySelectorAll(".gcal-link").forEach(b => b.addEventListener("click", () => {
+    const day = b.dataset.gday;
+    const row = [...app.querySelectorAll("#w7journal .day-row")].find(r => r.dataset.day === day);
+    if (!row) return; // רק אם אנחנו בטאב היומן
+    const action = row.querySelector(".day-input")?.value.trim();
+    const time = row.querySelector(".day-time")?.value || "09:00";
+    if (!action) return toast("אין חשיפה ליום זה");
+    S.setToolData(7, "expJournal", collectExpJournal());
+    window.open(googleEventUrl({ day, time: time || "09:00", activity: action }), "_blank", "noopener");
+    toast(`נפתח יומן Google ליום ${day} — אשר את השמירה ✓`);
+  }));
+  const validEmail7 = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  const eic = app.querySelector("#expIcs");
+  if (eic) eic.addEventListener("click", () => {
+    const email = (app.querySelector("#expEmail").value || "").trim();
+    if (!validEmail7(email)) return toast("הזן כתובת מייל תקינה");
+    const plan = collectExpJournal();
+    const events = Object.entries(plan).map(([day, v]) => ({ day, time: v.time || "09:00", activity: v.action }));
+    if (!events.length) return toast("הוסף לפחות חשיפה אחת");
+    S.setToolData(7, "expJournal", plan); S.setReminders({ email, enabled: true });
+    downloadWeeklyICS({ events, email });
+    toast(`קובץ עם ${events.length} ימים ירד — פתח אותו כדי להוסיף ליומן ✓`);
+  });
 }
 
 function stashWeek7Drafts() {
@@ -1625,6 +1757,7 @@ function stashWeek7Drafts() {
     S.setToolData(7, "prep", data);
   }
   if (app.querySelectorAll("#rungs .rung").length) S.setToolData(7, "ladder", collectLadder());
+  if (app.querySelectorAll("#w7journal .day-row").length) S.setToolData(7, "expJournal", collectExpJournal());
 }
 
 function openLadderPrint(L) {
