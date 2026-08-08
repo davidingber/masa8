@@ -229,12 +229,13 @@ function toggleTheme() {
 //  מסך קליטה (Onboarding) — כניסה ראשונה
 // ============================================================
 let onbStep = 0;
-const onb = { name: "", emotion: "", rating: 5, goal: "", breathDone: false, remind: false, remindTime: "09:00" };
+const onb = { name: "", emotion: "", otherMode: false, rating: 5, goal: "", breathDone: false, remind: false, remindTime: "09:00" };
 const ONB_EMOTIONS = ["חרדה", "פחד", "בושה", "כעס", "עצב", "אשמה", "בדידות"];
 const ONB_TOTAL = 5;
 
 function captureOnb() {
   const n = app.querySelector("#onbName"); if (n) onb.name = n.value;
+  const eo = app.querySelector("#onbEmotionOther"); if (eo) onb.emotion = eo.value.trim();
   const r = app.querySelector("#onbRate"); if (r) onb.rating = +r.value;
   const g = app.querySelector("#onbGoal"); if (g) onb.goal = g.value;
   const rt = app.querySelector("#onbRemindTime"); if (rt) onb.remindTime = rt.value;
@@ -270,6 +271,7 @@ function renderOnboarding() {
   const dots = Array.from({ length: ONB_TOTAL }, (_, i) =>
     `<span class="onb-dot ${i === onbStep ? "on" : ""} ${i < onbStep ? "done" : ""}"></span>`).join("");
   let body = "";
+  const emoOther = onb.otherMode || (!!onb.emotion && !ONB_EMOTIONS.includes(onb.emotion));
   if (onbStep === 0) body = `
     ${onbArt(0)}
     <h2>ברוך הבא למסע 8 השבועות</h2>
@@ -282,7 +284,9 @@ function renderOnboarding() {
     <h2>איזה רגש הכי מלווה אותך?</h2>
     <p class="onb-sub">נבחר רגש אחד לעבוד עליו לאורך המסע — ונראה אותו יורד עם הזמן.</p>
     <div class="chip-row">${ONB_EMOTIONS.map(e =>
-      `<button class="chip ${onb.emotion === e ? "on" : ""}" data-onbemo="${e}">${e}</button>`).join("")}</div>
+      `<button class="chip ${onb.emotion === e ? "on" : ""}" data-onbemo="${e}">${e}</button>`).join("")}
+      <button class="chip ${emoOther ? "on" : ""}" data-onbemo="__other__">אחר…</button></div>
+    ${emoOther ? `<input class="inp" id="onbEmotionOther" placeholder="כתוב את הרגש שלך..." value="${esc(ONB_EMOTIONS.includes(onb.emotion) ? "" : (onb.emotion || ""))}">` : ""}
     <label class="onb-label">כמה חזק הוא עכשיו? (0–10)</label>
     <div class="rating-row"><input type="range" id="onbRate" min="0" max="10" value="${onb.rating}">
       <span class="rate-val" id="onbRateV">${onb.rating}</span></div>`;
@@ -321,7 +325,11 @@ function renderOnboarding() {
   const rate = app.querySelector("#onbRate");
   if (rate) rate.addEventListener("input", () => app.querySelector("#onbRateV").textContent = rate.value);
   app.querySelectorAll("[data-onbemo]").forEach(b => b.addEventListener("click", () => {
-    captureOnb(); onb.emotion = b.dataset.onbemo; renderOnboarding();
+    captureOnb();
+    if (b.dataset.onbemo === "__other__") { onb.otherMode = true; if (ONB_EMOTIONS.includes(onb.emotion)) onb.emotion = ""; }
+    else { onb.otherMode = false; onb.emotion = b.dataset.onbemo; }
+    renderOnboarding();
+    if (onb.otherMode) app.querySelector("#onbEmotionOther")?.focus();
   }));
   const breath = app.querySelector("#onbBreath");
   if (breath) breath.addEventListener("click", () => {
