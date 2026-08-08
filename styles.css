@@ -649,3 +649,8 @@ body{font-size:15.5px;line-height:1.5}
 .goal-anchor p{margin-bottom:10px}
 [data-theme="dark"] .goal-anchor{background:#122a27;border-color:#1f4d45}
 .goal-card .btn{margin-top:10px;width:100%}
+
+/* שדה "רגש אחר" */
+.other-emo-row{display:flex;gap:8px;align-items:flex-start;margin:8px 0 4px}
+.other-emo-row .inp{margin-bottom:0;flex:1}
+.other-emo-row .btn{white-space:nowrap}

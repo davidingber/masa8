@@ -1022,6 +1022,7 @@ function renderTool(c) {
 
 // --- שבוע 1: כלי מורחב עם 3 חלקים ---
 let week1Tab = "emotion";
+let week1EmoOther = false;
 const W1_TABS = [
   { id: "emotion",    label: "רגש ודירוג" },
   { id: "dickens",    label: "תרגיל דיקנס" },
@@ -1044,12 +1045,17 @@ function w1Emotion() {
   const emotions = ["חרדה", "פחד", "בושה", "כעס", "עצב", "אשמה", "בדידות"];
   const suggested = EMOTION_ALTERNATIVES[st.emotion.name];
   const altPool = [...new Set([suggested, ...ALT_EMOTION_POOL].filter(Boolean))];
+  const emoOther = week1EmoOther || (!!st.emotion.name && !emotions.includes(st.emotion.name));
   return `
     <div class="tool-block">
       <h4>1. בחר רגש מרכזי שמלווה אותך</h4>
       <div class="chip-row">
         ${emotions.map(e => `<button class="chip ${st.emotion.name === e ? "on" : ""}" data-emotion="${e}">${e}</button>`).join("")}
+        <button class="chip ${emoOther ? "on" : ""}" data-emotion="__other__">אחר…</button>
       </div>
+      ${emoOther ? `<div class="other-emo-row">
+        <input class="inp" id="w1EmoOther" placeholder="כתוב את הרגש שלך..." value="${esc(emotions.includes(st.emotion.name) ? "" : (st.emotion.name || ""))}">
+        <button class="btn ghost2" id="w1EmoSave">שמור רגש</button></div>` : ""}
 
       <h4>2. דרג את עוצמתו עכשיו (0–10) — נקודת מוצא למדידה</h4>
       <div class="rating-row">
@@ -2967,7 +2973,16 @@ function mountWeek1Handlers() {
 
   // חלק 1 — רגש
   app.querySelectorAll("[data-emotion]").forEach(b =>
-    b.addEventListener("click", () => { S.setEmotion(b.dataset.emotion); renderChapter(1); }));
+    b.addEventListener("click", () => {
+      if (b.dataset.emotion === "__other__") { week1EmoOther = true; renderChapter(1); app.querySelector("#w1EmoOther")?.focus(); }
+      else { week1EmoOther = false; S.setEmotion(b.dataset.emotion); renderChapter(1); }
+    }));
+  const w1es = app.querySelector("#w1EmoSave");
+  if (w1es) w1es.addEventListener("click", () => {
+    const v = app.querySelector("#w1EmoOther").value.trim();
+    if (!v) return toast("כתוב את הרגש");
+    week1EmoOther = false; S.setEmotion(v); renderChapter(1);
+  });
   app.querySelectorAll("[data-alt]").forEach(b =>
     b.addEventListener("click", () => { S.setEmotionTarget(b.dataset.alt); renderChapter(1); }));
   const rate = app.querySelector("#rate");
