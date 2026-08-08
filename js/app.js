@@ -1984,13 +1984,13 @@ function openThoughtPrint(rows) {
 let week6Tab = "identity";
 const W6_TABS = [
   { id: "identity", label: "מי אני בלי הבעיה" },
-  { id: "guided",   label: "תהליך מודרך" },
+  { id: "guided",   label: "מפגש החמלה" },
   { id: "meds",     label: "מדיטציות" },
   { id: "write",    label: "כתיבה 5 דק׳" },
 ];
 const WORRY_REMINDER = {
   title: "דייט עם הדאגה — 5 דקות",
-  description: "שב 5 דקות עם הדאגה: פשוט לכתוב כל מה שעולה, או לתרגל את התהליך המודרך. אני כאן — מה אתה מנסה להגיד לי?",
+  description: "שב 5 דקות עם הדאגה: פשוט לכתוב כל מה שעולה, או לתרגל את מפגש החמלה. אני כאן — מה אתה מנסה להגיד לי?",
 };
 const FOCUS_SENSATIONS = ["כיווץ", "רעד", "עומס", "כבדות", "משהו שרוצה להתפרץ"];
 
@@ -2089,18 +2089,19 @@ function w6Guided() {
     `<button class="chip mini focus-sens ${(d.sens || []).includes(s) ? "on" : ""}" data-sens="${s}">${s}</button>`).join("");
   return `
     <div class="tool-block">
-      <p class="hint">אפשרות ב׳ — תהליך עדין של הקשבה לתחושה. קח את הזמן, נשום, ולווה כל שלב ברוגע.</p>
+      <p class="hint">תהליך עדין של הקשבה לתחושה. קח את הזמן, נשום, ולווה כל שלב ברוגע.</p>
 
       <div class="focus-step"><span class="fs-num">1</span>
         <div><b>התמקד בתחושה</b> — היכן היא יושבת בגוף? איזה סוג תחושה?
           <div class="chip-row" style="margin-top:6px">${sensChips}</div></div></div>
 
       <div class="focus-step"><span class="fs-num">2</span>
-        <div><b>איזו מילה עולה מתוך התחושה</b> ומייצגת אותה?
-          <input class="inp" id="fWord" value="${esc(d.word || "")}" placeholder="המילה שעולה מהתחושה..."></div></div>
+        <div><b>איזו מילה או תמונה עולה מתוך התחושה</b> ומייצגת אותה?
+          <input class="inp" id="fWord" value="${esc(d.word || "")}" placeholder="תוסיף מילה או תמונה שעולה מתוך התחושה..."></div></div>
 
       <div class="focus-step"><span class="fs-num">3</span>
-        <div><b>בחן:</b> האם זו באמת המילה שמרגישה נכון מתוך התחושה? לשהות איתה כמה רגעים.</div></div>
+        <div><b>בחן:</b> האם זו באמת המילה שמרגישה נכון מתוך התחושה? לשהות איתה כמה רגעים.
+          אפשר גם לשנות את המילה או התמונה שמייצגת או מתארת את התחושה.</div></div>
 
       <div class="focus-step"><span class="fs-num">4</span>
         <div><b>שים לב</b> למה שעולה מתוך התחושה כשאתה נשאר איתה.</div></div>
