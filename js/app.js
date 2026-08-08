@@ -7,7 +7,7 @@ import { COURSE, ACTIVITY_TYPES, EMOTION_ALTERNATIVES, ALT_EMOTION_POOL,
          DISTORTIONS, THOUGHT_TABLE_COLS,
          EXPOSURE_EMOTIONS, EXPOSURE_RULES, EXPOSURE_EXAMPLES, IMAGINAL_STEPS,
          VALUES_SUGGESTIONS, COMMUNICATION_PRINCIPLES, ASSERTIVENESS_STEPS, DAILY_PRACTICES,
-         BREATH_PATTERNS, BADGES } from "./data.js";
+         BREATH_PATTERNS, BADGES, CALMING_PHRASES, GROUNDING_STEPS, HOTLINES } from "./data.js";
 import * as S from "./state.js";
 import { renderAvatar, avatarMessage } from "./avatar.js";
 import { askAI } from "./ai.js";
@@ -51,6 +51,7 @@ function renderNav() {
 //  ראוטר
 // ============================================================
 function render() {
+  updateSOSVisibility();
   if (!S.isOnboarded()) { navEl.innerHTML = ""; return renderOnboarding(); }
   renderNav();
   if (route === "home") return renderHome();
@@ -201,6 +202,9 @@ function renderHome() {
   const pracDone = practiceDoneToday(prac.name);
   checkNewBadges();
   const badgeCount = badgeSummary();
+  const today = new Date().toISOString().slice(0, 10);
+  const checkedToday = ratings.some(r => r.date.slice(0, 10) === today);
+  const todayVal = [...ratings].reverse().find(r => r.date.slice(0, 10) === today)?.value;
 
 
   app.innerHTML = `
@@ -211,6 +215,8 @@ function renderHome() {
       </div>
       <button class="icon-btn" id="themeToggle" title="מצב כהה / בהיר" aria-label="מצב כהה או בהיר">${S.getTheme() === "dark" ? "☀️" : "🌙"}</button>
     </header>
+
+    ${installBanner()}
 
     <section class="card avatar-card">
       ${streak > 0 ? `<div class="streak-chip" title="ימים רצופים של עבודה">🔥 ${streak} ${streak === 1 ? "יום" : "ימים"} ברצף</div>` : ""}
@@ -223,6 +229,18 @@ function renderHome() {
       <div class="work-clock" title="זמן העבודה שלך השבוע">⏱️ זמן עבודה השבוע: <b id="workClock">${fmtHM(S.getWeekWorkTime())}</b></div>
       <button class="btn share-btn" id="shareProgress">📤 שיתוף ההתקדמות שלי</button>
     </section>
+
+    ${st.emotion.name ? `
+    <section class="card checkin-card">
+      <div class="card-head"><h3>🌡️ צ'ק-אין יומי</h3>
+        ${checkedToday ? `<span class="today-done">✓ נבדקת היום</span>` : ""}</div>
+      <p class="checkin-q">איך <b>${esc(st.emotion.name)}</b> מרגיש עכשיו? <span class="subtle">(0–10)</span></p>
+      <div class="rating-row">
+        <input type="range" id="checkinRate" min="0" max="10" value="${todayVal ?? lastR ?? 5}">
+        <span class="rate-val" id="checkinVal">${todayVal ?? lastR ?? 5}</span>
+      </div>
+      <button class="btn" id="checkinSave">${checkedToday ? "עדכון הדירוג" : "שמירת הדירוג היומי"}</button>
+    </section>` : ""}
 
     <section class="card today-card">
       <h3>📌 המשימה של היום</h3>
@@ -310,8 +328,16 @@ function renderHome() {
   });
   app.querySelector("#themeToggle").addEventListener("click", toggleTheme);
   app.querySelector("#achvLink").addEventListener("click", () => go("achievements"));
+  mountInstallBanner();
   const pb = app.querySelector("#pracBreath");
   if (pb) pb.addEventListener("click", () => openBreathingPlayer({ patternId: "478" }));
+  const cr = app.querySelector("#checkinRate");
+  if (cr) cr.addEventListener("input", () => app.querySelector("#checkinVal").textContent = cr.value);
+  const cs = app.querySelector("#checkinSave");
+  if (cs) cs.addEventListener("click", () => {
+    S.logEmotionRating(app.querySelector("#checkinRate").value);
+    toast("הדירוג היומי נשמר ✓"); celebrate(); renderHome();
+  });
 
   // חגיגה בעליית שלב אווטר (רק כשעולה בתוך המפגש, לא בטעינה ראשונה)
   if (lastAvatarStage !== null && stage > lastAvatarStage) celebrate();
@@ -3287,10 +3313,143 @@ function startTimeTracker() {
 }
 
 // ============================================================
+//  ערכת "רגע קשה" (SOS) — נגישה מכל מסך
+// ============================================================
+let sosFab = null;
+let sosView = "menu";
+let sosPhraseIdx = 0;
+
+function mountSOS() {
+  if (sosFab) return;
+  sosFab = document.createElement("button");
+  sosFab.id = "sosFab"; sosFab.className = "sos-fab";
+  sosFab.innerHTML = "🫂 רגע קשה";
+  sosFab.title = "צריך רגע? לחץ כאן";
+  sosFab.addEventListener("click", openSOS);
+  document.body.appendChild(sosFab);
+}
+function updateSOSVisibility() {
+  if (sosFab) sosFab.style.display = S.isOnboarded() ? "" : "none";
+}
+function openSOS() { sosView = "menu"; renderSOS(); }
+function closeSOS() { document.getElementById("sosOverlay")?.remove(); }
+
+function renderSOS() {
+  let ov = document.getElementById("sosOverlay");
+  if (!ov) { ov = document.createElement("div"); ov.id = "sosOverlay"; ov.className = "sos-overlay"; document.body.appendChild(ov); }
+  let body = "";
+  if (sosView === "menu") {
+    body = `
+      <div class="sos-emoji">🫂</div>
+      <h2>רגע קשה? אני כאן איתך</h2>
+      <p class="sos-sub">אתה בטוח. מה שאתה מרגיש הוא גל — הוא יעלה ויחלוף. בוא נעבור אותו יחד, צעד אחד.</p>
+      <div class="sos-menu">
+        <button class="sos-item" data-sos="breath"><span>🫁</span> נשימה מרגיעה</button>
+        <button class="sos-item" data-sos="ground"><span>🖐️</span> עיגון 5-4-3-2-1</button>
+        <button class="sos-item" data-sos="safe"><span>🏝️</span> המקום הבטוח שלי</button>
+        <button class="sos-item" data-sos="phrase"><span>💗</span> משפט שמרגיע אותי</button>
+      </div>
+      <div class="sos-hotlines">
+        <div class="sos-hot-title">אם קשה מאוד — לא צריך להיות לבד:</div>
+        ${HOTLINES.map(h => h.phone
+          ? `<a class="sos-hot" href="tel:${h.phone.replace(/[^0-9]/g, "")}">${esc(h.name)} · ${esc(h.phone)}</a>`
+          : `<a class="sos-hot" href="${esc(h.url)}" target="_blank" rel="noopener">${esc(h.name)}</a>`).join("")}
+      </div>`;
+  } else if (sosView === "ground") {
+    body = `
+      <div class="sos-emoji">🖐️</div>
+      <h2>עיגון 5-4-3-2-1</h2>
+      <p class="sos-sub">מחזירים את תשומת הלב לכאן ועכשיו, דרך החושים.</p>
+      <div class="ground-list">
+        ${GROUNDING_STEPS.map(s => `<div class="ground-row"><span class="ground-n">${s.n}</span>
+          <div><b>${esc(s.sense)}</b><div class="subtle">${esc(s.prompt)}</div></div></div>`).join("")}
+      </div>
+      <button class="btn sos-back" data-sos="menu">חזרה</button>`;
+  } else if (sosView === "safe") {
+    const safe = (S.getToolData(7, "prep") || {}).safePlace;
+    body = `
+      <div class="sos-emoji">🏝️</div>
+      <h2>המקום הבטוח שלי</h2>
+      ${safe ? `<p class="sos-safe">${esc(safe).replace(/\n/g, "<br>")}</p>`
+        : `<p class="sos-sub">עצום עיניים ודמיין מקום שבו אתה מרגיש בטוח ורגוע — חוף, יער, חדר ילדות.
+           ראה את הצבעים, שמע את הצלילים, הרגש את החום. אתה יכול לחזור לשם בכל רגע.</p>`}
+      <button class="btn sos-back" data-sos="menu">חזרה</button>`;
+  } else if (sosView === "phrase") {
+    body = `
+      <div class="sos-emoji">💗</div>
+      <h2>קח נשימה, ותקרא לאט</h2>
+      <p class="sos-phrase">${esc(CALMING_PHRASES[sosPhraseIdx % CALMING_PHRASES.length])}</p>
+      <div class="sos-actions">
+        <button class="btn ghost2" id="sosMore">משפט נוסף</button>
+        <button class="btn sos-back" data-sos="menu">חזרה</button>
+      </div>`;
+  }
+  ov.innerHTML = `<button class="sos-close" id="sosClose" aria-label="סגירה">✕</button>
+    <div class="sos-inner">${body}</div>`;
+  ov.querySelector("#sosClose").addEventListener("click", closeSOS);
+  ov.querySelectorAll("[data-sos]").forEach(b => b.addEventListener("click", () => {
+    const v = b.dataset.sos;
+    if (v === "breath") { closeSOS(); openBreathingPlayer({ patternId: "478" }); return; }
+    sosView = v; renderSOS();
+  }));
+  const more = ov.querySelector("#sosMore");
+  if (more) more.addEventListener("click", () => { sosPhraseIdx++; renderSOS(); });
+}
+
+// ============================================================
+//  הצעת התקנה למסך הבית (PWA)
+// ============================================================
+let deferredInstall = null;
+function isStandalone() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+function isIOS() { return /iphone|ipad|ipod/i.test(navigator.userAgent); }
+function installDismissed() { return localStorage.getItem("masa8_install_dismissed") === "1"; }
+
+function installBanner() {
+  if (installDismissed() || isStandalone()) return "";
+  if (deferredInstall) return `
+    <div class="install-banner" id="installBanner">
+      <span>📲 התקן את האפליקציה למסך הבית — גישה מהירה ועבודה גם אופליין.</span>
+      <div class="install-actions">
+        <button class="btn" id="installBtn">התקנה</button>
+        <button class="btn ghost2" id="installX">לא עכשיו</button>
+      </div>
+    </div>`;
+  if (isIOS()) return `
+    <div class="install-banner" id="installBanner">
+      <span>📲 להתקנה: הקש על <b>שיתוף</b> ⬆ ואז <b>“הוסף למסך הבית”</b>.</span>
+      <div class="install-actions"><button class="btn ghost2" id="installX">הבנתי</button></div>
+    </div>`;
+  return "";
+}
+function mountInstallBanner() {
+  const btn = app.querySelector("#installBtn");
+  if (btn) btn.addEventListener("click", async () => {
+    if (!deferredInstall) return;
+    deferredInstall.prompt();
+    try { await deferredInstall.userChoice; } catch (e) {}
+    deferredInstall = null;
+    app.querySelector("#installBanner")?.remove();
+  });
+  const x = app.querySelector("#installX");
+  if (x) x.addEventListener("click", () => {
+    localStorage.setItem("masa8_install_dismissed", "1");
+    app.querySelector("#installBanner")?.remove();
+  });
+}
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault(); deferredInstall = e;
+  if (route === "home" && S.isOnboarded()) renderHome();
+});
+window.addEventListener("appinstalled", () => { deferredInstall = null; });
+
+// ============================================================
 //  אתחול
 // ============================================================
 window.addEventListener("state:changed", () => { /* עתידי: סנכרון */ });
 applyTheme(S.getTheme());
+mountSOS();
 startReminderLoop();
 startTimeTracker();
 render();

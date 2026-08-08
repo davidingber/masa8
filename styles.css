@@ -536,3 +536,48 @@ body{min-height:100vh}
 .breath-circle.hold{transform:scale(1.7)}
 .breath-count{font-size:15px;opacity:.9}
 .breath-actions{display:flex;gap:10px}
+
+/* ============ צ'ק-אין יומי ============ */
+.checkin-card .checkin-q{margin:2px 0 6px;line-height:1.5}
+
+/* ============ הצעת התקנה (PWA) ============ */
+.install-banner{background:linear-gradient(160deg,var(--card),#eef7fb);border:1px solid var(--line);
+  border-radius:14px;padding:12px 14px;margin-bottom:14px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5}
+.install-actions{display:flex;gap:8px}
+[data-theme="dark"] .install-banner{background:linear-gradient(160deg,var(--card),#0f2230)}
+
+/* ============ כפתור "רגע קשה" (SOS) ============ */
+.sos-fab{position:fixed;bottom:74px;inset-inline-end:14px;z-index:150;
+  background:linear-gradient(160deg,#e07a5f,#c85a3f);color:#fff;border:none;
+  border-radius:999px;padding:11px 16px;font:inherit;font-weight:800;font-size:14px;
+  box-shadow:0 8px 22px rgba(200,90,63,.4);cursor:pointer}
+.sos-fab:active{transform:scale(.95)}
+.sos-overlay{position:fixed;inset:0;z-index:210;background:linear-gradient(180deg,#0b3b37,#072a27);
+  color:#eafaf6;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:56px 20px 40px}
+.sos-inner{max-width:460px;width:100%;text-align:center}
+.sos-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.14);border:none;color:#fff;
+  width:40px;height:40px;border-radius:12px;font-size:18px;cursor:pointer}
+.sos-emoji{font-size:52px;margin-bottom:6px}
+.sos-inner h2{font-size:23px;margin-bottom:8px}
+.sos-sub{opacity:.9;line-height:1.65;margin-bottom:18px}
+.sos-menu{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.sos-item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.18);color:#eafaf6;border-radius:14px;padding:15px 16px;
+  font:inherit;font-weight:700;font-size:16px;cursor:pointer;text-align:right}
+.sos-item:active{transform:scale(.98)}
+.sos-item span{font-size:24px}
+.sos-hotlines{border-top:1px solid rgba(255,255,255,.15);padding-top:14px;margin-top:6px}
+.sos-hot-title{font-size:13px;opacity:.8;margin-bottom:8px}
+.sos-hot{display:block;color:#bff3ea;text-decoration:none;padding:7px 0;font-weight:700;font-size:14px}
+.ground-list{display:flex;flex-direction:column;gap:12px;text-align:right;margin-bottom:20px}
+.ground-row{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.08);
+  border-radius:14px;padding:12px 14px;line-height:1.5}
+.ground-n{flex-shrink:0;width:44px;height:44px;border-radius:50%;background:#2dd4bf;color:#04231f;
+  display:grid;place-items:center;font-weight:800;font-size:20px}
+.ground-row .subtle{color:#bfe6df}
+.sos-phrase{font-size:22px;font-weight:700;line-height:1.6;margin:10px 0 22px;padding:0 6px}
+.sos-safe{font-size:17px;line-height:1.7;background:rgba(255,255,255,.08);border-radius:14px;
+  padding:16px;margin-bottom:20px}
+.sos-actions{display:flex;gap:10px;justify-content:center}
+.sos-back{margin-top:4px}
