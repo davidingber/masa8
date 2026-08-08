@@ -22,6 +22,7 @@ const DEFAULT_STATE = {
   onboarded: false,                   // האם עבר את מסך הקליטה
   theme: "light",                     // "light" | "dark"
   badgesSeen: [],                     // מזהי מדליות שכבר נחגגו
+  adminPin: "",                       // קוד מנחה לנעילת מסך הניהול (ריק = פתוח)
   createdAt: null,
 };
 
@@ -91,6 +92,10 @@ export function setTheme(t) { state.theme = t === "dark" ? "dark" : "light"; sav
 // ---- מדליות שנחגגו ----
 export function getBadgesSeen() { return state.badgesSeen || (state.badgesSeen = []); }
 export function setBadgesSeen(ids) { state.badgesSeen = ids; save(); }
+
+// ---- קוד מנחה (PIN) לנעילת מסך הניהול ----
+export function getAdminPin() { return state.adminPin || ""; }
+export function setAdminPin(pin) { state.adminPin = String(pin || "").trim(); save(); }
 
 // ---- קליטה (Onboarding) ----
 export function isOnboarded() {

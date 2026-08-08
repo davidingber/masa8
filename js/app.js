@@ -30,13 +30,14 @@ window.__go = go;
 // ============================================================
 //  ניווט תחתון
 // ============================================================
+// "ניהול" הוסר מהתפריט — גישה למנחה בלבד דרך לחיצה ארוכה על הכותרת בבית או #admin
 const NAV = [
   { id: "home",     label: "בית",       icon: "🏠" },
   { id: "chapters", label: "המסע",       icon: "🗺️" },
   { id: "library",  label: "מדיטציות",  icon: "🎧" },
   { id: "coach",    label: "מאמן AI",    icon: "💬" },
-  { id: "settings", label: "ניהול",      icon: "⚙️" },
 ];
+let adminUnlocked = false;
 
 function renderNav() {
   navEl.innerHTML = NAV.map(n => `
@@ -59,9 +60,37 @@ function render() {
   if (route === "chapter") return renderChapter(routeParam);
   if (route === "library") return renderLibrary();
   if (route === "coach") return renderCoach();
-  if (route === "settings") return renderSettings();
+  if (route === "settings") return (S.getAdminPin() && !adminUnlocked) ? renderPinGate() : renderSettings();
   if (route === "achievements") return renderAchievements();
 }
+
+// שער קוד מנחה — מוצג כשמסך הניהול נעול
+function renderPinGate() {
+  app.innerHTML = `
+    <header class="topbar chapter-head">
+      <button class="back-btn" id="back">›</button>
+      <div><div class="greeting">🔒 אזור מנחה</div><div class="subtle">נדרש קוד</div></div>
+    </header>
+    <section class="card" style="text-align:center">
+      <div style="font-size:44px;margin-bottom:8px">🔒</div>
+      <p class="subtle" style="margin-bottom:14px">הזן את קוד המנחה כדי להיכנס למסך הניהול.</p>
+      <input class="inp" id="pinInput" type="password" inputmode="numeric" placeholder="קוד" style="text-align:center;letter-spacing:4px;max-width:200px;margin:0 auto 12px">
+      <div><button class="btn" id="pinUnlock">כניסה</button></div>
+    </section>`;
+  app.querySelector("#back").addEventListener("click", () => go("home"));
+  const tryUnlock = () => {
+    const v = app.querySelector("#pinInput").value.trim();
+    if (v && v === S.getAdminPin()) { adminUnlocked = true; renderSettings(); }
+    else toast("קוד שגוי");
+  };
+  app.querySelector("#pinUnlock").addEventListener("click", tryUnlock);
+  app.querySelector("#pinInput").addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
+}
+
+// גישה למנחה: #admin או מחווה נסתרת
+function openAdmin() { go("settings"); }
+window.addEventListener("hashchange", () => { if (location.hash === "#admin") openAdmin(); });
+if (location.hash === "#admin") setTimeout(openAdmin, 0);
 
 // ============================================================
 //  ערכת נושא (מצב כהה)
@@ -99,7 +128,8 @@ function renderOnboarding() {
     <h2>ברוך הבא למסע 8 השבועות</h2>
     <p class="onb-sub">מהישרדות פנימית להנהגה עצמית. נכיר אותך בכמה שאלות קצרות — פחות מדקה.</p>
     <label class="onb-label">איך קוראים לך?</label>
-    <input class="inp" id="onbName" placeholder="השם שלך" value="${esc(onb.name)}">`;
+    <input class="inp" id="onbName" placeholder="השם שלך" value="${esc(onb.name)}">
+    <p class="onb-safety">כלי עזר ותמיכה — לא תחליף לטיפול מקצועי. במצוקה חריפה: ער״ן 1201 · חירום 101.</p>`;
   if (onbStep === 1) body = `
     <div class="onb-emoji">💗</div>
     <h2>איזה רגש הכי מלווה אותך?</h2>
@@ -210,7 +240,7 @@ function renderHome() {
   app.innerHTML = `
     <header class="topbar">
       <div>
-        <div class="greeting">${hello}</div>
+        <div class="greeting" id="homeTitle">${hello}</div>
         <div class="subtle">${COURSE.subtitle}</div>
       </div>
       <button class="icon-btn" id="themeToggle" title="מצב כהה / בהיר" aria-label="מצב כהה או בהיר">${S.getTheme() === "dark" ? "☀️" : "🌙"}</button>
@@ -304,6 +334,8 @@ function renderHome() {
     </section>
 
     <button class="btn ghost2 achv-link" id="achvLink">🏅 ההישגים שלי · ${badgeCount.unlocked}/${badgeCount.total}</button>
+
+    ${trustBlock()}
   `;
 
   // מאזינים
@@ -328,6 +360,8 @@ function renderHome() {
   });
   app.querySelector("#themeToggle").addEventListener("click", toggleTheme);
   app.querySelector("#achvLink").addEventListener("click", () => go("achievements"));
+  app.querySelector("#trustSOS").addEventListener("click", openSOS);
+  bindLongPress(app.querySelector("#homeTitle"), openAdmin);
   mountInstallBanner();
   const pb = app.querySelector("#pracBreath");
   if (pb) pb.addEventListener("click", () => openBreathingPlayer({ patternId: "478" }));
@@ -548,6 +582,31 @@ function editGoal() {
   const cur = S.getState().goal;
   const v = prompt("מהי המטרה שלך למסע?", cur || "");
   if (v !== null) { S.setGoal(v.trim()); renderHome(); }
+}
+
+// בלוק אמון ובטיחות (מוצג בתחתית הבית)
+function trustBlock() {
+  return `
+    <section class="card trust-card">
+      <div class="trust-methods">🧠 מבוסס CBT · ACT · NLP · מיינדפולנס</div>
+      <p class="trust-author">פותח על ידי <b>דוד אינגבר</b> — הורות עצמית מיטיבה להתמודדות עם חרדה.</p>
+      <p class="trust-privacy">🔒 הנתונים שלך נשמרים במכשיר שלך בלבד ואינם נשלחים לאף אחד.</p>
+      <div class="trust-safety">
+        <b>⚠️ חשוב:</b> האפליקציה היא כלי עזר ואינה תחליף לטיפול מקצועי.
+        במצוקה חריפה או מחשבות אובדניות — פנה מיד לעזרה: ער״ן <b>1201</b> · מוקד חירום <b>101</b>.
+      </div>
+      <button class="btn ghost2" id="trustSOS">🫂 צריך רגע עכשיו?</button>
+    </section>`;
+}
+
+// לחיצה ארוכה על הכותרת פותחת אזור מנחה (נסתר מהלקוח)
+function bindLongPress(el, cb, ms = 700) {
+  if (!el) return;
+  let t = null;
+  const start = () => { t = setTimeout(cb, ms); };
+  const cancel = () => { clearTimeout(t); };
+  el.addEventListener("pointerdown", start);
+  ["pointerup", "pointerleave", "pointercancel", "pointermove"].forEach(ev => el.addEventListener(ev, cancel));
 }
 
 // ---- חגיגה: קונפטי + רטט ----
@@ -2978,8 +3037,18 @@ async function sendMsg() {
 function renderSettings() {
   const st = S.getState();
   app.innerHTML = `
-    <header class="topbar"><div><div class="greeting">⚙️ ניהול והגדרות</div>
+    <header class="topbar chapter-head">
+      <button class="back-btn" id="backHome">›</button>
+      <div><div class="greeting">⚙️ ניהול והגדרות</div>
       <div class="subtle">אזור המנחה</div></div></header>
+
+    <section class="card">
+      <h3>🔒 קוד מנחה (PIN)</h3>
+      <p class="subtle">קוד שנועל את מסך הניהול הזה בפני משתתפים. כשקוד מוגדר — הכניסה לניהול תדרוש אותו.
+        גישה למנחה: לחיצה ארוכה על הכותרת במסך הבית, או הוספת <b dir="ltr">#admin</b> לכתובת.</p>
+      <input id="setPin" class="inp" type="text" inputmode="numeric" value="${esc(st.adminPin || "")}" placeholder="למשל 1234 — ריק = ללא נעילה">
+      <button class="btn" id="savePin">שמירת הקוד</button>
+    </section>
 
     <section class="card">
       <h3>👤 פרטים</h3>
@@ -3090,6 +3159,12 @@ function renderSettings() {
     </section>
   `;
 
+  app.querySelector("#backHome").addEventListener("click", () => go("home"));
+  app.querySelector("#savePin").addEventListener("click", () => {
+    S.setAdminPin(app.querySelector("#setPin").value);
+    adminUnlocked = true;
+    toast(S.getAdminPin() ? "הקוד נשמר — הניהול נעול 🔒" : "הנעילה בוטלה");
+  });
   app.querySelector("#setName").addEventListener("change", e => S.setName(e.target.value.trim()));
   app.querySelector("#setTheme").addEventListener("change", e => {
     const t = e.target.checked ? "dark" : "light"; S.setTheme(t); applyTheme(t); render();

@@ -581,3 +581,14 @@ body{min-height:100vh}
   padding:16px;margin-bottom:20px}
 .sos-actions{display:flex;gap:10px;justify-content:center}
 .sos-back{margin-top:4px}
+
+/* ============ בלוק אמון ובטיחות ============ */
+.trust-card{text-align:center;background:linear-gradient(160deg,var(--card),#f6fbfa)}
+[data-theme="dark"] .trust-card{background:linear-gradient(160deg,var(--card),#10201e)}
+.trust-methods{font-weight:800;color:var(--teal);font-size:14px;margin-bottom:6px}
+.trust-author{font-size:14px;line-height:1.6;margin-bottom:8px}
+.trust-privacy{font-size:13px;color:var(--subtle);margin-bottom:12px}
+.trust-safety{font-size:13px;line-height:1.6;text-align:right;background:#fbf3f0;border:1px solid #f0d9d0;
+  border-radius:12px;padding:11px 13px;margin-bottom:12px;color:#7a3b2c}
+[data-theme="dark"] .trust-safety{background:#2a1a17;border-color:#5a3a30;color:#f0c3b5}
+.onb-safety{font-size:12px;color:var(--subtle);line-height:1.5;margin-top:12px}
