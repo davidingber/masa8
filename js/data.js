@@ -543,8 +543,7 @@ export const DEFAULT_MEDITATIONS = [
   { id: "mindfulness", week: 2, name: "מיינדפולנס", icon: "🧘",
     link: "https://youtu.be/4u3DXZZ6rT0", file: "resources/mindfulness.pdf", note: "" },
   { id: "autogenic", week: 2, name: "אימון אוטוגני", icon: "🌬️",
-    link: "https://youtu.be/F1tfNiM2nNY", file: "resources/autogenic.pdf",
-    note: "קובץ זמני (נשימות) — יוחלף בהמשך" },
+    link: "https://youtu.be/F1tfNiM2nNY", file: "resources/autogenic.pdf", note: "" },
   { id: "jacobson", week: 2, name: "הרפיית ג'ייקובסון", icon: "💪",
     link: "https://youtu.be/Zo7OTXljkzk", file: "resources/jacobson.pdf", note: "" },
 

@@ -61,6 +61,9 @@ function load() {
       if (!merged.meditations.some(m => m.id === def.id)) merged.meditations.push(structuredClone(def));
     }
     if (!merged.medLibrary) merged.medLibrary = structuredClone(DEFAULT_MED_LIBRARY);
+    // ניקוי הערת "קובץ זמני" ישנה מאימון אוטוגני (אצל משתמשים קיימים)
+    const ag = merged.meditations.find(m => m.id === "autogenic");
+    if (ag && ag.note && ag.note.includes("זמני")) ag.note = "";
     return merged;
   } catch (e) {
     return fresh();
@@ -294,6 +297,50 @@ export function getStreak() {
   let streak = 0;
   while (days.has(key(cur))) { streak++; cur = new Date(cur.getTime() - dayMs); }
   return streak;
+}
+
+// ---- תוכן מרכזי מהמנחה (content.json) — מגיע לכל הלקוחות ----
+// מיזוג תוכן שפורסם: מדיטציות, ספריית מדיטציות וסרטוני פרקים.
+export function applyPublishedContent(c) {
+  if (!c || typeof c !== "object") return false;
+  let changed = false;
+  if (Array.isArray(c.meditations)) {
+    state.meditations = state.meditations || [];
+    for (const m of c.meditations) {
+      if (!m || !m.id) continue;
+      const ex = state.meditations.find(x => x.id === m.id);
+      if (ex) Object.assign(ex, m); else state.meditations.push({ ...m });
+      changed = true;
+    }
+  }
+  if (Array.isArray(c.medLibrary)) {
+    state.medLibrary = state.medLibrary || [];
+    for (const t of c.medLibrary) {
+      if (!t || !t.topic) continue;
+      let ex = state.medLibrary.find(x => x.topic === t.topic);
+      if (!ex) { ex = { topic: t.topic, items: [] }; state.medLibrary.push(ex); }
+      ex.items = ex.items || [];
+      for (const it of (t.items || [])) {
+        const eit = ex.items.find(x => x.name === it.name);
+        if (eit) Object.assign(eit, it); else ex.items.push({ ...it });
+      }
+      changed = true;
+    }
+  }
+  if (c.chapterVideos && typeof c.chapterVideos === "object") {
+    state.chapterVideos = Object.assign(state.chapterVideos || {}, c.chapterVideos);
+    changed = true;
+  }
+  if (changed) save();
+  return changed;
+}
+// מייצא את התוכן להפצה (content.json) — המנחה מעלה לריפו והוא מגיע לכולם
+export function exportPublishedContent() {
+  return JSON.stringify({
+    meditations: state.meditations || [],
+    medLibrary: state.medLibrary || [],
+    chapterVideos: state.chapterVideos || {},
+  }, null, 2);
 }
 
 // ---- גיבוי ושחזור ----

@@ -1,7 +1,7 @@
 // Service Worker — קאשינג בסיסי לעבודה גם ללא אינטרנט
-const CACHE = "masa8-v26";
+const CACHE = "masa8-v27";
 const ASSETS = [
-  "./", "./index.html", "./styles.css", "./manifest.webmanifest",
+  "./", "./index.html", "./styles.css", "./manifest.webmanifest", "./content.json",
   "./js/app.js", "./js/data.js", "./js/state.js",
   "./js/avatar.js", "./js/ai.js", "./js/reminders.js", "./js/calendar.js",
   "./fonts/rubik-hebrew-400.woff2", "./fonts/rubik-hebrew-500.woff2",
@@ -23,6 +23,17 @@ self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
   // בקשות ל-API של Claude — תמיד רשת, לא קאש
   if (url.hostname.includes("anthropic.com")) return;
+  // תוכן מרכזי מהמנחה — network-first כדי לקבל עדכונים, עם נפילה למטמון (אופליין)
+  if (url.pathname.endsWith("/content.json")) {
+    e.respondWith(
+      fetch(e.request).then(resp => {
+        const copy = resp.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+        return resp;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
   e.respondWith(
     caches.match(e.request).then(r => r || fetch(e.request).then(resp => {
       if (e.request.method === "GET" && resp.ok && url.origin === location.origin) {

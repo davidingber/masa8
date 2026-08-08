@@ -46,6 +46,8 @@ const NAV = [
   { id: "coach",    label: "מאמן AI" },
 ];
 let adminUnlocked = false;
+// "מנחה" = נכנס עם קוד, או שעדיין לא הוגדר קוד נעילה
+function isManager() { return adminUnlocked || !S.getAdminPin(); }
 
 function renderNav() {
   navEl.innerHTML = NAV.map(n => `
@@ -963,11 +965,11 @@ function renderChapter(week) {
       <div id="toolMount">${renderTool(c)}</div>
     </section>
 
-    <section class="card">
+    ${(ext.length || isManager()) ? `<section class="card">
       <div class="card-head"><h3>🔗 כלים דיגיטליים נוספים</h3></div>
       ${ext.length ? ext.map(t => `<a class="ext-tool" href="${esc(t.url)}" target="_blank">↗ ${esc(t.name)}</a>`).join("")
-        : `<p class="subtle">כאן יתחברו הכלים שכבר בנית (תנועות עיניים ועוד) — לפי הפרק הרלוונטי. אפשר להוסיף במסך הניהול.</p>`}
-    </section>
+        : `<p class="subtle">כאן יתחברו הכלים שכבר בנית (תנועות עיניים ועוד) — לפי הפרק הרלוונטי. אפשר להוסיף במסך הניהול. (גלוי למנחה בלבד)</p>`}
+    </section>` : ""}
 
     <p class="tools-note">כלים בגישה זו: ${c.tools}</p>
 
@@ -3200,6 +3202,14 @@ function renderSettings() {
     </section>
 
     <section class="card">
+      <h3>📢 הפצת תוכן לכל הלקוחות</h3>
+      <p class="subtle">מדיטציות, ספריית מדיטציות וסרטוני פרקים שאתה מוסיף נשמרים כרגע במכשיר שלך בלבד.
+        כדי שיופיעו <b>אצל כל הלקוחות</b>: לחץ “ייצוא”, ואז העלה את הקובץ <b dir="ltr">content.json</b>
+        לתיקיית הריפו (כמו שאתה מעלה קבצים אחרים). תוך דקה זה יופיע לכולם.</p>
+      <button class="btn" id="publishContent">⬇ ייצוא content.json</button>
+    </section>
+
+    <section class="card">
       <h3>👤 פרטים</h3>
       <label class="field">שם המשתתף
         <input id="setName" class="inp" value="${esc(st.name)}" placeholder="שם">
@@ -3313,6 +3323,13 @@ function renderSettings() {
     S.setAdminPin(app.querySelector("#setPin").value);
     adminUnlocked = true;
     toast(S.getAdminPin() ? "הקוד נשמר — הניהול נעול 🔒" : "הנעילה בוטלה");
+  });
+  app.querySelector("#publishContent").addEventListener("click", () => {
+    const url = URL.createObjectURL(new Blob([S.exportPublishedContent()], { type: "application/json" }));
+    const a = document.createElement("a"); a.href = url; a.download = "content.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast("content.json ירד — העלה אותו לריפו ✓");
   });
   app.querySelector("#setName").addEventListener("change", e => S.setName(e.target.value.trim()));
   app.querySelector("#setTheme").addEventListener("change", e => {
@@ -3672,8 +3689,20 @@ window.addEventListener("appinstalled", () => { deferredInstall = null; });
 //  אתחול
 // ============================================================
 window.addEventListener("state:changed", () => { /* עתידי: סנכרון */ });
+
+// תוכן מרכזי מהמנחה — מגיע לכל הלקוחות (מדיטציות/ספרייה/סרטונים)
+async function loadPublishedContent() {
+  try {
+    const res = await fetch("./content.json", { cache: "no-store" });
+    if (!res.ok) return;
+    const json = await res.json();
+    if (S.applyPublishedContent(json)) render();
+  } catch (e) { /* אין קובץ תוכן / אופליין — ממשיכים עם ברירות המחדל */ }
+}
+
 applyTheme(S.getTheme());
 mountSOS();
 startReminderLoop();
 startTimeTracker();
 render();
+loadPublishedContent();
