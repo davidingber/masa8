@@ -30,19 +30,27 @@ window.__go = go;
 // ============================================================
 //  ניווט תחתון
 // ============================================================
+// אייקוני קו נקיים (SVG) — stroke=currentColor כדי לרשת את צבע המצב הפעיל
+const SVG = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const NAV_ICON = {
+  home:     SVG('<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>'),
+  chapters: SVG('<path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/>'),
+  library:  SVG('<path d="M4 13a8 8 0 0 1 16 0"/><rect x="3" y="13" width="4" height="7.5" rx="1.6"/><rect x="17" y="13" width="4" height="7.5" rx="1.6"/>'),
+  coach:    SVG('<path d="M21 11.5a7.5 7.5 0 0 1-10.9 6.7L4 19.5l1.3-4.2A7.5 7.5 0 1 1 21 11.5z"/>'),
+};
 // "ניהול" הוסר מהתפריט — גישה למנחה בלבד דרך לחיצה ארוכה על הכותרת בבית או #admin
 const NAV = [
-  { id: "home",     label: "בית",       icon: "🏠" },
-  { id: "chapters", label: "המסע",       icon: "🗺️" },
-  { id: "library",  label: "מדיטציות",  icon: "🎧" },
-  { id: "coach",    label: "מאמן AI",    icon: "💬" },
+  { id: "home",     label: "בית" },
+  { id: "chapters", label: "המסע" },
+  { id: "library",  label: "מדיטציות" },
+  { id: "coach",    label: "מאמן AI" },
 ];
 let adminUnlocked = false;
 
 function renderNav() {
   navEl.innerHTML = NAV.map(n => `
     <button class="nav-btn ${route === n.id ? "active" : ""}" data-route="${n.id}">
-      <span class="nav-ico">${n.icon}</span><span>${n.label}</span>
+      <span class="nav-ico">${NAV_ICON[n.id]}</span><span>${n.label}</span>
     </button>`).join("");
   navEl.querySelectorAll(".nav-btn").forEach(b =>
     b.addEventListener("click", () => go(b.dataset.route)));
@@ -119,19 +127,44 @@ function captureOnb() {
   const rc = app.querySelector("#onbRemind"); if (rc) onb.remind = rc.checked;
 }
 
+// איורים רכים למסכי הקליטה (SVG מוטמע — עובד אופליין)
+function onbArt(step) {
+  const wrap = (inner) => `<div class="onb-art"><svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">${inner}</svg></div>`;
+  if (step === 0) return wrap(`<circle cx="60" cy="60" r="52" fill="#eafaf5"/><circle cx="88" cy="40" r="11" fill="#e9b949"/>
+    <path d="M40 88 h40" stroke="#0f766e" stroke-width="4" stroke-linecap="round"/>
+    <path d="M60 88 V54" stroke="#0f766e" stroke-width="4" stroke-linecap="round"/>
+    <path d="M60 66 C47 64 43 53 45 44 C56 46 62 55 60 66Z" fill="#84b59f"/>
+    <path d="M60 60 C73 56 79 47 77 38 C66 40 60 49 60 60Z" fill="#14b8a6"/>`);
+  if (step === 1) return wrap(`<circle cx="60" cy="60" r="52" fill="#fbeef0"/>
+    <path d="M60 86 C39 71 33 58 41 49 C48 41 57 45 60 51 C63 45 72 41 79 49 C87 58 81 71 60 86Z" fill="#e07a5f"/>
+    <path d="M40 62 h9 l4-9 6 16 5-10 3 3 h13" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
+  if (step === 2) return wrap(`<circle cx="60" cy="60" r="52" fill="#eafaf5"/>
+    <circle cx="60" cy="60" r="30" fill="none" stroke="#0f766e" stroke-width="4"/>
+    <circle cx="60" cy="60" r="18" fill="none" stroke="#14b8a6" stroke-width="4"/>
+    <circle cx="60" cy="60" r="6" fill="#e07a5f"/>`);
+  if (step === 3) return wrap(`<circle cx="60" cy="60" r="52" fill="#eef3fb"/>
+    <circle cx="60" cy="60" r="34" fill="none" stroke="#5b8def" stroke-width="3" opacity=".45"/>
+    <circle cx="60" cy="60" r="24" fill="none" stroke="#14b8a6" stroke-width="3" opacity=".7"/>
+    <circle cx="60" cy="60" r="13" fill="#14b8a6"/>`);
+  return wrap(`<circle cx="60" cy="60" r="52" fill="#fff6e6"/>
+    <path d="M60 34 c-10 0-16 8-16 18 v9 l-6 9 h44 l-6-9 v-9 c0-10-6-18-16-18Z" fill="#e9b949"/>
+    <circle cx="60" cy="30" r="4" fill="#0f766e"/>
+    <path d="M53 74 a7 7 0 0 0 14 0" fill="#0f766e"/>`);
+}
+
 function renderOnboarding() {
   const dots = Array.from({ length: ONB_TOTAL }, (_, i) =>
     `<span class="onb-dot ${i === onbStep ? "on" : ""} ${i < onbStep ? "done" : ""}"></span>`).join("");
   let body = "";
   if (onbStep === 0) body = `
-    <div class="onb-emoji">🌱</div>
+    ${onbArt(0)}
     <h2>ברוך הבא למסע 8 השבועות</h2>
     <p class="onb-sub">מהישרדות פנימית להנהגה עצמית. נכיר אותך בכמה שאלות קצרות — פחות מדקה.</p>
     <label class="onb-label">איך קוראים לך?</label>
     <input class="inp" id="onbName" placeholder="השם שלך" value="${esc(onb.name)}">
     <p class="onb-safety">כלי עזר ותמיכה — לא תחליף לטיפול מקצועי. במצוקה חריפה: ער״ן 1201 · חירום 101.</p>`;
   if (onbStep === 1) body = `
-    <div class="onb-emoji">💗</div>
+    ${onbArt(1)}
     <h2>איזה רגש הכי מלווה אותך?</h2>
     <p class="onb-sub">נבחר רגש אחד לעבוד עליו לאורך המסע — ונראה אותו יורד עם הזמן.</p>
     <div class="chip-row">${ONB_EMOTIONS.map(e =>
@@ -140,19 +173,19 @@ function renderOnboarding() {
     <div class="rating-row"><input type="range" id="onbRate" min="0" max="10" value="${onb.rating}">
       <span class="rate-val" id="onbRateV">${onb.rating}</span></div>`;
   if (onbStep === 2) body = `
-    <div class="onb-emoji">🎯</div>
+    ${onbArt(2)}
     <h2>מה תרצה שיהיה שונה?</h2>
     <p class="onb-sub">מטרה אחת קטנה למסע. אפשר גם לדלג ולחזור לזה מאוחר יותר.</p>
     <textarea class="ta" id="onbGoal" placeholder="למשל: לנסוע באוטובוס בלי חרדה, לישון טוב יותר...">${esc(onb.goal)}</textarea>`;
   if (onbStep === 3) body = `
-    <div class="onb-emoji">🫁</div>
+    ${onbArt(3)}
     <h2>הניצחון הראשון שלך</h2>
     <p class="onb-sub">בוא נטען את האווטר בפעם הראשונה. קח נשימה אחת עמוקה ואיטית —
       שאיפה דרך האף, נשיפה ארוכה דרך הפה.</p>
     <button class="btn onb-breath ${onb.breathDone ? "done" : ""}" id="onbBreath">
       ${onb.breathDone ? "✓ נשמתי" : "נשמתי נשימה עמוקה"}</button>`;
   if (onbStep === 4) body = `
-    <div class="onb-emoji">🔔</div>
+    ${onbArt(4)}
     <h2>רוצה תזכורת יומית קטנה?</h2>
     <p class="onb-sub">רגע ביום לצעד קטן שטוען את האווטר. אפשר לכבות בכל עת בהגדרות.</p>
     <label class="onb-check"><input type="checkbox" id="onbRemind" ${onb.remind ? "checked" : ""}> כן, הזכר לי כל יום</label>

@@ -1,3 +1,11 @@
+@font-face{font-family:'Rubik';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/rubik-hebrew-400.woff2') format('woff2');unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/rubik-latin-400.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/rubik-hebrew-500.woff2') format('woff2');unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/rubik-latin-500.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/rubik-hebrew-700.woff2') format('woff2');unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/rubik-latin-700.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:800;font-display:swap;src:url('fonts/rubik-hebrew-800.woff2') format('woff2');unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}
+@font-face{font-family:'Rubik';font-style:normal;font-weight:800;font-display:swap;src:url('fonts/rubik-latin-800.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
 /* ============================================================
    מסע 8 השבועות — עיצוב (RTL, פלטה רגועה טורקיז/מרווה)
    ============================================================ */
@@ -11,7 +19,8 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--ink);
-  font-family:"Segoe UI","Assistant",system-ui,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+  font-family:'Rubik',"Assistant","Segoe UI",system-ui,Arial,sans-serif;-webkit-tap-highlight-color:transparent;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 body{min-height:100vh}
 .view{max-width:520px;margin:0 auto;padding:16px 16px 96px}
 
@@ -412,7 +421,10 @@ body{min-height:100vh}
 .nav-btn{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;
   gap:2px;padding:6px 2px;color:var(--subtle);font:inherit;font-size:11px;font-weight:600;cursor:pointer}
 .nav-btn.active{color:var(--teal)}
-.nav-ico{font-size:20px}
+.nav-ico{font-size:20px;display:grid;place-items:center;height:24px}
+.nav-ico svg{width:23px;height:23px}
+.nav-btn{transition:color .18s,transform .12s}
+.nav-btn.active .nav-ico{transform:translateY(-1px)}
 
 /* טוסט */
 #toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(20px);
@@ -592,3 +604,34 @@ body{min-height:100vh}
   border-radius:12px;padding:11px 13px;margin-bottom:12px;color:#7a3b2c}
 [data-theme="dark"] .trust-safety{background:#2a1a17;border-color:#5a3a30;color:#f0c3b5}
 .onb-safety{font-size:12px;color:var(--subtle);line-height:1.5;margin-top:12px}
+
+/* ============ ליטוש עיצובי: פונט, איורים, אנימציות ============ */
+body{font-size:15.5px;line-height:1.5}
+:root{--shadow:0 8px 26px rgba(20,60,55,.10)}
+:root[data-theme="dark"]{--shadow:0 10px 30px rgba(0,0,0,.45)}
+
+/* מעברים חלקים לרכיבים אינטראקטיביים */
+.card{transition:box-shadow .25s ease, transform .18s ease, border-color .2s ease}
+.btn{transition:transform .12s ease, box-shadow .22s ease, filter .2s ease}
+.btn:active{transform:translateY(1px) scale(.99)}
+.chip{transition:background .18s, color .18s, border-color .18s, transform .12s}
+.chip:active{transform:scale(.96)}
+@media (hover:hover){
+  .card:hover{box-shadow:0 12px 32px rgba(20,60,55,.14)}
+  .chapter-item:hover,.qa-btn.tappable:hover{transform:translateY(-2px)}
+  .btn:hover{filter:brightness(1.04)}
+}
+
+/* איורים במסכי הקליטה */
+.onb-art{display:flex;justify-content:center;margin-bottom:10px}
+.onb-art svg{width:120px;height:120px;filter:drop-shadow(0 8px 16px rgba(20,60,55,.12));
+  animation:artPop .5s cubic-bezier(.2,.8,.25,1) both}
+@keyframes artPop{0%{opacity:0;transform:scale(.8) translateY(8px)}100%{opacity:1;transform:none}}
+
+/* עדינות נוספת */
+.greeting{letter-spacing:-.2px}
+.streak-chip{animation:chipIn .4s ease both}
+@keyframes chipIn{0%{opacity:0;transform:translateY(-6px)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .onb-art svg,.streak-chip{animation:none}
+}

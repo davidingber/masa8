@@ -1,9 +1,13 @@
 // Service Worker — קאשינג בסיסי לעבודה גם ללא אינטרנט
-const CACHE = "masa8-v24";
+const CACHE = "masa8-v25";
 const ASSETS = [
   "./", "./index.html", "./styles.css", "./manifest.webmanifest",
   "./js/app.js", "./js/data.js", "./js/state.js",
   "./js/avatar.js", "./js/ai.js", "./js/reminders.js", "./js/calendar.js",
+  "./fonts/rubik-hebrew-400.woff2", "./fonts/rubik-hebrew-500.woff2",
+  "./fonts/rubik-hebrew-700.woff2", "./fonts/rubik-hebrew-800.woff2",
+  "./fonts/rubik-latin-400.woff2", "./fonts/rubik-latin-500.woff2",
+  "./fonts/rubik-latin-700.woff2", "./fonts/rubik-latin-800.woff2",
 ];
 
 self.addEventListener("install", e => {
