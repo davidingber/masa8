@@ -233,7 +233,7 @@ function toggleTheme() {
 let onbStep = 0;
 const onb = { name: "", emotion: "", otherMode: false, rating: 5, goal: "", breathDone: false, remind: false, remindTime: "09:00" };
 const ONB_EMOTIONS = ["חרדה", "פחד", "בושה", "כעס", "עצב", "אשמה", "בדידות"];
-const ONB_TOTAL = 5;
+const ONB_TOTAL = 1; // מסך כניסה מינימלי: שם + ברוך הבא בלבד
 
 function captureOnb() {
   const n = app.querySelector("#onbName"); if (n) onb.name = n.value;
@@ -270,14 +270,14 @@ function onbArt(step) {
 }
 
 function renderOnboarding() {
-  const dots = Array.from({ length: ONB_TOTAL }, (_, i) =>
+  const dots = ONB_TOTAL <= 1 ? "" : Array.from({ length: ONB_TOTAL }, (_, i) =>
     `<span class="onb-dot ${i === onbStep ? "on" : ""} ${i < onbStep ? "done" : ""}"></span>`).join("");
   let body = "";
   const emoOther = onb.otherMode || (!!onb.emotion && !ONB_EMOTIONS.includes(onb.emotion));
   if (onbStep === 0) body = `
     ${onbArt(0)}
     <h2>ברוך הבא למסע 8 השבועות</h2>
-    <p class="onb-sub">מהישרדות פנימית להנהגה עצמית. נכיר אותך בכמה שאלות קצרות — פחות מדקה.</p>
+    <p class="onb-sub">מהישרדות פנימית להנהגה עצמית. נתחיל בהיכרות קצרה.</p>
     <label class="onb-label">איך קוראים לך?</label>
     <input class="inp" id="onbName" placeholder="השם שלך" value="${esc(onb.name)}">
     <p class="onb-safety">כלי עזר ותמיכה — לא תחליף לטיפול מקצועי. במצוקה חריפה: ער״ן 1201 · חירום 101.</p>`;
