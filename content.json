@@ -1,6 +1,16 @@
 {
   "meditations": [],
-  "medLibrary": [],
+  "medLibrary": [
+    { "topic": "להירדם מהר", "items": [ { "name": "מדיטציה להירדמות", "link": "https://youtu.be/rBXTOD-ajPw", "file": "" } ] },
+    { "topic": "להפחית חרדה", "items": [ { "name": "מדיטציה להפחתת חרדה", "link": "https://youtu.be/H_arPCS7YSQ", "file": "" } ] },
+    { "topic": "מדיטציית חמלה עצמית", "items": [ { "name": "מדיטציית חמלה עצמית", "link": "https://youtu.be/7f7PSVaU7KY", "file": "" } ] },
+    { "topic": "לשפר את הערך ולהפחית אשמה ובושה", "items": [ { "name": "מדיטציה לערך עצמי", "link": "https://youtu.be/pkXjkeY_n1s", "file": "" } ] },
+    { "topic": "להכניס את הגוף להרפיה", "items": [ { "name": "מדיטציה להרפיית הגוף", "link": "https://youtu.be/oin7ust0LFw", "file": "" } ] },
+    { "topic": "לעטוף את הנפש בחמלה", "items": [ { "name": "מדיטציה לעטיפת הנפש בחמלה", "link": "https://youtu.be/Sn-COWv2r3o", "file": "" } ] }
+  ],
   "chapterVideos": {},
-  "externalTools": {}
+  "externalTools": {
+    "5": [ { "name": "לשנות את הייצוג הפנימי", "url": "https://davidingber.github.io/התניהלטריגר.html" } ],
+    "6": [ { "name": "למלא את הצרכים", "url": "https://davidingber.github.io/emotional.html" } ]
+  }
 }
