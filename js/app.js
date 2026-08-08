@@ -2021,9 +2021,32 @@ function w6Identity() {
         <p>וכך גם עם כעס, עצב או אכזבה — שכבה אחר שכבה — עד שאתם מרגישים <b>שאתם מרגישים מצוין בלי הבעיה.</b></p>
         <p class="identity-close">בשעה טובה — הנה נזכרתם במי אתם, בלי הבעיה. <b>זה מי שאתם.</b> 🌱</p>
       </div>
+
+      <div class="bowl-ritual">
+        <p class="hint">וכעת באמת: כתבו שכבה אחת שמכבידה — רגש, מחשבה, בעיה — <b>והשליכו אותה לקערה.</b></p>
+        <div class="bowl-line">
+          <input class="inp" id="w6probInput" maxlength="60" placeholder="כתבו כאן מה מכביד עליכם עכשיו...">
+          <button class="btn tossBtn" id="w6tossBtn">🕊️ להשליך לקערה</button>
+        </div>
+        <p class="bowl-affirm" id="w6bowlAffirm"></p>
+        <div class="bowl-stage" id="w6bowlStage">
+          <div class="bowl-wrap">
+            <div class="bowl-rim"></div>
+            <div class="bowl-body"><div class="bowl-rest" id="w6bowlRest"></div></div>
+          </div>
+        </div>
+      </div>
+
       <button class="btn" id="saveIdentity">סיימתי את התרגיל + טעינת האווטר</button>
     </div>`;
 }
+const BOWL_AFFIRM = [
+  "שכבה אחת פחות לשאת. נשמו.",
+  "הנחתם את זה בצד. יפה.",
+  "שימו לב — נהיה קליל יותר?",
+  "עוד משהו שמכביד? כתבו והשליכו.",
+  "אתם לא הבעיה. אתם מי שנשאר. 🌱",
+];
 
 // --- כתיבה חופשית 5 דקות + טיימר + תזכורת יומית ---
 function w6Write() {
@@ -2129,6 +2152,40 @@ function mountWeek6Handlers() {
     S.logActivity("exercise", "מי אני בלי הבעיה");
     celebrate(); toast("יפה — נזכרת במי שאתה 🌱");
   });
+
+  // טקס הקערה — כותבים בעיה ומשליכים אותה לקערה
+  const tossBtn = app.querySelector("#w6tossBtn");
+  if (tossBtn) {
+    let tossed = 0;
+    const doToss = () => {
+      const inp = app.querySelector("#w6probInput");
+      const v = (inp.value || "").trim();
+      if (!v) return toast("כתבו קודם מה מכביד");
+      const stage = app.querySelector("#w6bowlStage");
+      const note = document.createElement("div");
+      note.className = "paper-note flying";
+      note.textContent = v.length > 16 ? v.slice(0, 16) + "…" : v;
+      stage.appendChild(note);
+      setTimeout(() => {
+        note.remove();
+        const rest = app.querySelector("#w6bowlRest");
+        if (rest) {
+          const chip = document.createElement("span");
+          chip.className = "bowl-paper";
+          chip.style.transform = `rotate(${Math.round(Math.random() * 40 - 20)}deg)`;
+          rest.appendChild(chip);
+        }
+      }, 1050);
+      const aff = app.querySelector("#w6bowlAffirm");
+      if (aff) aff.textContent = BOWL_AFFIRM[Math.min(tossed, BOWL_AFFIRM.length - 1)];
+      tossed++;
+      inp.value = "";
+      S.logActivity("thought", "השלכת שכבה לקערה");
+    };
+    tossBtn.addEventListener("click", doToss);
+    const pi = app.querySelector("#w6probInput");
+    if (pi) pi.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); doToss(); } });
+  }
 
   app.querySelectorAll("[data-w6tab]").forEach(b =>
     b.addEventListener("click", () => { stopActiveTimer(); stashWeek6Drafts(); week6Tab = b.dataset.w6tab; renderChapter(6); }));
