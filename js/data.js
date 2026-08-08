@@ -199,6 +199,45 @@ export const DAILY_PRACTICES = [
 ];
 
 // ============================================================
+//  נגן נשימה מודרך — תבניות נשימה
+// ============================================================
+export const BREATH_PATTERNS = [
+  { id: "478",      name: "4-7-8 להרגעה",           phases: [["שאיפה", 4], ["החזקה", 7], ["נשיפה", 8]] },
+  { id: "box",      name: "נשימה מרובעת 4-4-4-4",   phases: [["שאיפה", 4], ["החזקה", 4], ["נשיפה", 4], ["החזקה", 4]] },
+  { id: "calm",     name: "רגועה 4-6",              phases: [["שאיפה", 4], ["נשיפה", 6]] },
+  { id: "coherent", name: "קוהרנטית 5-5",           phases: [["שאיפה", 5], ["נשיפה", 5]] },
+];
+
+// ============================================================
+//  מדליות והישגים — test(ctx) קובע אם נפתחה
+//  ctx = { total, streak, charge, stage, first, last, counts, weekDone(w) }
+// ============================================================
+export const BADGES = [
+  { id: "first-step",   icon: "👣", name: "צעד ראשון",        desc: "ביצעת את הפעולה הראשונה שלך",        test: c => c.total >= 1 },
+  { id: "streak-3",     icon: "🔥", name: "שלושה ברצף",       desc: "3 ימים רצופים של עבודה",             test: c => c.streak >= 3 },
+  { id: "streak-7",     icon: "🗓️", name: "שבוע שלם",         desc: "7 ימים רצופים",                     test: c => c.streak >= 7 },
+  { id: "streak-30",    icon: "🏅", name: "חודש של התמדה",    desc: "30 ימים רצופים",                    test: c => c.streak >= 30 },
+  { id: "acts-10",      icon: "⭐", name: "10 פעולות",         desc: "טענת את האווטר 10 פעמים",            test: c => c.total >= 10 },
+  { id: "acts-50",      icon: "🌟", name: "50 פעולות",         desc: "50 פעולות במסע",                    test: c => c.total >= 50 },
+  { id: "acts-100",     icon: "💫", name: "100 פעולות",        desc: "100 פעולות — מדהים",                 test: c => c.total >= 100 },
+  { id: "emotion-down", icon: "📉", name: "הרגש יורד",         desc: "עוצמת הרגש ירדה מתחילת המסע",        test: c => c.first != null && c.last != null && c.last < c.first },
+  { id: "meditator",    icon: "🎧", name: "חמש מדיטציות",      desc: "האזנת ל-5 מדיטציות",                 test: c => (c.counts.meditation || 0) >= 5 },
+  { id: "exposed",      icon: "🪜", name: "מתמודד עם פחד",     desc: "ביצעת 3 חשיפות",                     test: c => (c.counts.exposure || 0) >= 3 },
+  { id: "values-set",   icon: "🧭", name: "ערכים ברורים",      desc: "בחרת ודירגת את הערכים שלך",          test: c => (c.counts.values || 0) >= 1 },
+  { id: "half-charge",  icon: "🌤️", name: "חצי הדרך",         desc: "האווטר הגיע ל-50%",                  test: c => c.charge >= 50 },
+  { id: "full-charge",  icon: "☀️", name: "הנהגה עצמית",       desc: "האווטר מלא — 100%",                  test: c => c.charge >= 100 },
+  { id: "week-1", icon: "1️⃣", name: "שבוע 1 הושלם", desc: "כל משימות שבוע 1", test: c => c.weekDone(1) },
+  { id: "week-2", icon: "2️⃣", name: "שבוע 2 הושלם", desc: "כל משימות שבוע 2", test: c => c.weekDone(2) },
+  { id: "week-3", icon: "3️⃣", name: "שבוע 3 הושלם", desc: "כל משימות שבוע 3", test: c => c.weekDone(3) },
+  { id: "week-4", icon: "4️⃣", name: "שבוע 4 הושלם", desc: "כל משימות שבוע 4", test: c => c.weekDone(4) },
+  { id: "week-5", icon: "5️⃣", name: "שבוע 5 הושלם", desc: "כל משימות שבוע 5", test: c => c.weekDone(5) },
+  { id: "week-6", icon: "6️⃣", name: "שבוע 6 הושלם", desc: "כל משימות שבוע 6", test: c => c.weekDone(6) },
+  { id: "week-7", icon: "7️⃣", name: "שבוע 7 הושלם", desc: "כל משימות שבוע 7", test: c => c.weekDone(7) },
+  { id: "week-8", icon: "8️⃣", name: "שבוע 8 הושלם", desc: "כל משימות שבוע 8", test: c => c.weekDone(8) },
+  { id: "graduate",     icon: "🎓", name: "בוגר המסע",        desc: "סיימת את כל 8 השבועות",              test: c => [1,2,3,4,5,6,7,8].every(w => c.weekDone(w)) },
+];
+
+// ============================================================
 //  רגשות חלופיים מוצעים (רגש מקור → כיוון רצוי)
 // ============================================================
 export const EMOTION_ALTERNATIVES = {

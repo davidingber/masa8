@@ -6,7 +6,8 @@ import { COURSE, ACTIVITY_TYPES, EMOTION_ALTERNATIVES, ALT_EMOTION_POOL,
          WEEK4_SENSATIONS, INTEROCEPTIVE_EXPOSURES,
          DISTORTIONS, THOUGHT_TABLE_COLS,
          EXPOSURE_EMOTIONS, EXPOSURE_RULES, EXPOSURE_EXAMPLES, IMAGINAL_STEPS,
-         VALUES_SUGGESTIONS, COMMUNICATION_PRINCIPLES, ASSERTIVENESS_STEPS, DAILY_PRACTICES } from "./data.js";
+         VALUES_SUGGESTIONS, COMMUNICATION_PRINCIPLES, ASSERTIVENESS_STEPS, DAILY_PRACTICES,
+         BREATH_PATTERNS, BADGES } from "./data.js";
 import * as S from "./state.js";
 import { renderAvatar, avatarMessage } from "./avatar.js";
 import { askAI } from "./ai.js";
@@ -58,6 +59,18 @@ function render() {
   if (route === "library") return renderLibrary();
   if (route === "coach") return renderCoach();
   if (route === "settings") return renderSettings();
+  if (route === "achievements") return renderAchievements();
+}
+
+// ============================================================
+//  ערכת נושא (מצב כהה)
+// ============================================================
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+}
+function toggleTheme() {
+  const next = S.getTheme() === "dark" ? "light" : "dark";
+  S.setTheme(next); applyTheme(next); render();
 }
 
 // ============================================================
@@ -186,6 +199,8 @@ function renderHome() {
   const task = getNextTask();
   const prac = todaysPractice();
   const pracDone = practiceDoneToday(prac.name);
+  checkNewBadges();
+  const badgeCount = badgeSummary();
 
 
   app.innerHTML = `
@@ -194,6 +209,7 @@ function renderHome() {
         <div class="greeting">${hello}</div>
         <div class="subtle">${COURSE.subtitle}</div>
       </div>
+      <button class="icon-btn" id="themeToggle" title="מצב כהה / בהיר" aria-label="מצב כהה או בהיר">${S.getTheme() === "dark" ? "☀️" : "🌙"}</button>
     </header>
 
     <section class="card avatar-card">
@@ -227,6 +243,7 @@ function renderHome() {
         <div class="today-actions">
           ${pracDone ? `<span class="today-done">✓ בוצע היום — כל הכבוד</span>`
             : `<button class="btn" id="pracDone">עשיתי ✓</button>`}
+          ${prac.name.includes("נשימ") ? `<button class="btn ghost2" id="pracBreath">🫁 מודרך</button>` : ""}
         </div>
       </div>
     </section>
@@ -267,6 +284,8 @@ function renderHome() {
       <div class="sum-item"><b>${stt.total}</b><span>פעולות שטענו</span></div>
       <div class="sum-item"><b>${stage}/5</b><span>שלב האווטר</span></div>
     </section>
+
+    <button class="btn ghost2 achv-link" id="achvLink">🏅 ההישגים שלי · ${badgeCount.unlocked}/${badgeCount.total}</button>
   `;
 
   // מאזינים
@@ -289,6 +308,10 @@ function renderHome() {
     S.logActivity(p.logType, "תרגול יומי: " + p.name);
     celebrate(); renderHome();
   });
+  app.querySelector("#themeToggle").addEventListener("click", toggleTheme);
+  app.querySelector("#achvLink").addEventListener("click", () => go("achievements"));
+  const pb = app.querySelector("#pracBreath");
+  if (pb) pb.addEventListener("click", () => openBreathingPlayer({ patternId: "478" }));
 
   // חגיגה בעליית שלב אווטר (רק כשעולה בתוך המפגש, לא בטעינה ראשונה)
   if (lastAvatarStage !== null && stage > lastAvatarStage) celebrate();
@@ -319,6 +342,180 @@ function todaysPractice() {
 function practiceDoneToday(name) {
   const today = new Date().toISOString().slice(0, 10);
   return S.getState().activities.some(a => a.note === "תרגול יומי: " + name && a.date.slice(0, 10) === today);
+}
+
+// ============================================================
+//  מדליות והישגים
+// ============================================================
+function badgeCtx() {
+  const stt = S.stats();
+  const charge = S.computeCharge();
+  const ratings = S.getState().emotion.ratings;
+  return {
+    total: stt.total, streak: S.getStreak(), charge, stage: S.avatarStage(charge),
+    counts: stt.counts, first: ratings[0]?.value ?? null, last: ratings[ratings.length - 1]?.value ?? null,
+    weekDone: (w) => { const c = COURSE.chapters.find(x => x.week === w); return !!c && c.tasks.every((_, i) => S.isTaskDone(w, i)); },
+  };
+}
+function unlockedBadgeIds() {
+  const ctx = badgeCtx();
+  return BADGES.filter(bd => { try { return bd.test(ctx); } catch (e) { return false; } }).map(bd => bd.id);
+}
+function badgeSummary() {
+  return { unlocked: unlockedBadgeIds().length, total: BADGES.length };
+}
+// חוגג מדליות חדשות שנפתחו מאז הביקור הקודם (בלי להציף בטעינה הראשונה)
+function checkNewBadges() {
+  const unlocked = unlockedBadgeIds();
+  const seen = S.getBadgesSeen();
+  if (!seen.length) { S.setBadgesSeen(unlocked); return; } // בסיס ראשוני — לא חוגגים רטרואקטיבית
+  const fresh = unlocked.filter(id => !seen.includes(id));
+  if (fresh.length) {
+    S.setBadgesSeen(unlocked);
+    celebrate();
+    const bd = BADGES.find(b => b.id === fresh[0]);
+    if (bd) toast(`🏅 מדליה חדשה: ${bd.name}`);
+  }
+}
+
+function renderAchievements() {
+  const unlocked = new Set(unlockedBadgeIds());
+  const done = unlocked.size;
+  app.innerHTML = `
+    <header class="topbar chapter-head">
+      <button class="back-btn" id="back">›</button>
+      <div><div class="greeting">🏅 ההישגים שלי</div>
+        <div class="subtle">${done} מתוך ${BADGES.length} מדליות</div></div>
+    </header>
+
+    <section class="card">
+      <div class="charge-row">
+        <div class="charge-bar"><div class="charge-fill" style="width:${Math.round(done / BADGES.length * 100)}%"></div></div>
+        <div class="charge-num">${Math.round(done / BADGES.length * 100)}%</div>
+      </div>
+      <p class="subtle" style="text-align:center;margin-top:8px">כל פעולה אמיתית שאתה עושה פותחת מדליות. תמשיך לטעון את האווטר 🌱</p>
+    </section>
+
+    <div class="badge-grid">
+      ${BADGES.map(bd => {
+        const on = unlocked.has(bd.id);
+        return `<div class="badge ${on ? "on" : "locked"}">
+          <div class="badge-ico">${on ? bd.icon : "🔒"}</div>
+          <div class="badge-name">${esc(bd.name)}</div>
+          <div class="badge-desc">${esc(bd.desc)}</div>
+        </div>`;
+      }).join("")}
+    </div>
+
+    <div class="chapter-footer">
+      <button class="btn ghost2 back-all" id="backHome">↩ חזרה לבית</button>
+    </div>`;
+  app.querySelector("#back").addEventListener("click", () => go("home"));
+  app.querySelector("#backHome").addEventListener("click", () => go("home"));
+}
+
+// ============================================================
+//  נגן נשימה מודרך (אנימציה + אודיו אופציונלי)
+// ============================================================
+let breathState = null; // { patternId, running, cycles, timerId, audio, muted }
+
+function openBreathingPlayer(opts = {}) {
+  breathState = { patternId: opts.patternId || BREATH_PATTERNS[0].id, running: false, cycles: 0,
+    timerId: null, audioSrc: opts.audioSrc || "", audioName: opts.audioName || "", muted: false };
+  renderBreathingPlayer();
+}
+function closeBreathingPlayer() {
+  stopBreathing();
+  if (breathState?.audioEl) { breathState.audioEl.pause(); }
+  document.getElementById("breathOverlay")?.remove();
+  breathState = null;
+}
+function currentPattern() { return BREATH_PATTERNS.find(p => p.id === breathState.patternId) || BREATH_PATTERNS[0]; }
+
+function renderBreathingPlayer() {
+  let ov = document.getElementById("breathOverlay");
+  if (!ov) { ov = document.createElement("div"); ov.id = "breathOverlay"; ov.className = "breath-overlay"; document.body.appendChild(ov); }
+  const p = currentPattern();
+  ov.innerHTML = `
+    <button class="breath-close" id="breathClose" aria-label="סגירה">✕</button>
+    <div class="breath-picker">
+      ${BREATH_PATTERNS.map(x => `<button class="chip ${x.id === breathState.patternId ? "on" : ""}" data-bp="${x.id}">${x.name}</button>`).join("")}
+    </div>
+    <div class="breath-stage">
+      <div class="breath-circle" id="breathCircle"><span id="breathPhase">מוכן?</span></div>
+    </div>
+    <div class="breath-count">סבבים: <b id="breathCycles">${breathState.cycles}</b></div>
+    ${breathState.audioSrc ? `<audio id="breathAudio" src="${esc(breathState.audioSrc)}" controls loop style="width:100%;max-width:320px"></audio>` : ""}
+    <div class="breath-actions">
+      <button class="btn" id="breathToggle">${breathState.running ? "עצירה" : "התחלה ▶"}</button>
+      <button class="btn ghost2" id="breathMute">${breathState.muted ? "🔇 שקט" : "🔔 צליל"}</button>
+    </div>`;
+  ov.querySelector("#breathClose").addEventListener("click", closeBreathingPlayer);
+  ov.querySelectorAll("[data-bp]").forEach(b => b.addEventListener("click", () => {
+    stopBreathing(); breathState.patternId = b.dataset.bp; renderBreathingPlayer();
+  }));
+  ov.querySelector("#breathToggle").addEventListener("click", () => {
+    if (breathState.running) stopBreathing(); else startBreathing();
+  });
+  ov.querySelector("#breathMute").addEventListener("click", () => {
+    breathState.muted = !breathState.muted;
+    ov.querySelector("#breathMute").textContent = breathState.muted ? "🔇 שקט" : "🔔 צליל";
+  });
+}
+
+function breathChime(freq) {
+  if (breathState?.muted) return;
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    breathState.ac = breathState.ac || new AC();
+    const ac = breathState.ac, o = ac.createOscillator(), g = ac.createGain();
+    o.type = "sine"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.12, ac.currentTime + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.6);
+    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime + 0.62);
+  } catch (e) {}
+}
+
+function startBreathing() {
+  const p = currentPattern();
+  breathState.running = true;
+  renderBreathingPlayer();
+  const circle = document.getElementById("breathCircle");
+  const phaseEl = document.getElementById("breathPhase");
+  let pi = 0;
+  const runPhase = () => {
+    if (!breathState || !breathState.running) return;
+    const [label, secs] = p.phases[pi];
+    phaseEl.textContent = `${label} · ${secs}`;
+    circle.className = "breath-circle " + (label === "שאיפה" ? "inhale" : label === "נשיפה" ? "exhale" : "hold");
+    circle.style.transitionDuration = secs + "s";
+    breathChime(label === "שאיפה" ? 440 : label === "נשיפה" ? 330 : 392);
+    // ספירה לאחור בתוך השלב
+    let left = secs;
+    clearInterval(breathState.countId);
+    breathState.countId = setInterval(() => {
+      left--; if (left > 0 && phaseEl) phaseEl.textContent = `${label} · ${left}`;
+    }, 1000);
+    breathState.timerId = setTimeout(() => {
+      pi = (pi + 1) % p.phases.length;
+      if (pi === 0) { breathState.cycles++; const c = document.getElementById("breathCycles"); if (c) c.textContent = breathState.cycles; }
+      runPhase();
+    }, secs * 1000);
+  };
+  runPhase();
+}
+function stopBreathing() {
+  if (!breathState) return;
+  breathState.running = false;
+  clearTimeout(breathState.timerId); clearInterval(breathState.countId);
+  const circle = document.getElementById("breathCircle");
+  const phaseEl = document.getElementById("breathPhase");
+  if (circle) { circle.className = "breath-circle"; circle.style.transitionDuration = "0.6s"; }
+  if (phaseEl) phaseEl.textContent = breathState.cycles ? "יפה 🌿" : "מוכן?";
+  const tg = document.getElementById("breathToggle"); if (tg) tg.textContent = "התחלה ▶";
+  // רישום פעולה אם היו לפחות 2 סבבים
+  if (breathState.cycles >= 2 && !breathState.logged) { breathState.logged = true; S.logActivity("meditation", "נשימה מודרכת"); }
 }
 
 function editGoal() {
@@ -2766,6 +2963,14 @@ function renderSettings() {
     </section>
 
     <section class="card">
+      <h3>🎨 תצוגה</h3>
+      <label class="onb-check" style="justify-content:space-between">
+        <span>🌙 מצב כהה</span>
+        <input type="checkbox" id="setTheme" ${st.theme === "dark" ? "checked" : ""}>
+      </label>
+    </section>
+
+    <section class="card">
       <h3>🔑 מפתח Claude API</h3>
       <p class="subtle">להפעלת תשובות אמיתיות במאמן ה-AI. נשמר מקומית במכשיר בלבד.</p>
       <input id="setKey" class="inp" type="password" value="${esc(st.apiKey)}" placeholder="sk-ant-...">
@@ -2860,6 +3065,9 @@ function renderSettings() {
   `;
 
   app.querySelector("#setName").addEventListener("change", e => S.setName(e.target.value.trim()));
+  app.querySelector("#setTheme").addEventListener("change", e => {
+    const t = e.target.checked ? "dark" : "light"; S.setTheme(t); applyTheme(t); render();
+  });
   app.querySelector("#saveKey").addEventListener("click", () => {
     S.setApiKey(app.querySelector("#setKey").value.trim()); toast("המפתח נשמר");
   });
@@ -2971,6 +3179,12 @@ function renderLibrary() {
   app.innerHTML = `
     <header class="topbar"><div><div class="greeting">🎧 ספריית מדיטציות</div>
       <div class="subtle">לפי נושאים</div></div></header>
+
+    <section class="card breath-card">
+      <div class="card-head"><h3>🫁 נשימה מודרכת</h3></div>
+      <p class="subtle">תרגול נשימה עם אנימציה שמובילה אותך — שאיפה, החזקה, נשיפה. מרגיע את מערכת העצבים תוך דקות.</p>
+      <button class="btn" id="openBreath">פתיחת נגן הנשימה ▶</button>
+    </section>
     ${!lib.length ? `<div class="card"><p class="subtle">עדיין אין נושאים. אפשר להוסיף במסך הניהול.</p></div>` : ""}
     ${lib.map(t => `
       <section class="card">
@@ -2986,6 +3200,7 @@ function renderLibrary() {
       </section>`).join("")}
     ${lib.length && !hasAny ? `<p class="tools-note">הוסף מדיטציות לנושאים במסך הניהול ⚙️</p>` : ""}
   `;
+  app.querySelector("#openBreath").addEventListener("click", () => openBreathingPlayer());
   mountMedLog();
 }
 
@@ -3075,6 +3290,7 @@ function startTimeTracker() {
 //  אתחול
 // ============================================================
 window.addEventListener("state:changed", () => { /* עתידי: סנכרון */ });
+applyTheme(S.getTheme());
 startReminderLoop();
 startTimeTracker();
 render();

@@ -20,6 +20,8 @@ const DEFAULT_STATE = {
   chapterVideos: {},                  // { "1": "url" } סרטון הקלטה לכל פרק
   medLibrary: null,                   // ספריית מדיטציות לפי נושאים
   onboarded: false,                   // האם עבר את מסך הקליטה
+  theme: "light",                     // "light" | "dark"
+  badgesSeen: [],                     // מזהי מדליות שכבר נחגגו
   createdAt: null,
 };
 
@@ -81,6 +83,14 @@ export function save() {
 export function getState() {
   return state;
 }
+
+// ---- ערכת נושא ----
+export function getTheme() { return state.theme === "dark" ? "dark" : "light"; }
+export function setTheme(t) { state.theme = t === "dark" ? "dark" : "light"; save(); }
+
+// ---- מדליות שנחגגו ----
+export function getBadgesSeen() { return state.badgesSeen || (state.badgesSeen = []); }
+export function setBadgesSeen(ids) { state.badgesSeen = ids; save(); }
 
 // ---- קליטה (Onboarding) ----
 export function isOnboarded() {
