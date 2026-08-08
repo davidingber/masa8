@@ -7,6 +7,7 @@ const KEY = "masa8_state_v1";
 
 const DEFAULT_STATE = {
   name: "",
+  gender: "m",                        // "m" | "f" — להתאמת לשון הפנייה
   goal: "",
   emotion: { name: "", ratings: [] }, // ratings: [{date, value}]
   activities: [],                     // [{type, date, note}]
@@ -106,6 +107,10 @@ export function isOnboarded() {
   return !!(state.onboarded || state.name || state.activities.length || state.emotion?.ratings?.length);
 }
 export function setOnboarded() { state.onboarded = true; save(); }
+
+// ---- מגדר (לשון פנייה) ----
+export function getGender() { return state.gender === "f" ? "f" : "m"; }
+export function setGender(g) { state.gender = g === "f" ? "f" : "m"; save(); }
 
 // ---- מטרה ורגש ----
 export function setGoal(goal) { state.goal = goal; save(); }

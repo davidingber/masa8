@@ -20,6 +20,9 @@ const navEl = document.getElementById("nav");
 let route = "home";
 let routeParam = null;
 
+// לשון פנייה לפי מגדר: G("זכר","נקבה")
+function G(m, f) { return S.getGender() === "f" ? f : m; }
+
 function go(r, param = null) {
   // יציאה ממסך הניהול נועלת אותו מחדש (אם הוגדר קוד) — כניסה חוזרת תדרוש קוד
   if (r !== "settings" && route === "settings") adminUnlocked = false;
@@ -231,7 +234,7 @@ function toggleTheme() {
 //  מסך קליטה (Onboarding) — כניסה ראשונה
 // ============================================================
 let onbStep = 0;
-const onb = { name: "", emotion: "", otherMode: false, rating: 5, goal: "", breathDone: false, remind: false, remindTime: "09:00" };
+const onb = { name: "", gender: "m", emotion: "", otherMode: false, rating: 5, goal: "", breathDone: false, remind: false, remindTime: "09:00" };
 const ONB_EMOTIONS = ["חרדה", "פחד", "בושה", "כעס", "עצב", "אשמה", "בדידות"];
 const ONB_TOTAL = 1; // מסך כניסה מינימלי: שם + ברוך הבא בלבד
 
@@ -276,11 +279,16 @@ function renderOnboarding() {
   const emoOther = onb.otherMode || (!!onb.emotion && !ONB_EMOTIONS.includes(onb.emotion));
   if (onbStep === 0) body = `
     ${onbArt(0)}
-    <h2>ברוך הבא למסע 8 השבועות</h2>
+    <h2>${onb.gender === "f" ? "ברוכה הבאה" : "ברוך הבא"} למסע 8 השבועות</h2>
     <p class="onb-sub">מהישרדות פנימית להנהגה עצמית. נתחיל בהיכרות קצרה.</p>
     <label class="onb-label">איך קוראים לך?</label>
     <input class="inp" id="onbName" placeholder="השם שלך" value="${esc(onb.name)}">
-    <p class="onb-safety">כלי עזר ותמיכה — לא תחליף לטיפול מקצועי. במצוקה חריפה: ער״ן 1201 · חירום 101.</p>`;
+    <label class="onb-label">אני:</label>
+    <div class="chip-row">
+      <button class="chip ${onb.gender === "m" ? "on" : ""}" data-onbgender="m">זכר</button>
+      <button class="chip ${onb.gender === "f" ? "on" : ""}" data-onbgender="f">נקבה</button>
+    </div>
+    <p class="onb-safety">כלי עזר ותמיכה — לא ${onb.gender === "f" ? "תחליף" : "תחליף"} לטיפול מקצועי. במצוקה חריפה: ער״ן 1201 · חירום 101.</p>`;
   if (onbStep === 1) body = `
     ${onbArt(1)}
     <h2>איזה רגש הכי מלווה אותך?</h2>
@@ -320,7 +328,7 @@ function renderOnboarding() {
       <div class="onb-actions">
         ${onbStep > 0 ? `<button class="btn ghost2" id="onbBack">חזרה</button>` : ""}
         ${onbStep === 2 ? `<button class="btn ghost2" id="onbSkip">דלג</button>` : ""}
-        <button class="btn onb-next" id="onbNext">${isLast ? "סיום — בוא נתחיל 🚀" : "המשך"}</button>
+        <button class="btn onb-next" id="onbNext">${isLast ? "סיום — " + (onb.gender === "f" ? "בואי" : "בוא") + " נתחיל 🚀" : (onb.gender === "f" ? "המשיכי" : "המשך")}</button>
       </div>
     </div>`;
 
@@ -332,6 +340,9 @@ function renderOnboarding() {
     else { onb.otherMode = false; onb.emotion = b.dataset.onbemo; }
     renderOnboarding();
     if (onb.otherMode) app.querySelector("#onbEmotionOther")?.focus();
+  }));
+  app.querySelectorAll("[data-onbgender]").forEach(b => b.addEventListener("click", () => {
+    captureOnb(); onb.gender = b.dataset.onbgender; renderOnboarding();
   }));
   const breath = app.querySelector("#onbBreath");
   if (breath) breath.addEventListener("click", () => {
@@ -354,6 +365,7 @@ function onbNext() {
 }
 
 async function finishOnboarding() {
+  S.setGender(onb.gender);
   if (onb.name.trim()) S.setName(onb.name.trim());
   if (onb.emotion) { S.setEmotion(onb.emotion); S.logEmotionRating(onb.rating); }
   if (onb.goal.trim()) S.setGoal(onb.goal.trim());
@@ -378,7 +390,7 @@ function renderHome() {
   const charge = S.computeCharge();
   const stage = S.avatarStage(charge);
   const stt = S.stats();
-  const hello = st.name ? `שלום ${st.name} 👋` : "ברוך הבא למסע 👋";
+  const hello = st.name ? `שלום ${st.name} 👋` : `${G("ברוך הבא", "ברוכה הבאה")} למסע 👋`;
 
   const ratings = st.emotion.ratings;
   const first = ratings[0]?.value;
@@ -421,8 +433,8 @@ function renderHome() {
       <div class="card-head"><h3>🎯 המטרה שלי</h3>
         ${st.goal ? `<button class="link-btn" id="editGoal">עריכה</button>` : ""}</div>
       ${st.goal ? `<p class="goal-text">${esc(st.goal)}</p>`
-        : `<p class="subtle">הגדר מטרה מדויקת ומעצימה בעזרת מודל דיסני ו-NLP — שלב אחר שלב.</p>`}
-      <button class="btn" id="goalToolBtn">✍️ ${st.goal ? "פתיחת הגדרת המטרה" : "בוא נגדיר את המטרה"}</button>
+        : `<p class="subtle">${G("הגדר", "הגדרי")} מטרה מדויקת ומעצימה בעזרת מודל דיסני ו-NLP — שלב אחר שלב.</p>`}
+      <button class="btn" id="goalToolBtn">✍️ ${st.goal ? "פתיחת הגדרת המטרה" : (G("בוא", "בואי") + " נגדיר את המטרה")}</button>
     </section>
 
     ${st.emotion.name ? `
@@ -1050,21 +1062,21 @@ function w1Emotion() {
   const emoOther = week1EmoOther || (!!st.emotion.name && !emotions.includes(st.emotion.name));
   return `
     <div class="tool-block">
-      <h4>1. בחר רגש מרכזי שמלווה אותך</h4>
+      <h4>1. ${G("בחר", "בחרי")} רגש מרכזי שמלווה אותך</h4>
       <div class="chip-row">
         ${emotions.map(e => `<button class="chip ${st.emotion.name === e ? "on" : ""}" data-emotion="${e}">${e}</button>`).join("")}
         <button class="chip ${emoOther ? "on" : ""}" data-emotion="__other__">אחר…</button>
       </div>
       ${emoOther ? `<div class="other-emo-row">
-        <input class="inp" id="w1EmoOther" placeholder="כתוב את הרגש שלך..." value="${esc(emotions.includes(st.emotion.name) ? "" : (st.emotion.name || ""))}">
-        <button class="btn ghost2" id="w1EmoSave">שמור רגש</button></div>` : ""}
+        <input class="inp" id="w1EmoOther" placeholder="${G("כתוב", "כתבי")} את הרגש שלך..." value="${esc(emotions.includes(st.emotion.name) ? "" : (st.emotion.name || ""))}">
+        <button class="btn ghost2" id="w1EmoSave">שמירת הרגש</button></div>` : ""}
 
-      <h4>2. דרג את עוצמתו עכשיו (0–10) — נקודת מוצא למדידה</h4>
+      <h4>2. ${G("דרג", "דרגי")} את עוצמתו עכשיו (0–10) — נקודת מוצא למדידה</h4>
       <div class="rating-row">
         <input type="range" id="rate" min="0" max="10" value="${lastRating(st) ?? 5}" ${st.emotion.name ? "" : "disabled"}>
         <span class="rate-val" id="rateVal">${lastRating(st) ?? 5}</span>
       </div>
-      <button class="btn" id="logRate" ${st.emotion.name ? "" : "disabled"}>שמור דירוג</button>
+      <button class="btn" id="logRate" ${st.emotion.name ? "" : "disabled"}>שמירת הדירוג</button>
       ${st.emotion.ratings.length ? renderSparkline(st.emotion.ratings) : ""}
 
       <h4 style="margin-top:18px">3. הרגש החלופי — לאן אני רוצה להגיע?</h4>
@@ -3238,6 +3250,11 @@ function renderSettings() {
       <label class="field">שם המשתתף
         <input id="setName" class="inp" value="${esc(st.name)}" placeholder="שם">
       </label>
+      <label class="onb-label">לשון פנייה (מגדר)</label>
+      <div class="chip-row">
+        <button class="chip ${st.gender !== "f" ? "on" : ""}" data-setgender="m">זכר</button>
+        <button class="chip ${st.gender === "f" ? "on" : ""}" data-setgender="f">נקבה</button>
+      </div>
     </section>
 
     <section class="card">
@@ -3356,6 +3373,9 @@ function renderSettings() {
     toast("content.json ירד — העלה אותו לריפו ✓");
   });
   app.querySelector("#setName").addEventListener("change", e => S.setName(e.target.value.trim()));
+  app.querySelectorAll("[data-setgender]").forEach(b => b.addEventListener("click", () => {
+    S.setGender(b.dataset.setgender); renderSettings(); toast("לשון הפנייה עודכנה");
+  }));
   app.querySelector("#setTheme").addEventListener("change", e => {
     const t = e.target.checked ? "dark" : "light"; S.setTheme(t); applyTheme(t); render();
   });
@@ -3607,7 +3627,7 @@ function renderSOS() {
     body = `
       <div class="sos-emoji">🫂</div>
       <h2>רגע קשה? אני כאן איתך</h2>
-      <p class="sos-sub">אתה בטוח. מה שאתה מרגיש הוא גל — הוא יעלה ויחלוף. בוא נעבור אותו יחד, צעד אחד.</p>
+      <p class="sos-sub">${G("אתה בטוח", "את בטוחה")}. מה ש${G("אתה מרגיש", "את מרגישה")} הוא גל — הוא יעלה ויחלוף. ${G("בוא", "בואי")} נעבור אותו יחד, צעד אחד.</p>
       <div class="sos-menu">
         <button class="sos-item" data-sos="breath"><span>🫁</span> נשימה מרגיעה</button>
         <button class="sos-item" data-sos="ground"><span>🖐️</span> עיגון 5-4-3-2-1</button>
