@@ -1981,12 +1981,12 @@ function openThoughtPrint(rows) {
 // ============================================================
 //  שבוע 6 — דייט עם הדאגה, מדיטציות, תזכורת יומית
 // ============================================================
-let week6Tab = "write";
+let week6Tab = "identity";
 const W6_TABS = [
-  { id: "write",    label: "כתיבה 5 דק׳" },
+  { id: "identity", label: "מי אני בלי הבעיה" },
   { id: "guided",   label: "תהליך מודרך" },
   { id: "meds",     label: "מדיטציות" },
-  { id: "reminder", label: "תזכורת יומית" },
+  { id: "write",    label: "כתיבה 5 דק׳" },
 ];
 const WORRY_REMINDER = {
   title: "דייט עם הדאגה — 5 דקות",
@@ -1998,25 +1998,64 @@ function toolWeek6(c) {
   const tabs = `<div class="subtool-tabs">${W6_TABS.map(t =>
     `<button class="subtool-tab ${week6Tab === t.id ? "on" : ""}" data-w6tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body = "";
-  if (week6Tab === "write") body = w6Write();
+  if (week6Tab === "identity") body = w6Identity();
   if (week6Tab === "guided") body = w6Guided();
   if (week6Tab === "meds") body = w6Meds();
-  if (week6Tab === "reminder") body = w6Reminder();
+  if (week6Tab === "write") body = w6Write();
   return tabs + `<div id="w6body">${body}</div>`;
 }
 
-// --- כתיבה חופשית 5 דקות + טיימר ---
-function w6Write() {
+// --- מי אני בלי הבעיה — דמיון מודרך "להפשיט את הכאב" ---
+function w6Identity() {
   return `
     <div class="tool-block">
-      <p class="hint">אפשרות א׳ — פשוט לכתוב 5 דקות את כל מה שעולה, בלי לסנן. כמו הורה טוב שמקשיב לדאגה.</p>
+      <p class="hint">תרגיל דמיון מודרך — פורקים שכבה אחר שכבה של מה שמכביד, עד שנזכרים במי שאנחנו באמת, בלי הבעיה.</p>
+      <div class="identity-guide">
+        <h4>🌬️ להפשיט את הכאב</h4>
+        <p>שימו לב לרגש שאתם עובדים עליו — <b>איפה הוא נוכח בגוף?</b> וכעת דמיינו, כאילו אתם כותבים את הרגש הזה על דף,
+          מקפלים אותו, ומניחים אותו בצד לכמה שניות.</p>
+        <p>עכשיו בדקו: האם אתם מרגישים טוב בלי הבעיה? אם עדיין לא — <b>מה עוד נשאר?</b> שימו לב לרגש נוסף.
+          דמיינו שאתם מוציאים אותו, כותבים גם אותו על דף, מקפלים ומניחים בקערה דמיונית, רק לכמה רגעים.</p>
+        <p>ושוב בדקו: האם אתם מרגישים נפלא בלי הבעיה? אם עדיין לא — שימו לב לעוד רגש, אולי לתחושה כללית של סטרס.
+          דמיינו שאתם מוציאים אותה מהגוף, רושמים על הדף, מקפלים ומניחים בקערה.</p>
+        <p>וכך גם עם כעס, עצב או אכזבה — שכבה אחר שכבה — עד שאתם מרגישים <b>שאתם מרגישים מצוין בלי הבעיה.</b></p>
+        <p class="identity-close">בשעה טובה — הנה נזכרתם במי אתם, בלי הבעיה. <b>זה מי שאתם.</b> 🌱</p>
+      </div>
+      <button class="btn" id="saveIdentity">סיימתי את התרגיל + טעינת האווטר</button>
+    </div>`;
+}
+
+// --- כתיבה חופשית 5 דקות + טיימר + תזכורת יומית ---
+function w6Write() {
+  const st = S.getState();
+  return `
+    <div class="tool-block">
+      <p class="hint">שבו 5 דקות עם הדאגה — פשוט לכתוב כל מה שעולה, בלי לסנן. כמו הורה טוב שמקשיב לדאגה.</p>
       <div class="timer-display" id="writeTimer"><div class="timer-idle">5:00 — לחץ להתחלה</div></div>
       <div class="activation-actions">
         <button class="btn ghost2" id="writeStart">▶ התחל טיימר 5 דקות</button>
         <button class="btn ghost2 hidden" id="writeStop">עצור</button>
       </div>
-      <textarea class="ta big" id="freeWrite" placeholder="אני כאן, מה אתה מנסה להגיד לי?..."></textarea>
+      <textarea class="ta big" id="freeWrite" placeholder="אני כאן, מה אתם מנסים להגיד לי?..."></textarea>
       <button class="btn" id="saveWrite">שמירה + טעינת האווטר</button>
+
+      <div class="cal-connect" style="margin-top:18px">
+        <h4>🔔 רוצים תזכורת יומית לתרגול הזה?</h4>
+        <p class="hint">נכין אירוע יומי חוזר <b>למשך חודש</b> ביומן שלכם. אתם מאשרים בעצמכם את ההוספה — שום דבר לא נשלח.</p>
+        <div class="cal-time-row">
+          <label class="mini-label">שעה</label>
+          <input class="inp cal-time" id="worryTime" type="time" value="${esc(st.reminders.time || "20:00")}">
+        </div>
+        <div class="gcal-block">
+          <button class="btn ghost2" id="worryGoogle">📅 הוספה ליומן Google</button>
+        </div>
+        <div class="ics-block">
+          <div class="mini-label">📥 או קובץ ליומן (Outlook / Apple / iPhone):</div>
+          <input class="inp" id="worryEmail" type="email" dir="ltr"
+            placeholder="המייל שלך (לקובץ) — you@example.com" value="${esc(st.reminders.email || "")}">
+          <button class="btn ghost2" id="worryIcs">⬇ הורדת קובץ יומן (.ics)</button>
+        </div>
+      </div>
     </div>`;
 }
 
@@ -2083,33 +2122,14 @@ function w6Meds() {
     </div>`;
 }
 
-// --- תזכורת יומית ---
-function w6Reminder() {
-  const st = S.getState();
-  return `
-    <div class="tool-block">
-      <div class="cal-connect">
-        <h4>🔔 תזכורת יומית — דייט עם הדאגה (5 דק׳)</h4>
-        <p class="hint">נכין אירוע יומי חוזר <b>למשך חודש</b> ביומן שלך. אתה מאשר בעצמך את ההוספה;
-          שום דבר לא נשלח.</p>
-        <div class="cal-time-row">
-          <label class="mini-label">שעה</label>
-          <input class="inp cal-time" id="worryTime" type="time" value="${esc(st.reminders.time || "20:00")}">
-        </div>
-        <div class="gcal-block">
-          <button class="btn" id="worryGoogle">📅 הוספה ליומן Google</button>
-        </div>
-        <div class="ics-block">
-          <div class="mini-label">📥 או קובץ ליומן (Outlook / Apple / iPhone):</div>
-          <input class="inp" id="worryEmail" type="email" dir="ltr"
-            placeholder="המייל שלך (לקובץ) — you@example.com" value="${esc(st.reminders.email || "")}">
-          <button class="btn ghost2" id="worryIcs">⬇ הורדת קובץ יומן (.ics)</button>
-        </div>
-      </div>
-    </div>`;
-}
-
 function mountWeek6Handlers() {
+  // מי אני בלי הבעיה
+  const si = app.querySelector("#saveIdentity");
+  if (si) si.addEventListener("click", () => {
+    S.logActivity("exercise", "מי אני בלי הבעיה");
+    celebrate(); toast("יפה — נזכרת במי שאתה 🌱");
+  });
+
   app.querySelectorAll("[data-w6tab]").forEach(b =>
     b.addEventListener("click", () => { stopActiveTimer(); stashWeek6Drafts(); week6Tab = b.dataset.w6tab; renderChapter(6); }));
 

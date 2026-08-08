@@ -654,3 +654,11 @@ body{font-size:15.5px;line-height:1.5}
 .other-emo-row{display:flex;gap:8px;align-items:flex-start;margin:8px 0 4px}
 .other-emo-row .inp{margin-bottom:0;flex:1}
 .other-emo-row .btn{white-space:nowrap}
+
+/* מי אני בלי הבעיה — דמיון מודרך */
+.identity-guide{background:#eefaf6;border:1px solid #cdeee5;border-radius:14px;padding:16px 16px 6px;margin-bottom:12px}
+.identity-guide h4{color:var(--teal);margin-bottom:10px;font-size:15px}
+.identity-guide p{line-height:1.75;margin-bottom:12px}
+.identity-close{background:#fff;border:1px dashed var(--teal-2);border-radius:12px;padding:12px 14px;text-align:center}
+[data-theme="dark"] .identity-guide{background:#122a27;border-color:#1f4d45}
+[data-theme="dark"] .identity-close{background:#0f1e20}
