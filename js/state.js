@@ -29,7 +29,6 @@ const DEFAULT_STATE = {
 // ספריית מדיטציות ברירת מחדל (נושאים לדוגמה — ניתן לערוך)
 const DEFAULT_MED_LIBRARY = [
   { topic: "להירדם מהר", items: [] },
-  { topic: "להרגיע התקף חרדה", items: [] },
 ];
 
 // מפתח שבוע ISO (שנה-שבוע)
@@ -61,6 +60,8 @@ function load() {
       if (!merged.meditations.some(m => m.id === def.id)) merged.meditations.push(structuredClone(def));
     }
     if (!merged.medLibrary) merged.medLibrary = structuredClone(DEFAULT_MED_LIBRARY);
+    // הסרת נושא ברירת המחדל "להרגיע התקף חרדה" (ריק) אצל משתמשים קיימים
+    merged.medLibrary = merged.medLibrary.filter(t => !(t.topic === "להרגיע התקף חרדה" && (!t.items || t.items.length === 0)));
     // ניקוי הערת "קובץ זמני" ישנה מאימון אוטוגני (אצל משתמשים קיימים)
     const ag = merged.meditations.find(m => m.id === "autogenic");
     if (ag && ag.note && ag.note.includes("זמני")) ag.note = "";
