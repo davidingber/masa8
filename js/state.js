@@ -331,6 +331,17 @@ export function applyPublishedContent(c) {
     state.chapterVideos = Object.assign(state.chapterVideos || {}, c.chapterVideos);
     changed = true;
   }
+  if (c.externalTools && typeof c.externalTools === "object") {
+    state.externalTools = state.externalTools || {};
+    for (const [wk, tools] of Object.entries(c.externalTools)) {
+      if (!Array.isArray(tools)) continue;
+      state.externalTools[wk] = state.externalTools[wk] || [];
+      for (const t of tools) {
+        if (t && t.url && !state.externalTools[wk].some(x => x.url === t.url)) state.externalTools[wk].push({ ...t });
+      }
+    }
+    changed = true;
+  }
   if (changed) save();
   return changed;
 }
@@ -340,6 +351,7 @@ export function exportPublishedContent() {
     meditations: state.meditations || [],
     medLibrary: state.medLibrary || [],
     chapterVideos: state.chapterVideos || {},
+    externalTools: state.externalTools || {},
   }, null, 2);
 }
 

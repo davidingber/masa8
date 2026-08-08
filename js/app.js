@@ -965,10 +965,9 @@ function renderChapter(week) {
       <div id="toolMount">${renderTool(c)}</div>
     </section>
 
-    ${(ext.length || isManager()) ? `<section class="card">
+    ${ext.length ? `<section class="card">
       <div class="card-head"><h3>🔗 כלים דיגיטליים נוספים</h3></div>
-      ${ext.length ? ext.map(t => `<a class="ext-tool" href="${esc(t.url)}" target="_blank">↗ ${esc(t.name)}</a>`).join("")
-        : `<p class="subtle">כאן יתחברו הכלים שכבר בנית (תנועות עיניים ועוד) — לפי הפרק הרלוונטי. אפשר להוסיף במסך הניהול. (גלוי למנחה בלבד)</p>`}
+      ${ext.map(t => `<a class="ext-tool" href="${esc(t.url)}" target="_blank">↗ ${esc(t.name)}</a>`).join("")}
     </section>` : ""}
 
     <p class="tools-note">כלים בגישה זו: ${c.tools}</p>
