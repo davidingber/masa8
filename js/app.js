@@ -7,7 +7,7 @@ import { COURSE, ACTIVITY_TYPES, EMOTION_ALTERNATIVES, ALT_EMOTION_POOL,
          DISTORTIONS, THOUGHT_TABLE_COLS,
          EXPOSURE_EMOTIONS, EXPOSURE_RULES, EXPOSURE_EXAMPLES, IMAGINAL_STEPS,
          VALUES_SUGGESTIONS, COMMUNICATION_PRINCIPLES, ASSERTIVENESS_STEPS, DAILY_PRACTICES,
-         BREATH_PATTERNS, BADGES, CALMING_PHRASES, GROUNDING_STEPS, HOTLINES } from "./data.js";
+         BREATH_PATTERNS, BADGES, CALMING_PHRASES, GROUNDING_STEPS, HOTLINES, GOAL_TOOL } from "./data.js";
 import * as S from "./state.js";
 import { renderAvatar, avatarMessage } from "./avatar.js";
 import { askAI } from "./ai.js";
@@ -70,6 +70,118 @@ function render() {
   if (route === "coach") return renderCoach();
   if (route === "settings") return (S.getAdminPin() && !adminUnlocked) ? renderPinGate() : renderSettings();
   if (route === "achievements") return renderAchievements();
+  if (route === "goal") return renderGoalTool();
+}
+
+// ============================================================
+//  כלי הגדרת מטרה (מודל דיסני + NLP)
+// ============================================================
+function goalField(f, plan) {
+  const val = plan[f.key];
+  if (f.type === "rating") {
+    const v = val ?? 5;
+    return `<div class="goal-field"><label class="mini-label">${f.label}</label>
+      <div class="rating-row"><input type="range" min="1" max="10" class="goal-input" data-k="${f.key}" data-t="rating" value="${v}">
+      <span class="rate-val">${v}</span></div></div>`;
+  }
+  if (f.type === "checks") {
+    return `<div class="goal-field"><label class="mini-label">${f.label}</label>
+      <div class="chip-row">${f.options.map(o =>
+        `<label class="check-chip"><input type="checkbox" class="goal-check" data-k="${f.key}" value="${esc(o)}" ${Array.isArray(val) && val.includes(o) ? "checked" : ""}> ${esc(o)}</label>`).join("")}</div></div>`;
+  }
+  if (f.type === "anchor") {
+    return `<div class="goal-anchor"><p>${f.label}</p>
+      <button class="btn ghost2" id="goalBreath">🫁 נשימה מודרכת</button></div>`;
+  }
+  if (f.type === "text") {
+    return `<div class="goal-field"><label class="mini-label">${f.label}</label>
+      <input class="inp goal-input" data-k="${f.key}" data-t="text" value="${esc(val || "")}" placeholder="${esc(f.ph || "")}"></div>`;
+  }
+  return `<div class="goal-field"><label class="mini-label">${f.label}</label>
+    <textarea class="ta goal-input" data-k="${f.key}" data-t="area" placeholder="${esc(f.ph || "")}">${esc(val || "")}</textarea></div>`;
+}
+
+function renderGoalTool() {
+  const plan = S.getGoalPlan();
+  app.innerHTML = `
+    <header class="topbar chapter-head">
+      <button class="back-btn" id="back">›</button>
+      <div><div class="greeting">🎯 הגדרת המטרה</div><div class="subtle">מודל דיסני · NLP</div></div>
+    </header>
+    <section class="card"><p class="hint">${GOAL_TOOL.intro}</p></section>
+    ${GOAL_TOOL.sections.map((s, si) => `
+      <section class="card goal-section">
+        <h3>${si + 1}. ${esc(s.title)}</h3>
+        ${s.note ? `<p class="subtle goal-note">${esc(s.note)}</p>` : ""}
+        ${s.fields.map(f => goalField(f, plan)).join("")}
+      </section>`).join("")}
+    <div class="activation-actions">
+      <button class="btn" id="saveGoal">שמירת המטרה</button>
+      <button class="btn ghost2" id="pdfGoal">⬇ הורדת המטרה כ-PDF</button>
+    </div>
+    <div class="chapter-footer"><button class="btn ghost2 back-all" id="backHome">↩ חזרה לבית</button></div>`;
+
+  app.querySelector("#back").addEventListener("click", () => go("home"));
+  app.querySelector("#backHome").addEventListener("click", () => go("home"));
+  app.querySelectorAll("input[type=range].goal-input").forEach(r =>
+    r.addEventListener("input", () => r.nextElementSibling.textContent = r.value));
+  const gb = app.querySelector("#goalBreath");
+  if (gb) gb.addEventListener("click", () => openBreathingPlayer({ patternId: "478" }));
+  app.querySelector("#saveGoal").addEventListener("click", () => {
+    const p = collectGoal(); S.setGoalPlan(p);
+    if (p.goal_precise) S.setGoal(p.goal_precise);
+    S.logActivity("exercise", "הגדרת מטרה"); celebrate();
+    toast("המטרה נשמרה ✓");
+  });
+  app.querySelector("#pdfGoal").addEventListener("click", () => { const p = collectGoal(); S.setGoalPlan(p); openGoalPrint(p); });
+}
+
+function collectGoal() {
+  const plan = {};
+  app.querySelectorAll(".goal-input").forEach(el => {
+    plan[el.dataset.k] = el.dataset.t === "rating" ? Number(el.value) : el.value.trim();
+  });
+  app.querySelectorAll(".goal-check").forEach(c => {
+    plan[c.dataset.k] = plan[c.dataset.k] || [];
+    if (c.checked) plan[c.dataset.k].push(c.value);
+  });
+  return plan;
+}
+
+function openGoalPrint(plan) {
+  const st = S.getState();
+  const today = new Date().toLocaleDateString("he-IL");
+  const body = GOAL_TOOL.sections.map(s => {
+    const items = s.fields.filter(f => f.type !== "anchor").map(f => {
+      let a = plan[f.key];
+      if (Array.isArray(a)) a = a.join(", ");
+      if (f.type === "rating" && a) a = a + "/10";
+      return `<div class="q"><div class="ql">${esc(f.label)}</div><div class="qa">${esc(a || "").replace(/\n/g, "<br>") || "&nbsp;"}</div></div>`;
+    }).join("");
+    return `<h2>${esc(s.title)}</h2>${items}`;
+  }).join("");
+  const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
+    <title>הגדרת המטרה — מסע 8 השבועות</title>
+    <style>
+      body{font-family:'Segoe UI',Arial,sans-serif;color:#20353a;padding:30px;max-width:760px;margin:auto}
+      h1{color:#0f766e;margin:0 0 2px} .sub{color:#6a8189;margin:0 0 16px;font-size:13px}
+      h2{color:#0f766e;font-size:16px;margin:20px 0 8px;border-bottom:2px solid #cfe0dc;padding-bottom:4px}
+      .q{margin-bottom:12px} .ql{font-weight:700;font-size:13.5px;margin-bottom:4px}
+      .qa{border:1px solid #cfe0dc;border-radius:8px;padding:9px 11px;min-height:34px;font-size:14px;background:#fbfdfc;line-height:1.5}
+      .meta{display:flex;gap:24px;color:#6a8189;font-size:13px;margin-bottom:14px}
+      .btn{background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:15px;cursor:pointer;margin-top:18px}
+      @media print{.noprint{display:none}}
+    </style></head><body>
+    <h1>הגדרת המטרה</h1>
+    <p class="sub">מסע 8 השבועות · מודל דיסני ו-NLP</p>
+    <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
+    ${body}
+    <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
+    <script>setTimeout(()=>window.print(),400)<\/script>
+    </body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) { toast("אפשר חלונות קופצים כדי להוריד"); return; }
+  w.document.write(html); w.document.close();
 }
 
 // שער קוד מנחה — מוצג כשמסך הניהול נעול
@@ -293,6 +405,14 @@ function renderHome() {
       <button class="btn share-btn" id="shareProgress">📤 שיתוף ההתקדמות שלי</button>
     </section>
 
+    <section class="card goal-card">
+      <div class="card-head"><h3>🎯 המטרה שלי</h3>
+        ${st.goal ? `<button class="link-btn" id="editGoal">עריכה</button>` : ""}</div>
+      ${st.goal ? `<p class="goal-text">${esc(st.goal)}</p>`
+        : `<p class="subtle">הגדר מטרה מדויקת ומעצימה בעזרת מודל דיסני ו-NLP — שלב אחר שלב.</p>`}
+      <button class="btn" id="goalToolBtn">✍️ ${st.goal ? "פתיחת הגדרת המטרה" : "בוא נגדיר את המטרה"}</button>
+    </section>
+
     ${st.emotion.name ? `
     <section class="card checkin-card">
       <div class="card-head"><h3>🌡️ צ'ק-אין יומי</h3>
@@ -344,12 +464,6 @@ function renderHome() {
     </section>
 
     <section class="card">
-      <div class="card-head"><h3>🎯 המטרה שלי למסע</h3>
-        <button class="link-btn" id="editGoal">${st.goal ? "עריכה" : "הוספה"}</button></div>
-      <p class="goal-text">${st.goal ? esc(st.goal) : "עוד לא הגדרת מטרה. לחץ להוספה — או בקש עזרה מהמאמן."}</p>
-    </section>
-
-    <section class="card">
       <div class="card-head"><h3>💗 הרגש שאני עובד עליו</h3></div>
       ${st.emotion.name ? `
         <div class="emotion-row">
@@ -372,7 +486,9 @@ function renderHome() {
   `;
 
   // מאזינים
-  app.querySelector("#editGoal").addEventListener("click", editGoal);
+  const eg = app.querySelector("#editGoal");
+  if (eg) eg.addEventListener("click", () => go("goal"));
+  app.querySelector("#goalToolBtn").addEventListener("click", () => go("goal"));
   app.querySelector("#shareProgress").addEventListener("click", shareProgress);
   app.querySelectorAll("[data-qa]").forEach(el =>
     el.addEventListener("click", () => { const [r, p] = QA_NAV[el.dataset.qa]; go(r, p); }));

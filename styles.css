@@ -635,3 +635,17 @@ body{font-size:15.5px;line-height:1.5}
 @media (prefers-reduced-motion:reduce){
   .onb-art svg,.streak-chip{animation:none}
 }
+
+/* ============ כלי הגדרת מטרה ============ */
+.goal-note{line-height:1.6;margin-bottom:12px}
+.goal-field{margin-bottom:12px}
+.goal-field .mini-label{display:block;font-weight:700;font-size:13.5px;margin-bottom:6px;line-height:1.5}
+.goal-field .ta{min-height:64px}
+.goal-section h3{font-size:16px}
+.check-chip{display:inline-flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--line);
+  border-radius:99px;padding:8px 13px;font-size:13.5px;font-weight:600;cursor:pointer}
+.check-chip input{width:17px;height:17px;accent-color:var(--teal)}
+.goal-anchor{background:#eefaf6;border:1px solid #cdeee5;border-radius:14px;padding:14px 16px;line-height:1.6}
+.goal-anchor p{margin-bottom:10px}
+[data-theme="dark"] .goal-anchor{background:#122a27;border-color:#1f4d45}
+.goal-card .btn{margin-top:10px;width:100%}

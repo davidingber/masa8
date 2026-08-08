@@ -106,6 +106,8 @@ export function setOnboarded() { state.onboarded = true; save(); }
 // ---- מטרה ורגש ----
 export function setGoal(goal) { state.goal = goal; save(); }
 export function setName(name) { state.name = name; save(); }
+export function getGoalPlan() { return state.goalPlan || (state.goalPlan = {}); }
+export function setGoalPlan(plan) { state.goalPlan = plan; save(); }
 
 export function setEmotion(name) {
   if (state.emotion.name !== name) {
