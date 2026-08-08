@@ -21,6 +21,8 @@ let route = "home";
 let routeParam = null;
 
 function go(r, param = null) {
+  // יציאה ממסך הניהול נועלת אותו מחדש (אם הוגדר קוד) — כניסה חוזרת תדרוש קוד
+  if (r !== "settings" && route === "settings") adminUnlocked = false;
   route = r; routeParam = param;
   window.scrollTo(0, 0);
   render();
@@ -3344,7 +3346,7 @@ function renderSettings() {
   app.querySelector("#savePin").addEventListener("click", () => {
     S.setAdminPin(app.querySelector("#setPin").value);
     adminUnlocked = true;
-    toast(S.getAdminPin() ? "הקוד נשמר — הניהול נעול 🔒" : "הנעילה בוטלה");
+    toast(S.getAdminPin() ? "הקוד נשמר 🔒 — ביציאה מהניהול הוא יינעל, וכניסה חוזרת תדרוש קוד" : "הנעילה בוטלה");
   });
   app.querySelector("#publishContent").addEventListener("click", () => {
     const url = URL.createObjectURL(new Blob([S.exportPublishedContent()], { type: "application/json" }));
