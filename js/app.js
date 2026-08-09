@@ -2019,7 +2019,6 @@ function w6Identity() {
         <p>ושוב בדקו: האם אתם מרגישים נפלא בלי הבעיה? אם עדיין לא — שימו לב לעוד רגש, אולי לתחושה כללית של סטרס.
           דמיינו שאתם מוציאים אותה מהגוף, רושמים על הדף, מקפלים ומניחים בקערה.</p>
         <p>וכך גם עם כעס, עצב או אכזבה — שכבה אחר שכבה — עד שאתם מרגישים <b>שאתם מרגישים מצוין בלי הבעיה.</b></p>
-        <p class="identity-close">בשעה טובה — הנה נזכרתם במי אתם, בלי הבעיה. <b>זה מי שאתם.</b> 🌱</p>
       </div>
 
       <div class="bowl-ritual">
@@ -2035,6 +2034,23 @@ function w6Identity() {
             <div class="bowl-body"><div class="bowl-rest" id="w6bowlRest"></div></div>
           </div>
         </div>
+
+        <div class="heal-avatar-wrap">
+          <div class="heal-avatar" id="w6avatar">
+            <svg viewBox="0 0 120 155" aria-hidden="true">
+              <ellipse class="ha-glow" cx="60" cy="74" rx="52" ry="55" fill="#9fe0cf"></ellipse>
+              <g class="ha-fig">
+                <path class="ha-body" d="M40 140 C40 100 45 82 60 82 C75 82 80 100 80 140 Z" fill="#3bb3a0"></path>
+                <circle class="ha-head" cx="60" cy="46" r="21" fill="#f4c9a8"></circle>
+                <circle class="ha-eye" cx="52" cy="44" r="2.6"></circle>
+                <circle class="ha-eye" cx="68" cy="44" r="2.6"></circle>
+                <path class="ha-mouth-sad" d="M51 57 Q60 51 69 57"></path>
+                <path class="ha-mouth-happy" d="M51 52 Q60 60 69 52"></path>
+              </g>
+            </svg>
+          </div>
+          <p class="identity-close">בשעה טובה — הנה נזכרתם במי אתם, בלי הבעיה. <b>זה מי שאתם.</b> 🌱</p>
+        </div>
       </div>
 
       <button class="btn" id="saveIdentity">סיימתי את התרגיל + טעינת האווטר</button>
@@ -2047,6 +2063,24 @@ const BOWL_AFFIRM = [
   "עוד משהו שמכביד? כתבו והשליכו.",
   "אתם לא הבעיה. אתם מי שנשאר. 🌱",
 ];
+// אווטר שמתיישר, מאיר ומתמלא רוגע ככל שמשליכים כאב לקערה (0 = כפוף/עצוב, 4 = זקוף/שמח)
+function w6HealAvatar(count) {
+  const wrap = app.querySelector("#w6avatar");
+  if (!wrap) return;
+  const s = Math.max(0, Math.min(4, count));
+  const fig = wrap.querySelector(".ha-fig");
+  const glow = wrap.querySelector(".ha-glow");
+  const sad = wrap.querySelector(".ha-mouth-sad");
+  const happy = wrap.querySelector(".ha-mouth-happy");
+  if (fig) {
+    fig.style.transform = `translateY(${(6 - 1.5 * s).toFixed(1)}px) rotate(${(-5 + 1.25 * s).toFixed(2)}deg) scale(${(0.86 + 0.035 * s).toFixed(3)})`;
+    fig.style.filter = `grayscale(${(0.55 * (1 - s / 4)).toFixed(2)}) saturate(${(0.7 + 0.3 * (s / 4)).toFixed(2)}) brightness(${(0.95 + 0.05 * (s / 4)).toFixed(3)})`;
+  }
+  if (glow) { glow.style.opacity = (0.06 + 0.12 * s).toFixed(2); glow.style.transform = `scale(${(0.7 + 0.09 * s).toFixed(2)})`; }
+  const happyOn = s >= 2;
+  if (sad) sad.style.opacity = happyOn ? "0" : "1";
+  if (happy) happy.style.opacity = happyOn ? "1" : "0";
+}
 
 // --- כתיבה חופשית 5 דקות + טיימר + תזכורת יומית ---
 function w6Write() {
@@ -2180,12 +2214,14 @@ function mountWeek6Handlers() {
       const aff = app.querySelector("#w6bowlAffirm");
       if (aff) aff.textContent = BOWL_AFFIRM[Math.min(tossed, BOWL_AFFIRM.length - 1)];
       tossed++;
+      w6HealAvatar(tossed);
       inp.value = "";
       S.logActivity("thought", "השלכת שכבה לקערה");
     };
     tossBtn.addEventListener("click", doToss);
     const pi = app.querySelector("#w6probInput");
     if (pi) pi.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); doToss(); } });
+    w6HealAvatar(0); // מצב פתיחה — כפוף ומעט עצוב
   }
 
   app.querySelectorAll("[data-w6tab]").forEach(b =>
