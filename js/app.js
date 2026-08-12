@@ -3,11 +3,12 @@
 // ============================================================
 import { COURSE, ACTIVITY_TYPES, EMOTION_ALTERNATIVES, ALT_EMOTION_POOL,
          PLEASANT_ACTIVITIES, WEEK_DAYS, CYCLE_STAGES, NLP_REFRAME_STEPS,
-         WEEK4_SENSATIONS, INTEROCEPTIVE_EXPOSURES,
+         WEEK4_SENSATIONS, INTEROCEPTIVE_EXPOSURES, INTERO_LEVELS, INTERO_DISCLAIMER, INTERO_ACK_LABEL,
          DISTORTIONS, THOUGHT_TABLE_COLS,
          EXPOSURE_EMOTIONS, EXPOSURE_RULES, EXPOSURE_EXAMPLES, IMAGINAL_STEPS,
          VALUES_SUGGESTIONS, COMMUNICATION_PRINCIPLES, ASSERTIVENESS_STEPS, DAILY_PRACTICES,
-         BREATH_PATTERNS, BADGES, CALMING_PHRASES, GROUNDING_STEPS, HOTLINES, GOAL_TOOL } from "./data.js";
+         BREATH_PATTERNS, BADGES, CALMING_PHRASES, GROUNDING_STEPS, HOTLINES, GOAL_TOOL,
+         CENTRAL_QUESTION, WEEK_FRAMING, METHODS_SUBTEXT } from "./data.js";
 import * as S from "./state.js";
 import { renderAvatar, avatarMessage } from "./avatar.js";
 import { askAI } from "./ai.js";
@@ -420,11 +421,13 @@ function renderHome() {
     <section class="card avatar-card">
       ${streak > 0 ? `<div class="streak-chip" title="ימים רצופים של עבודה">🔥 ${streak} ${streak === 1 ? "יום" : "ימים"} ברצף</div>` : ""}
       <div class="avatar-wrap">${renderAvatar(charge)}</div>
+      <div class="leader-label">🏠 המנהיג הפנימי שלי</div>
       <div class="charge-row">
         <div class="charge-bar"><div class="charge-fill" style="width:${charge}%"></div></div>
         <div class="charge-num">${charge}%</div>
       </div>
       <p class="avatar-msg">${avatarMessage(stage)}</p>
+      <p class="leader-hint">מתחזק בכל פעם שאני בוחר להנהיג — לא כשהפחד נעלם.</p>
       <div class="work-clock" title="זמן העבודה שלך השבוע">⏱️ זמן עבודה השבוע: <b id="workClock">${fmtHM(S.getWeekWorkTime())}</b></div>
       <button class="btn share-btn" id="shareProgress">📤 שיתוף ההתקדמות שלי</button>
     </section>
@@ -584,9 +587,19 @@ function badgeCtx() {
   const stt = S.stats();
   const charge = S.computeCharge();
   const ratings = S.getState().emotion.ratings;
+  const acts = S.getState().activities || [];
+  const has = (re) => acts.filter(a => re.test(a.note || "")).length;
+  // מדדי הנהגה — נספרים לפי מה שהאדם בחר לעשות, לא לפי ירידת רגש
+  const lead = {
+    stay:   has(/נשאר|להישאר|תוך-גופנית|הישארות|עוד 20 שניות/) ,
+    fear:   (stt.counts.exposure || 0) + has(/למרות פחד|לוקח את הפחד|לקחתי את הפחד/),
+    safety: has(/התנהגות ביטחון|התנהגות הצלה|ויתור על|ויתרתי/),
+    value:  (stt.counts.values || 0) + has(/מבוססת ערך|בחירת ערך|מתוך ערכים/),
+    meet:   has(/בלי להילחם|מי אני בלי הבעיה|חמלה|פגשתי רגש|הצורך שמתחת/),
+  };
   return {
     total: stt.total, streak: S.getStreak(), charge, stage: S.avatarStage(charge),
-    counts: stt.counts, first: ratings[0]?.value ?? null, last: ratings[ratings.length - 1]?.value ?? null,
+    counts: stt.counts, lead, first: ratings[0]?.value ?? null, last: ratings[ratings.length - 1]?.value ?? null,
     weekDone: (w) => { const c = COURSE.chapters.find(x => x.week === w); return !!c && c.tasks.every((_, i) => S.isTaskDone(w, i)); },
   };
 }
@@ -626,7 +639,7 @@ function renderAchievements() {
         <div class="charge-bar"><div class="charge-fill" style="width:${Math.round(done / BADGES.length * 100)}%"></div></div>
         <div class="charge-num">${Math.round(done / BADGES.length * 100)}%</div>
       </div>
-      <p class="subtle" style="text-align:center;margin-top:8px">כל פעולה אמיתית שאתה עושה פותחת מדליות. תמשיך לטעון את האווטר 🌱</p>
+      <p class="subtle" style="text-align:center;margin-top:8px">כל פעם שאתה בוחר להנהיג במקום להישלט על-ידי ההגנה — המנהיג הפנימי מתחזק 🌱</p>
     </section>
 
     <div class="badge-grid">
@@ -904,13 +917,19 @@ async function shareProgress() {
 function renderChapters() {
   app.innerHTML = `
     <header class="topbar"><div><div class="greeting">🗺️ מפת המסע</div>
-      <div class="subtle">שמונה שבועות, שמונה זהויות</div></div></header>
+      <div class="subtle">שמונה שבועות של הנהגה עצמית</div></div></header>
+    <section class="card central-q-card">
+      <div class="central-q-label">השאלה שמלווה את כל המסע</div>
+      <div class="central-q-text">${CENTRAL_QUESTION}</div>
+      <div class="central-q-sub">בכל שבוע אני מתאמן להיות המבוגר המיטיב שמנהיג את מה שקורה בתוכי.</div>
+    </section>
     <div class="chapters-list">
       ${COURSE.chapters.map(c => {
         const done = tasksDoneCount(c);
         const total = c.tasks.length;
         const pct = Math.round(done / total * 100);
         const live = c.week === 1;
+        const fr = WEEK_FRAMING[c.week];
         return `
         <button class="chapter-item" data-week="${c.week}">
           <div class="ch-icon">${c.icon}</div>
@@ -920,7 +939,7 @@ function renderChapters() {
               ${live ? '<span class="badge-live">כלי פעיל</span>' : ''}
             </div>
             <div class="ch-title">${c.title}</div>
-            <div class="ch-shift">${c.shift.from} ← ${c.shift.to}</div>
+            ${fr ? `<div class="ch-flag">🚩 "${fr.flag}"</div>` : ""}
             <div class="ch-progress"><div style="width:${pct}%"></div></div>
           </div>
           <div class="ch-arrow">‹</div>
@@ -948,6 +967,7 @@ function tasksDoneCount(c) {
 // ============================================================
 function renderChapter(week) {
   const c = COURSE.chapters.find(x => x.week === week);
+  const fr = WEEK_FRAMING[week];
   const ext = S.getState().externalTools[String(week)] || [];
   const video = S.getChapterVideo(week);
 
@@ -958,9 +978,18 @@ function renderChapter(week) {
         <div class="subtle">${c.title}</div></div>
     </header>
 
+    ${fr ? `<section class="card benefit-card">
+      <p class="benefit-line">${fr.benefit}</p>
+      <div class="flag-moment">
+        <div class="flag-label">🚩 רגע הדגל של השבוע</div>
+        <div class="flag-text">"${fr.flag}"</div>
+      </div>
+    </section>` : ""}
+
     ${video ? `<section class="card video-card"><h3>🎥 הקלטת השבוע</h3>${videoEmbed(video)}</section>` : ""}
 
     <section class="card shift-card">
+      ${fr ? `<div class="lead-line">🏠 השבוע אני מתאמן להיות המבוגר המיטיב:<br><b>${fr.lead}</b></div>` : ""}
       <div class="shift-from">${c.shift.from}</div>
       <div class="shift-arrow">↓</div>
       <div class="shift-to">${c.shift.to}</div>
@@ -992,7 +1021,7 @@ function renderChapter(week) {
       ${ext.map(t => `<a class="ext-tool" href="${esc(t.url)}" target="_blank">↗ ${esc(t.name)}</a>`).join("")}
     </section>` : ""}
 
-    <p class="tools-note">כלים בגישה זו: ${c.tools}</p>
+    <p class="tools-note">${METHODS_SUBTEXT}</p>
 
     <div class="chapter-footer">
       <button class="btn ghost2 back-all" id="backAll">↩ חזרה לכל הפרקים</button>
@@ -1602,24 +1631,45 @@ function w4Exposure() {
     </div>`;
 }
 
-// --- תת-כלי 3: טבלת חשיפות פנימיות (ניתנת לעריכה) ---
+// --- תת-כלי 3: טבלת חשיפות פנימיות (ניתנת לעריכה, מדורגת ל-3 רמות, עם שער בטיחות) ---
+const W4_TABLE_COLS = [
+  { key: "sensation", label: "תחושה", w: "22%" },
+  { key: "exercise", label: "תרגיל", w: "24%" },
+  { key: "duration", label: "משך", w: "12%" },
+  { key: "guidance", label: "הנחיה / ויסות", w: "34%" },
+];
+
 function w4Table() {
+  const disclaimerBox = `<div class="warn-note intero-disclaimer">⚠️ ${esc(INTERO_DISCLAIMER)}</div>`;
+  // שער בטיחות — עד לאישור רפואי, התרגילים לא נפתחים
+  if (!S.getToolData(7, "interoAck")) {
+    return `
+      <div class="tool-block">
+        <p class="hint">חשיפות פנימיות — כל תרגיל מעורר תחושה גופנית בכוונה, כדי להתאמן להישאר איתה עד שהיא יורדת בעצמה.</p>
+        ${disclaimerBox}
+        <label class="rung-check intero-ack"><input type="checkbox" id="interoAck"> ${esc(INTERO_ACK_LABEL)}</label>
+        <p class="hint">לאחר האישור ייפתחו התרגילים, מחולקים ל-3 רמות עצימות — מהעדין אל המעורר.</p>
+      </div>`;
+  }
   const rows = S.getToolData(4, "exposures") || structuredClone(INTEROCEPTIVE_EXPOSURES);
-  const cols = [
-    { key: "sensation", label: "תחושה", w: "22%" },
-    { key: "exercise", label: "תרגיל", w: "26%" },
-    { key: "duration", label: "משך", w: "14%" },
-    { key: "guidance", label: "הנחיה / ויסות", w: "38%" },
-  ];
+  const cols = W4_TABLE_COLS;
+  // מיון והצגה לפי רמה, עם כותרות קבוצה (ברירת מחדל רמה 2 לשורות ישנות)
+  const sorted = rows.map((r, idx) => ({ r, idx })).sort((a, b) => (Number(a.r.level) || 2) - (Number(b.r.level) || 2));
+  let lastLevel = null;
+  const rowsHtml = sorted.map((o, pos) => {
+    const lvl = Number(o.r.level) || 2;
+    let header = "";
+    if (lvl !== lastLevel) { lastLevel = lvl; header = `<div class="exp-group lvl-${lvl}">${INTERO_LEVELS[lvl] || ("רמה " + lvl)}</div>`; }
+    return header + expRow(o.r, pos, cols);
+  }).join("");
   return `
     <div class="tool-block">
-      <p class="hint">חשיפות פנימיות — כל תרגיל מעורר תחושה גופנית, ואנחנו מתרגלים להישאר איתה עד שהיא יורדת.
-        אפשר לערוך, להוסיף ולמחוק שורות.</p>
+      <p class="hint">חשיפות פנימיות — כל תרגיל מעורר תחושה גופנית, ואנחנו מתרגלים להישאר איתה עד שהיא יורדת בעצמה.
+        התרגילים מחולקים ל-3 רמות עצימות. אפשר לערוך, להוסיף ולמחוק שורות.</p>
+      ${disclaimerBox}
       <div class="exp-table">
-        <div class="exp-head">${cols.map(co => `<div style="flex-basis:${co.w}">${co.label}</div>`).join("")}<div class="exp-del-col"></div></div>
-        <div id="expRows">
-          ${rows.map((r, i) => expRow(r, i, cols)).join("")}
-        </div>
+        <div class="exp-head"><div style="flex-basis:46px">רמה</div>${cols.map(co => `<div style="flex-basis:${co.w}">${co.label}</div>`).join("")}<div class="exp-del-col"></div></div>
+        <div id="expRows">${rowsHtml}</div>
       </div>
       <button class="btn ghost2 add-case" id="addExp">＋ הוספת שורה</button>
       <div class="activation-actions">
@@ -1631,7 +1681,13 @@ function w4Table() {
 }
 
 function expRow(r, i, cols) {
+  const lvl = Number(r.level) || 2;
+  const lvlSel = `<div class="exp-cell exp-lvl" style="flex-basis:46px">
+    <select class="exp-input exp-lvl-sel" data-f="level">
+      ${[1, 2, 3].map(n => `<option value="${n}" ${lvl === n ? "selected" : ""}>${n}</option>`).join("")}
+    </select></div>`;
   return `<div class="exp-row" data-i="${i}">
+    ${lvlSel}
     ${cols.map(co => `<div class="exp-cell" style="flex-basis:${co.w}">
       <textarea class="exp-input" data-f="${co.key}" rows="2" placeholder="${co.label}">${esc(r[co.key] || "")}</textarea></div>`).join("")}
     <button class="exp-del" data-del="${i}">✕</button>
@@ -1739,8 +1795,9 @@ function stashWeek4Drafts() {}
 function openExposurePrint(rows) {
   const st = S.getState();
   const today = new Date().toLocaleDateString("he-IL");
-  const body = rows.map(r =>
-    `<tr><td>${esc(r.sensation || "")}</td><td>${esc(r.exercise || "")}</td><td class="d">${esc(r.duration || "")}</td><td>${esc(r.guidance || "")}</td></tr>`).join("");
+  const sortedRows = [...rows].sort((a, b) => (Number(a.level) || 2) - (Number(b.level) || 2));
+  const body = sortedRows.map(r =>
+    `<tr><td class="d">${esc(String(r.level || 2))}</td><td>${esc(r.sensation || "")}</td><td>${esc(r.exercise || "")}</td><td class="d">${esc(r.duration || "")}</td><td>${esc(r.guidance || "")}</td></tr>`).join("");
   const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
     <title>חשיפות פנימיות — שבוע 7</title>
     <style>
@@ -1756,7 +1813,7 @@ function openExposurePrint(rows) {
     <h1>חשיפות פנימיות</h1>
     <p class="sub">מסע 8 השבועות · שבוע 7 — פעולה למרות פחד</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
-    <table><thead><tr><th>תחושה</th><th>תרגיל</th><th>משך</th><th>הנחיה / ויסות</th></tr></thead><tbody>${body}</tbody></table>
+    <table><thead><tr><th>רמה</th><th>תחושה</th><th>תרגיל</th><th>משך</th><th>הנחיה / ויסות</th></tr></thead><tbody>${body}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
     <script>setTimeout(()=>window.print(),400)<\/script>
     </body></html>`;
@@ -1768,10 +1825,11 @@ function openExposurePrint(rows) {
 // ============================================================
 //  שבוע 5 — עיוותי חשיבה, טבלת החלפת מחשבות, בודק AI
 // ============================================================
-let week5Tab = "learn";
+let week5Tab = "quick";
 const W5_TABS = [
+  { id: "quick",   label: "בדיקה מהירה" },
   { id: "learn",   label: "עיוותי חשיבה" },
-  { id: "table",   label: "טבלת החלפה" },
+  { id: "table",   label: "טבלה מלאה" },
   { id: "checker", label: "בדיקת מחשבה (AI)" },
 ];
 
@@ -1779,10 +1837,33 @@ function toolWeek5(c) {
   const tabs = `<div class="subtool-tabs">${W5_TABS.map(t =>
     `<button class="subtool-tab ${week5Tab === t.id ? "on" : ""}" data-w5tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body = "";
+  if (week5Tab === "quick") body = w5Quick();
   if (week5Tab === "learn") body = w5Learn();
   if (week5Tab === "table") body = w5Table();
   if (week5Tab === "checker") body = w5Checker();
   return tabs + `<div id="w5body">${body}</div>`;
+}
+
+// --- תת-כלי 0: בדיקה מהירה של מחשבה (30 שניות) — ברירת המחדל הפשוטה ---
+function w5Quick() {
+  const d = S.getToolData(5, "quickCheck") || {};
+  return `
+    <div class="tool-block">
+      <p class="hint">בדיקה מהירה של מחשבה מטרידה — 30 שניות, ארבע שאלות. זו ברירת המחדל.
+        מי שרוצה לבדוק לעומק — יש טבלה מלאה בלשונית הבאה.</p>
+      <label class="mini-label">1. מה המוח אומר?</label>
+      <textarea class="ta" id="q1" placeholder="המחשבה כמו שהיא עולה...">${esc(d.q1 || "")}</textarea>
+      <label class="mini-label">2. מה אני יודע בוודאות?</label>
+      <textarea class="ta" id="q2" placeholder="רק העובדות, בלי פרשנות...">${esc(d.q2 || "")}</textarea>
+      <label class="mini-label">3. מה עוד יכול להיות נכון?</label>
+      <textarea class="ta" id="q3" placeholder="פרשנות נוספת, סבירה לא פחות...">${esc(d.q3 || "")}</textarea>
+      <label class="mini-label">4. איך הייתי מדבר עכשיו לאדם שאני אוהב?</label>
+      <textarea class="ta" id="q4" placeholder="במילים חמות ומדויקות...">${esc(d.q4 || "")}</textarea>
+      <div class="activation-actions">
+        <button class="btn" id="saveQuick">שמירה + טעינת האווטר</button>
+        <button class="btn ghost2" id="toDepth">אני רוצה לבדוק לעומק ←</button>
+      </div>
+    </div>`;
 }
 
 // --- תת-כלי 1: לימוד עיוותי חשיבה ---
@@ -1812,8 +1893,8 @@ function w5Table() {
   const rows = S.getToolData(5, "thoughtTable") || [emptyThoughtRow()];
   return `
     <div class="tool-block">
-      <p class="hint">מלא אירוע אחר אירוע: מהמחשבה האוטומטית, דרך זיהוי עיוות החשיבה,
-        אל המחשבה החלופית — ובדוק איך עוצמת הרגש יורדת.</p>
+      <p class="hint">גרסת העומק (אופציונלית): מלא אירוע אחר אירוע — מהמחשבה האוטומטית, דרך זיהוי עיוות החשיבה,
+        אל המחשבה החלופית שמרגישה מדויקת יותר.</p>
       <div class="exp-table wide">
         <div class="exp-head">${THOUGHT_TABLE_COLS.map(co => `<div style="flex-basis:${co.w}" title="${esc(co.hint)}">${co.label}</div>`).join("")}<div class="exp-del-col"></div></div>
         <div id="thoughtRows">${rows.map((r, i) => thoughtRow(r, i)).join("")}</div>
@@ -1873,6 +1954,17 @@ function mountWeek5Handlers() {
   app.querySelectorAll("[data-w5tab]").forEach(b =>
     b.addEventListener("click", () => { stashWeek5Drafts(); week5Tab = b.dataset.w5tab; renderChapter(5); }));
 
+  // בדיקה מהירה (30 שניות)
+  const sq = app.querySelector("#saveQuick");
+  if (sq) sq.addEventListener("click", () => {
+    const d = { q1: qv("#q1"), q2: qv("#q2"), q3: qv("#q3"), q4: qv("#q4") };
+    S.setToolData(5, "quickCheck", d);
+    if (Object.values(d).some(Boolean)) S.logActivity("thought", "בדיקה מהירה של מחשבה");
+    toast("נשמר ✓");
+  });
+  const tod = app.querySelector("#toDepth");
+  if (tod) tod.addEventListener("click", () => { stashWeek5Drafts(); week5Tab = "table"; renderChapter(5); });
+
   // לימוד
   const ld = app.querySelector("#learnDone");
   if (ld) ld.addEventListener("click", () => { S.logActivity("thought", "לימוד עיוותי חשיבה"); toast("יפה! טענת את האווטר ✓"); });
@@ -1918,6 +2010,7 @@ function mountWeek5Handlers() {
 
 function stashWeek5Drafts() {
   if (app.querySelectorAll("#thoughtRows .exp-row").length) S.setToolData(5, "thoughtTable", collectThoughtRows());
+  if (app.querySelector("#q1")) S.setToolData(5, "quickCheck", { q1: qv("#q1"), q2: qv("#q2"), q3: qv("#q3"), q4: qv("#q4") });
 }
 
 function openThoughtPrint(rows) {
@@ -2362,8 +2455,8 @@ function w7Ladder() {
       <div class="chip-row">${emoChips}</div>
 
       <h5 style="margin-top:14px">סולם הפחדים — מהקל אל הכבד</h5>
-      <p class="hint">דרג את הפעולות שאתה נמנע מהן, מהקל (למטה) אל הכבד (למעלה). לכל דרגה: עוצמה לפני ואחרי,
-        ומספר הפעמים שתרגלת. עולים דרגה רק כשהחרדה מהפחד יורדת בכ-50%.</p>
+      <p class="hint">דרג את הפעולות שאתה נמנע מהן, מהקל אל הכבד. המטרה אינה שהפחד ייעלם, אלא <b>למידה חדשה</b>:
+        "הפחד יכול להיות פה — ואני עדיין מתמודד". עולים דרגה כשנשארת, ויתרת על התנהגות ההצלה, ולמדת משהו חדש.</p>
       <div id="rungs">${L.rungs.map((r, i) => rungCard(r, i)).join("")}</div>
       <button class="btn ghost2 add-case" id="addRung">＋ הוספת דרגה</button>
 
@@ -2382,11 +2475,12 @@ function w7Ladder() {
     </div>`;
 }
 
-function emptyRung() { return { desc: "", before: "", after: "", times: "" }; }
+function emptyRung() { return { desc: "", predict: "", actual: "", learning: "", stayed: false, droppedSafety: false }; }
+
+function rungReady(r) { return !!r.stayed && !!r.droppedSafety && !!(r.learning && String(r.learning).trim()); }
 
 function rungCard(r, i) {
-  const drop = dropPct(r);
-  const ready = drop >= 50 && Number(r.times) >= 3;
+  const ready = rungReady(r);
   return `
     <div class="rung" data-i="${i}">
       <div class="rung-head">
@@ -2394,19 +2488,20 @@ function rungCard(r, i) {
         <input class="inp rung-desc" data-f="desc" value="${esc(r.desc || "")}" placeholder="מה אני נמנע/מפחד ממנו">
         <button class="rung-del" data-del="${i}">✕</button>
       </div>
-      <div class="rung-scores">
-        <label>עוצמה לפני<input type="number" min="0" max="10" class="rung-score" data-f="before" value="${esc(r.before ?? "")}"></label>
-        <label>עוצמה אחרי<input type="number" min="0" max="10" class="rung-score" data-f="after" value="${esc(r.after ?? "")}"></label>
-        <label>פעמים<input type="number" min="0" max="20" class="rung-score" data-f="times" value="${esc(r.times ?? "")}"></label>
-        <span class="rung-drop ${ready ? "ready" : ""}" data-i="${i}">${drop > 0 ? "ירידה " + drop + "%" : ""}${ready ? " · אפשר לעלות דרגה ✓" : ""}</span>
+      <div class="rung-q">
+        <label class="mini-label">לפני — מה אני מפחד שיקרה?</label>
+        <textarea class="ta rung-ta" data-f="predict" placeholder="התרחיש שהמוח מנבא...">${esc(r.predict || "")}</textarea>
+        <label class="mini-label">אחרי — מה קרה בפועל?</label>
+        <textarea class="ta rung-ta" data-f="actual" placeholder="מה באמת קרה כשנשארתי...">${esc(r.actual || "")}</textarea>
+        <label class="mini-label">למידה — מה המוח שלי צריך לקחת מהחוויה הזאת?</label>
+        <textarea class="ta rung-ta" data-f="learning" placeholder="למשל: 'הפחד היה פה — ואני עדיין התמודדתי'">${esc(r.learning || "")}</textarea>
       </div>
+      <div class="rung-checks">
+        <label class="rung-check"><input type="checkbox" data-f="stayed" ${r.stayed ? "checked" : ""}> נשארתי עד שהתחושה ירדה בעצמה</label>
+        <label class="rung-check"><input type="checkbox" data-f="droppedSafety" ${r.droppedSafety ? "checked" : ""}> ויתרתי על התנהגות ההצלה הרגילה שלי</label>
+      </div>
+      <span class="rung-drop ${ready ? "ready" : ""}" data-i="${i}">${ready ? "למידה חדשה נרשמה ✓ אפשר לעלות דרגה" : "נשארתי · ויתרתי על הצלה · רשמתי מה למדתי"}</span>
     </div>`;
-}
-
-function dropPct(r) {
-  const b = Number(r.before), a = Number(r.after);
-  if (!b || b <= 0 || r.after === "" || r.after == null) return 0;
-  return Math.max(0, Math.round((b - a) / b * 100));
 }
 
 function collectLadder() {
@@ -2414,7 +2509,9 @@ function collectLadder() {
   const rungs = [];
   app.querySelectorAll("#rungs .rung").forEach(el => {
     const r = {};
-    el.querySelectorAll("[data-f]").forEach(inp => r[inp.dataset.f] = inp.value.trim());
+    el.querySelectorAll("[data-f]").forEach(inp => {
+      r[inp.dataset.f] = inp.type === "checkbox" ? inp.checked : inp.value.trim();
+    });
     rungs.push(r);
   });
   return { emotion, rungs };
@@ -2608,12 +2705,20 @@ function mountWeek7Handlers() {
     toast("נשמר ✓");
   });
 
+  // חשיפות פנימיות — שער בטיחות
+  const iack = app.querySelector("#interoAck");
+  if (iack) iack.addEventListener("change", () => {
+    if (iack.checked) { S.setToolData(7, "interoAck", true); renderChapter(7); }
+  });
   // חשיפות פנימיות — טבלה
   app.querySelectorAll(".exp-input").forEach(inp =>
-    inp.addEventListener("change", () => S.setToolData(4, "exposures", collectExposures())));
+    inp.addEventListener("change", () => {
+      S.setToolData(4, "exposures", collectExposures());
+      if (inp.classList.contains("exp-lvl-sel")) renderChapter(7); // שינוי רמה → מיון מחדש לקבוצות
+    }));
   const ae = app.querySelector("#addExp");
   if (ae) ae.addEventListener("click", () => {
-    const rows = collectExposures(); rows.push({ sensation: "", exercise: "", duration: "", guidance: "" });
+    const rows = collectExposures(); rows.push({ level: 2, sensation: "", exercise: "", duration: "", guidance: "" });
     S.setToolData(4, "exposures", rows); renderChapter(7);
   });
   app.querySelectorAll(".exp-del").forEach(b =>
@@ -2638,12 +2743,12 @@ function mountWeek7Handlers() {
     S.setToolData(7, "ladder", collectLadder());
   }));
   app.querySelectorAll("#rungs [data-f]").forEach(inp =>
-    inp.addEventListener("input", () => {
+    inp.addEventListener(inp.type === "checkbox" ? "change" : "input", () => {
       const rungEl = inp.closest(".rung");
-      const r = {}; rungEl.querySelectorAll("[data-f]").forEach(x => r[x.dataset.f] = x.value.trim());
+      const r = {}; rungEl.querySelectorAll("[data-f]").forEach(x => r[x.dataset.f] = x.type === "checkbox" ? x.checked : x.value.trim());
       const badge = rungEl.querySelector(".rung-drop");
-      const drop = dropPct(r); const ready = drop >= 50 && Number(r.times) >= 3;
-      badge.textContent = `${drop > 0 ? "ירידה " + drop + "%" : ""}${ready ? " · אפשר לעלות דרגה ✓" : ""}`;
+      const ready = rungReady(r);
+      badge.textContent = ready ? "למידה חדשה נרשמה ✓ אפשר לעלות דרגה" : "נשארתי · ויתרתי על הצלה · רשמתי מה למדתי";
       badge.classList.toggle("ready", ready);
       S.setToolData(7, "ladder", collectLadder());
     }));
@@ -2662,13 +2767,16 @@ function mountWeek7Handlers() {
     const key = app.querySelector("#exampleSelect").value;
     if (!key) return;
     const L = collectLadder();
-    L.rungs = EXPOSURE_EXAMPLES[key].map(desc => ({ desc, before: "", after: "", times: "" }));
+    L.rungs = EXPOSURE_EXAMPLES[key].map(desc => ({ ...emptyRung(), desc }));
     S.setToolData(7, "ladder", L); renderChapter(7);
   });
   const sl = app.querySelector("#saveLadder");
   if (sl) sl.addEventListener("click", () => {
     const L = collectLadder(); S.setToolData(7, "ladder", L);
     if (L.rungs.some(r => r.desc)) S.logActivity("exposure", "סולם פחדים");
+    // מדדי הנהגה — נספרים לפי מה שבחרתי לעשות, לא לפי ירידת הפחד
+    if (L.rungs.some(r => r.droppedSafety)) S.logActivity("exposure", "ויתרתי על התנהגות ביטחון");
+    if (L.rungs.some(r => rungReady(r))) S.logActivity("exposure", "פעלתי למרות פחד");
     toast("הסולם נשמר ✓"); renderChapter(7);
   });
   const pl = app.querySelector("#pdfLadder");
@@ -2739,8 +2847,8 @@ function openLadderPrint(L) {
   const st = S.getState();
   const today = new Date().toLocaleDateString("he-IL");
   const body = L.rungs.map((r, i) => {
-    const drop = dropPct(r);
-    return `<tr><td class="n">${i + 1}</td><td>${esc(r.desc || "")}</td><td class="c">${esc(r.before ?? "")}</td><td class="c">${esc(r.after ?? "")}</td><td class="c">${esc(r.times ?? "")}</td><td class="c">${drop > 0 ? drop + "%" : ""}</td></tr>`;
+    const chk = (v) => v ? "✓" : "";
+    return `<tr><td class="n">${i + 1}</td><td>${esc(r.desc || "")}</td><td>${esc(r.predict || "")}</td><td>${esc(r.actual || "")}</td><td>${esc(r.learning || "")}</td><td class="c">${chk(r.stayed)}</td><td class="c">${chk(r.droppedSafety)}</td></tr>`;
   }).join("");
   const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
     <title>סולם פחדים — שבוע 7</title>
@@ -2758,7 +2866,7 @@ function openLadderPrint(L) {
     <h1>סולם פחדים</h1>
     <p class="sub">מסע 8 השבועות · שבוע 7 — פעולה למרות פחד${L.emotion ? " · רגש: " + esc(L.emotion) : ""}</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
-    <table><thead><tr><th>#</th><th>הפעולה / הפחד</th><th>עוצמה לפני</th><th>עוצמה אחרי</th><th>פעמים</th><th>ירידה</th></tr></thead><tbody>${body}</tbody></table>
+    <table><thead><tr><th>#</th><th>הפעולה / הפחד</th><th>מה פחדתי שיקרה</th><th>מה קרה בפועל</th><th>מה למדתי</th><th>נשארתי</th><th>ויתרתי על הצלה</th></tr></thead><tbody>${body}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
     <script>setTimeout(()=>window.print(),400)<\/script>
     </body></html>`;
@@ -3268,6 +3376,14 @@ let coachThreads = {}; // toolId -> messages
 // מאמנים שלא מוצגים במסך "מאמן AI" (thought-checker עדיין משמש את הכלי בשבוע 5)
 const HIDDEN_COACH_TOOLS = ["emotion-helper", "thought-checker"];
 
+// "מראה טיפולית" — 4 פעולות סגורות של השיטה, במקום צ'אט פתוח בלבד
+const COACH_ACTIONS = [
+  { icon: "🔁", label: "לזהות את המעגל", seed: "עזור לי לזהות את המעגל שהחלק המפוחד מפעיל בי עכשיו — הטריגר, המחשבה, התחושה, התגובה ופעולת ההצלה. שאל אותי שאלה אחת בכל פעם." },
+  { icon: "🍃", label: "הפרדה ממחשבה", seed: "עזור לי לעשות הפרדה (אי-הזדהות) מהמחשבה שמטרידה אותי עכשיו, כך שאני אשים לב שאני חושב אותה במקום להיות בתוכה." },
+  { icon: "🏠", label: "תגובת הורה מיטיב", seed: "עזור לי לנסח תגובה של הורה פנימי מיטיב לחלק שמפחד בי עכשיו — באימות, בחמלה ובקול יציב." },
+  { icon: "🧭", label: "פעולה מבוססת ערך", seed: "עזור לי לבחור פעולה קטנה אחת מבוססת ערך לצעד הבא שלי, גם אם הפחד עדיין נוכח." },
+];
+
 function renderCoach() {
   const st = S.getState();
   const prompts = st.aiPrompts;
@@ -3276,8 +3392,16 @@ function renderCoach() {
   const thread = coachThreads[coachTool] || [];
 
   app.innerHTML = `
-    <header class="topbar"><div><div class="greeting">💬 המאמן שלך</div>
+    <header class="topbar"><div><div class="greeting">🪞 המראה הטיפולית</div>
       <div class="subtle">${st.apiKey ? "מחובר ל-Claude" : "מצב הדגמה — ללא מפתח API"}</div></div></header>
+
+    <section class="card coach-actions-card">
+      <div class="coach-actions-title">מה אתה צריך עכשיו?</div>
+      <div class="coach-actions">
+        ${COACH_ACTIONS.map((a, i) => `<button class="coach-action" data-seed="${i}">
+          <span class="ca-ico">${a.icon}</span><span>${a.label}</span></button>`).join("")}
+      </div>
+    </section>
 
     <div class="tool-tabs">
       ${coachEntries.map(([id, t]) => `
@@ -3287,8 +3411,7 @@ function renderCoach() {
 
     <div class="chat" id="chat">
       ${thread.length ? thread.map(m => chatBubble(m)).join("")
-        : `<div class="chat-empty">${prompts[coachTool].icon} כתוב הודעה כדי להתחיל.<br>
-           <span class="subtle">${esc(prompts[coachTool].name)}</span></div>`}
+        : `<div class="chat-empty">🪞 בחר למעלה מה אתה צריך עכשיו — או כתוב בעצמך למטה.</div>`}
     </div>
 
     <div class="chat-input">
@@ -3296,6 +3419,13 @@ function renderCoach() {
       <button class="btn send" id="send">שלח</button>
     </div>
   `;
+
+  app.querySelectorAll(".coach-action").forEach(b =>
+    b.addEventListener("click", () => {
+      const a = COACH_ACTIONS[Number(b.dataset.seed)];
+      if (!a) return;
+      const m = app.querySelector("#msg"); m.value = a.seed; sendMsg();
+    }));
 
   app.querySelectorAll(".tool-tab").forEach(b =>
     b.addEventListener("click", () => { coachTool = b.dataset.tool; renderCoach(); }));
@@ -3651,6 +3781,8 @@ function esc(s = "") {
   return String(s).replace(/[&<>"']/g, m =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 }
+// ערך שדה טקסט לפי סלקטור (מקוצר)
+function qv(sel) { return (app.querySelector(sel)?.value || "").trim(); }
 
 function renderSparkline(ratings) {
   if (!ratings.length) return "";
