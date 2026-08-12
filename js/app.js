@@ -1529,7 +1529,6 @@ let activeTimer = null;
 const W4_TABS = [
   { id: "scan",     label: "סריקה ונשימה" },
   { id: "exposure", label: "חשיפה תוך-גופנית" },
-  { id: "table",    label: "טבלת חשיפות" },
 ];
 
 function stopActiveTimer() { if (activeTimer) { clearInterval(activeTimer); activeTimer = null; } }
@@ -1540,7 +1539,6 @@ function toolWeek4(c) {
   let body = "";
   if (week4Tab === "scan") body = w4Scan();
   if (week4Tab === "exposure") body = w4Exposure();
-  if (week4Tab === "table") body = w4Table();
   return tabs + `<div id="w4body">${body}</div>`;
 }
 
@@ -1734,34 +1732,9 @@ function mountWeek4Handlers() {
     toast("נשמר ✓"); renderChapter(4);
   });
 
-  // תת-כלי 3 — טבלה
-  app.querySelectorAll(".exp-input").forEach(inp =>
-    inp.addEventListener("change", () => S.setToolData(4, "exposures", collectExposures())));
-  const ae = app.querySelector("#addExp");
-  if (ae) ae.addEventListener("click", () => {
-    const rows = collectExposures(); rows.push({ sensation: "", exercise: "", duration: "", guidance: "" });
-    S.setToolData(4, "exposures", rows); renderChapter(4);
-  });
-  app.querySelectorAll(".exp-del").forEach(b =>
-    b.addEventListener("click", () => {
-      const rows = collectExposures(); rows.splice(Number(b.dataset.del), 1);
-      S.setToolData(4, "exposures", rows); renderChapter(4);
-    }));
-  const se = app.querySelector("#saveExp");
-  if (se) se.addEventListener("click", () => { S.setToolData(4, "exposures", collectExposures()); toast("הטבלה נשמרה ✓"); });
-  const pe = app.querySelector("#pdfExp");
-  if (pe) pe.addEventListener("click", () => { S.setToolData(4, "exposures", collectExposures()); openExposurePrint(collectExposures()); });
-  const re = app.querySelector("#resetExp");
-  if (re) re.addEventListener("click", () => {
-    if (confirm("לשחזר את טבלת ברירת המחדל? השינויים שלך יימחקו.")) {
-      S.setToolData(4, "exposures", structuredClone(INTEROCEPTIVE_EXPOSURES)); renderChapter(4);
-    }
-  });
 }
 
-function stashWeek4Drafts() {
-  if (app.querySelectorAll(".exp-row").length) S.setToolData(4, "exposures", collectExposures());
-}
+function stashWeek4Drafts() {}
 
 function openExposurePrint(rows) {
   const st = S.getState();
@@ -1769,7 +1742,7 @@ function openExposurePrint(rows) {
   const body = rows.map(r =>
     `<tr><td>${esc(r.sensation || "")}</td><td>${esc(r.exercise || "")}</td><td class="d">${esc(r.duration || "")}</td><td>${esc(r.guidance || "")}</td></tr>`).join("");
   const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
-    <title>חשיפות פנימיות — שבוע 4</title>
+    <title>חשיפות פנימיות — שבוע 7</title>
     <style>
       body{font-family:"Segoe UI",Arial,sans-serif;color:#20353a;padding:28px}
       h1{color:#0f766e;margin:0 0 4px}.sub{color:#6a8189;margin:0 0 8px}
@@ -1781,7 +1754,7 @@ function openExposurePrint(rows) {
       @media print{.noprint{display:none}}
     </style></head><body>
     <h1>חשיפות פנימיות</h1>
-    <p class="sub">מסע 8 השבועות · שבוע 4 — הנהגת הגוף</p>
+    <p class="sub">מסע 8 השבועות · שבוע 7 — פעולה למרות פחד</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><thead><tr><th>תחושה</th><th>תרגיל</th><th>משך</th><th>הנחיה / ויסות</th></tr></thead><tbody>${body}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -2309,6 +2282,7 @@ const W7_TABS = [
   { id: "rules",    label: "כללים והכנה" },
   { id: "ladder",   label: "סולם פחדים" },
   { id: "imaginal", label: "חשיפה בדמיון" },
+  { id: "internal", label: "חשיפות פנימיות" },
   { id: "journal",  label: "יומן חשיפות" },
   { id: "advisor",  label: "יועץ חשיפות" },
 ];
@@ -2322,6 +2296,7 @@ function toolWeek7(c) {
   let body = "";
   if (week7Tab === "rules") body = w7Rules();
   if (week7Tab === "imaginal") body = w7Imaginal();
+  if (week7Tab === "internal") body = w4Table();
   if (week7Tab === "ladder") body = w7Ladder();
   if (week7Tab === "journal") body = w7Journal();
   if (week7Tab === "advisor") body = w7Advisor();
@@ -2341,7 +2316,7 @@ function w7Rules() {
 
     <div class="tool-block">
       <h5>🛡️ הכנה לחשיפה</h5>
-      <label class="mini-label">כלי או טכניקה שמרגיעים אותי ומעניקים ביטחון</label>
+      <label class="mini-label">יכולת ויסות עצמי שמעניקה לי ביטחון</label>
       <textarea class="ta prep-field" data-p="tool" placeholder="למשל: נשימת בטן, המקום הבטוח, משפט מרגיע...">${esc(p.tool || "")}</textarea>
       <label class="mini-label">המקום הבטוח שלי בדמיון</label>
       <textarea class="ta prep-field" data-p="safePlace" placeholder="חוף הים, גינה ירוקה... תאר אותו בפירוט">${esc(p.safePlace || "")}</textarea>
@@ -2388,7 +2363,7 @@ function w7Ladder() {
 
       <h5 style="margin-top:14px">סולם הפחדים — מהקל אל הכבד</h5>
       <p class="hint">דרג את הפעולות שאתה נמנע מהן, מהקל (למטה) אל הכבד (למעלה). לכל דרגה: עוצמה לפני ואחרי,
-        ומספר הפעמים שתרגלת. עולים דרגה רק כשהפחד יורד בכ-50%.</p>
+        ומספר הפעמים שתרגלת. עולים דרגה רק כשהחרדה מהפחד יורדת בכ-50%.</p>
       <div id="rungs">${L.rungs.map((r, i) => rungCard(r, i)).join("")}</div>
       <button class="btn ghost2 add-case" id="addRung">＋ הוספת דרגה</button>
 
@@ -2633,6 +2608,30 @@ function mountWeek7Handlers() {
     toast("נשמר ✓");
   });
 
+  // חשיפות פנימיות — טבלה
+  app.querySelectorAll(".exp-input").forEach(inp =>
+    inp.addEventListener("change", () => S.setToolData(4, "exposures", collectExposures())));
+  const ae = app.querySelector("#addExp");
+  if (ae) ae.addEventListener("click", () => {
+    const rows = collectExposures(); rows.push({ sensation: "", exercise: "", duration: "", guidance: "" });
+    S.setToolData(4, "exposures", rows); renderChapter(7);
+  });
+  app.querySelectorAll(".exp-del").forEach(b =>
+    b.addEventListener("click", () => {
+      const rows = collectExposures(); rows.splice(Number(b.dataset.del), 1);
+      S.setToolData(4, "exposures", rows); renderChapter(7);
+    }));
+  const se = app.querySelector("#saveExp");
+  if (se) se.addEventListener("click", () => { S.setToolData(4, "exposures", collectExposures()); toast("הטבלה נשמרה ✓"); });
+  const pe = app.querySelector("#pdfExp");
+  if (pe) pe.addEventListener("click", () => { S.setToolData(4, "exposures", collectExposures()); openExposurePrint(collectExposures()); });
+  const re = app.querySelector("#resetExp");
+  if (re) re.addEventListener("click", () => {
+    if (confirm("לשחזר את טבלת ברירת המחדל? השינויים שלך יימחקו.")) {
+      S.setToolData(4, "exposures", structuredClone(INTEROCEPTIVE_EXPOSURES)); renderChapter(7);
+    }
+  });
+
   // סולם פחדים
   app.querySelectorAll("[data-emo]").forEach(b => b.addEventListener("click", () => {
     app.querySelectorAll("[data-emo]").forEach(x => x.classList.remove("on")); b.classList.add("on");
@@ -2733,6 +2732,7 @@ function stashWeek7Drafts() {
   }
   if (app.querySelectorAll("#rungs .rung").length) S.setToolData(7, "ladder", collectLadder());
   if (app.querySelectorAll(".exp-day-row").length) S.setToolData(7, "exposurePlan", collectExpPlan());
+  if (app.querySelectorAll(".exp-row").length) S.setToolData(4, "exposures", collectExposures());
 }
 
 function openLadderPrint(L) {

@@ -66,6 +66,12 @@ function load() {
     // ניקוי הערת "קובץ זמני" ישנה מאימון אוטוגני (אצל משתמשים קיימים)
     const ag = merged.meditations.find(m => m.id === "autogenic");
     if (ag && ag.note && ag.note.includes("זמני")) ag.note = "";
+    // הסרת שורות "טשטוש ראייה" ו-"ניתוק / דה-ריאליזציה" מטבלת החשיפות הפנימיות (אצל משתמשים קיימים)
+    const expData = merged.chapters && merged.chapters["4"] && merged.chapters["4"].data;
+    if (expData && Array.isArray(expData.exposures)) {
+      expData.exposures = expData.exposures.filter(r =>
+        r && r.sensation !== "טשטוש ראייה" && r.sensation !== "ניתוק / דה-ריאליזציה");
+    }
     return merged;
   } catch (e) {
     return fresh();
