@@ -309,6 +309,8 @@ body{min-height:100vh}
 .exp-group.lvl-2{background:#158a7e}
 .exp-group.lvl-3{background:#b0603f}
 .exp-lvl-sel{text-align:center;font-weight:800;color:var(--teal);cursor:pointer}
+.edge-note{background:#eefaf6;border:1px dashed #bfe3d9;border-radius:10px;padding:9px 11px;margin-top:8px}
+[data-theme="dark"] .edge-note{background:#122a27;border-color:#1f4d45}
 .intero-disclaimer{margin:4px 0 12px;line-height:1.6}
 .intero-ack{background:#fff6ee;border:1px solid #f0d3bd;border-radius:12px;padding:12px;margin:8px 0;
   align-items:flex-start}

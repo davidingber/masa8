@@ -1597,35 +1597,48 @@ function w4Scan() {
     </div>`;
 }
 
-// --- תת-כלי 2: חשיפה תוך-גופנית (ליטוף היד + יד על הלב) ---
+// --- תת-כלי 2: חשיפה תוך-גופנית (שים לב לתחושה → מעברים → תרגילים תומכים) ---
 function w4Exposure() {
   const chips = WEEK4_SENSATIONS.map(s =>
     `<button class="chip mini sens-chip" data-sens="${s}">${s}</button>`).join("");
   return `
     <div class="tool-block">
       <div class="def-tech">
-        <h5>✋ תרגיל 1 — ליטוף היד (3 מחזורים)</h5>
+        <h5>👁️ שלב 1 — שים לב לתחושה בגוף</h5>
+        <p class="hint">לפני הכול — עצור ושים לב: איזו תחושה גופנית נוכחת עכשיו, והיכן היא יושבת?</p>
+        <div class="chip-row">${chips}</div>
+        <p class="hint edge-note">💡 חשוב: התמקד רק ב<b>קצה של התחושה</b> — רק באזור שבו היא מתחילה, בגבול שלה —
+          <b>בלי לקפוץ ישר אל תוך מרכז התחושה.</b></p>
+      </div>
+
+      <div class="def-tech">
+        <h5>🔁 שלב 2 — מעברים בין ביטחון לתחושה</h5>
+        <p class="hint">התחל מ<b>תחושת ביטחון ורוגע</b> בגוף (מהמקום הבטוח או מהנשימה). כשאתה מעוגן —
+          עבור בעדינות אל <b>הקצה</b> של תחושת הכיווץ / אי-הנוחות, שהה בו כמה שניות, <b>והסכם לה להיות</b> —
+          ואז חזור לתחושת הביטחון. עשה כמה מעברים כאלה, הלוך ושוב, בלי למהר.</p>
+      </div>
+
+      <div class="def-tech">
+        <h5>✋ תרגיל תומך 1 — ליטוף היד (3 מחזורים)</h5>
         <p class="hint">לטף את היד באופן מונוטוני מהכתף ועד גב היד, בקצב איטי, כ-2 דקות.
-          ואז שים לב לתחושה הלא נעימה כמה שניות — <b>והסכם לה להיות</b> — ואז חזור ללטף. שלושה מחזורים.</p>
+          ואז שים לב ל<b>קצה</b> של התחושה הלא נעימה כמה שניות — <b>והסכם לה להיות</b> — ואז חזור ללטף. שלושה מחזורים.</p>
         <div class="timer-display" id="handTimer"><div class="timer-idle">מוכן להתחיל</div></div>
         <button class="btn ghost2" id="handStart">התחל תרגיל מונחה</button>
         <button class="btn ghost2 hidden" id="handStop">עצור</button>
       </div>
 
       <div class="def-tech">
-        <h5>❤️ תרגיל 2 — יד על הלב</h5>
+        <h5>❤️ תרגיל תומך 2 — יד על הלב</h5>
         <p class="hint">הנח יד על הלב. שאף 5 שניות אל הלב, היזכר במשהו משמח, ונשוף 5 שניות.
-          אז שים לב לתחושה הלא נעימה כמה שניות — וחזור. כמה סבבים.</p>
+          אז שים לב ל<b>קצה</b> של התחושה הלא נעימה כמה שניות — וחזור. כמה סבבים.</p>
         <div class="timer-display" id="heartTimer"><div class="timer-idle">מוכן להתחיל</div></div>
         <button class="btn ghost2" id="heartStart">התחל תרגיל מונחה</button>
         <button class="btn ghost2 hidden" id="heartStop">עצור</button>
       </div>
 
       <div class="def-tech">
-        <h5>🎯 על איזו תחושה פיזית התמקדת?</h5>
-        <p class="hint">התמקד בעיקר בתחושה הפיזית עצמה.</p>
-        <div class="chip-row">${chips}</div>
-        <textarea class="ta" id="sensNote" placeholder="מה עלה? מה קרה לתחושה כשנתת לה להיות?"></textarea>
+        <h5>📝 מה קרה?</h5>
+        <textarea class="ta" id="sensNote" placeholder="מה עלה? מה קרה לתחושה כשנשארת עם הקצה שלה, בלי לקפוץ פנימה?"></textarea>
         <button class="btn" id="saveSens">שמירה + טעינת האווטר</button>
       </div>
     </div>`;
@@ -3386,9 +3399,7 @@ const COACH_ACTIONS = [
 
 function renderCoach() {
   const st = S.getState();
-  const prompts = st.aiPrompts;
-  const coachEntries = Object.entries(prompts).filter(([id]) => !HIDDEN_COACH_TOOLS.includes(id));
-  if (HIDDEN_COACH_TOOLS.includes(coachTool)) coachTool = coachEntries[0]?.[0] || "alt-thoughts";
+  coachTool = "mirror"; // המאמן הוא "מראה טיפולית" אחת עם 4 פעולות — בלי לשוניות מאמנים
   const thread = coachThreads[coachTool] || [];
 
   app.innerHTML = `
@@ -3402,12 +3413,6 @@ function renderCoach() {
           <span class="ca-ico">${a.icon}</span><span>${a.label}</span></button>`).join("")}
       </div>
     </section>
-
-    <div class="tool-tabs">
-      ${coachEntries.map(([id, t]) => `
-        <button class="tool-tab ${coachTool === id ? "on" : ""}" data-tool="${id}">
-          ${t.icon} ${t.name}</button>`).join("")}
-    </div>
 
     <div class="chat" id="chat">
       ${thread.length ? thread.map(m => chatBubble(m)).join("")
@@ -3426,9 +3431,6 @@ function renderCoach() {
       if (!a) return;
       const m = app.querySelector("#msg"); m.value = a.seed; sendMsg();
     }));
-
-  app.querySelectorAll(".tool-tab").forEach(b =>
-    b.addEventListener("click", () => { coachTool = b.dataset.tool; renderCoach(); }));
 
   app.querySelector("#send").addEventListener("click", sendMsg);
   app.querySelector("#msg").addEventListener("keydown", e => {
@@ -3454,7 +3456,8 @@ async function sendMsg() {
   chat.innerHTML += `<div class="bubble assistant typing">מקליד…</div>`;
   chat.scrollTop = chat.scrollHeight;
 
-  const sys = S.getState().aiPrompts[coachTool].prompt;
+  const prompts = S.getState().aiPrompts;
+  const sys = (prompts[coachTool] || prompts["mirror"] || prompts["alt-thoughts"] || {}).prompt || "";
   const reply = await askAI(sys, coachThreads[coachTool]);
   coachThreads[coachTool].push({ role: "assistant", content: reply });
   S.logActivity("thought", "שיחה עם המאמן");
