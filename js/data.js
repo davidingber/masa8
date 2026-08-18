@@ -89,24 +89,6 @@ export const COURSE = {
     },
     {
       week: 5,
-      icon: "🧠",
-      title: "להנהיג את המחשבות",
-      shift: { from: "המחשבה קובעת לי מה מסוכן", to: "המחשבה היא הצעה, ואני בוחר" },
-      learn: [
-        "לזהות עיוותי חשיבה בזמן אמת",
-        "להחליף מחשבה מעוותת במחשבה מדויקת יותר",
-        "להשתמש ביומן כדי לתפוס ולשכתב את הדפוס",
-      ],
-      tools: "יומן 2, זיהוי עיוותי חשיבה, שכתוב קוגניטיבי (CBT)",
-      tasks: [
-        "לתפוס מחשבה מעוותת אחת ביום",
-        "לבדוק: עובדה או פרשנות? איזה עיוות?",
-        "להחליף במחשבה מדויקת יותר",
-      ],
-      tool: { type: "thought-replace" },
-    },
-    {
-      week: 6,
       icon: "💗",
       title: "הורות עצמית מיטיבה",
       shift: { from: "אני נגד עצמי", to: "אני ההורה המיטיב של עצמי" },
@@ -124,6 +106,24 @@ export const COURSE = {
         "לתרגל משפט חמלה עצמית",
       ],
       tool: { type: "worry-date" },
+    },
+    {
+      week: 6,
+      icon: "🧠",
+      title: "להנהיג את המחשבות",
+      shift: { from: "המחשבה קובעת לי מה מסוכן", to: "המחשבה היא הצעה, ואני בוחר" },
+      learn: [
+        "לזהות עיוותי חשיבה בזמן אמת",
+        "להחליף מחשבה מעוותת במחשבה מדויקת יותר",
+        "להשתמש ביומן כדי לתפוס ולשכתב את הדפוס",
+      ],
+      tools: "יומן 2, זיהוי עיוותי חשיבה, שכתוב קוגניטיבי (CBT)",
+      tasks: [
+        "לתפוס מחשבה מעוותת אחת ביום",
+        "לבדוק: עובדה או פרשנות? איזה עיוות?",
+        "להחליף במחשבה מדויקת יותר",
+      ],
+      tool: { type: "thought-replace" },
     },
     {
       week: 7,
@@ -203,14 +203,14 @@ export const WEEK_FRAMING = {
     lead: "אני נשאר עם הגוף בלי להציל אותו מיד.",
   },
   5: {
-    benefit: "השבוע תלמד לעצור ולשאול: זו עובדה, או סיפור שהמוח מספר?",
-    flag: "עובדה או סיפור?",
-    lead: "אני עוזר למוח לבדוק את הסיפור שלו.",
-  },
-  6: {
     benefit: "השבוע תפגוש את הצורך שמתחת לפחד — ותלמד לתת לעצמך את מה שהחלק המבוהל באמת מבקש.",
     flag: "מה אתה צריך ממני עכשיו?",
     lead: "אני פוגש את הצורך שמתחת לפחד.",
+  },
+  6: {
+    benefit: "השבוע תלמד לעצור ולשאול: זו עובדה, או סיפור שהמוח מספר?",
+    flag: "עובדה או סיפור?",
+    lead: "אני עוזר למוח לבדוק את הסיפור שלו.",
   },
   7: {
     benefit: "השבוע תלמד להוביל את עצמך לפעולה — ולקחת את הפחד איתך, במקום לחכות שייעלם.",
@@ -600,20 +600,22 @@ export const NLP_REFRAME_STEPS = [
 //  מדיטציות מובנות (ניתן להחליף קישור/קובץ במסך הניהול)
 // ============================================================
 export const DEFAULT_MEDITATIONS = [
-  // שבוע 2
-  { id: "mindfulness", week: 2, name: "מיינדפולנס", icon: "🧘",
+  // שבוע 4 — כלי ויסות (מיינדפולנס, אימון אוטוגני, הרפיית ג'ייקובסון, כניסה לטראנס)
+  { id: "mindfulness", week: 4, name: "מיינדפולנס", icon: "🧘",
     link: "https://youtu.be/4u3DXZZ6rT0", file: "resources/mindfulness.pdf", note: "" },
-  { id: "autogenic", week: 2, name: "אימון אוטוגני", icon: "🌬️",
+  { id: "autogenic", week: 4, name: "אימון אוטוגני", icon: "🌬️",
     link: "https://youtu.be/F1tfNiM2nNY", file: "resources/autogenic.pdf", note: "" },
-  { id: "jacobson", week: 2, name: "הרפיית ג'ייקובסון", icon: "💪",
+  { id: "jacobson", week: 4, name: "הרפיית ג'ייקובסון", icon: "💪",
     link: "https://youtu.be/Zo7OTXljkzk", file: "resources/jacobson.pdf", note: "" },
+  { id: "trance", week: 4, name: "כניסה לטראנס", icon: "🌀",
+    link: "https://youtu.be/oin7ust0LFw", file: "", note: "" },
 
-  // שבוע 6 — הורות עצמית מיטיבה
-  { id: "forgiveness", week: 6, name: "מדיטציית סליחה", icon: "🕊️",
+  // שבוע 5 — הורות עצמית מיטיבה (סליחה, איחול טוב, הכרת תודה)
+  { id: "forgiveness", week: 5, name: "מדיטציית סליחה", icon: "🕊️",
     link: "https://youtu.be/AozqgSzGkjM", file: "", note: "" },
-  { id: "metta", week: 6, name: "מדיטציית איחול טוב (מטא)", icon: "🌸",
+  { id: "metta", week: 5, name: "מדיטציית איחול טוב (מטא)", icon: "🌸",
     link: "https://youtu.be/CqKLt3zD1do", file: "", note: "" },
-  { id: "gratitude", week: 6, name: "מדיטציית הכרת תודה", icon: "🙏",
+  { id: "gratitude", week: 5, name: "מדיטציית הכרת תודה", icon: "🙏",
     link: "https://youtu.be/vDwITNG0r84", file: "", note: "" },
 ];
 

@@ -1254,12 +1254,12 @@ function toolWeek2(c) {
         <button class="btn ghost2" id="pdfCycleEmpty">⬇ יומן ריק להדפסה</button>
       </div>
     </div>
-
+    ${meds.length ? `
     <div class="tool-block med-block">
       <h4>🎧 מדיטציות מלוות</h4>
       <p class="hint">תרגול יומי מרגיע את מערכת העצבים. האזן/צפה בקישור, או הורד את הקובץ.</p>
       ${meds.map(medCard).join("")}
-    </div>`;
+    </div>` : ""}`;
 }
 
 function cycleCase(r, i) {
@@ -1556,9 +1556,14 @@ function openReframePrint(answers) {
 let week4Tab = "scan";
 let activeTimer = null;
 const W4_TABS = [
-  { id: "scan",     label: "סריקה ונשימה" },
-  { id: "exposure", label: "חשיפה תוך-גופנית" },
+  { id: "scan",       label: "סריקה ונשימה" },
+  { id: "sensations", label: "להכיר את התחושות" },
+  { id: "exposure",   label: "חשיפה תוך-גופנית" },
+  { id: "regulation", label: "כלי ויסות" },
 ];
+// שלבי "להכיר את התחושות" — תהליך שחרור מודרך
+const SENS_QUALITIES = ["כיווץ", "כבדות", "משהו שרוצה להתפרץ", "מחנק", "דקירה", "נימול", "חום", "זרמים", "ריקנות", "לחץ"];
+const SENS_RELEASE = ["תנועה", "נשימה", "מגע", "תיפוף עם קצות האצבעות", "דימוי של משהו שמתפזר"];
 
 function stopActiveTimer() { if (activeTimer) { clearInterval(activeTimer); activeTimer = null; } }
 
@@ -1567,8 +1572,71 @@ function toolWeek4(c) {
     `<button class="subtool-tab ${week4Tab === t.id ? "on" : ""}" data-w4tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body = "";
   if (week4Tab === "scan") body = w4Scan();
+  if (week4Tab === "sensations") body = w4Sensations();
   if (week4Tab === "exposure") body = w4Exposure();
+  if (week4Tab === "regulation") body = w4Regulation();
   return tabs + `<div id="w4body">${body}</div>`;
+}
+
+// --- תת-כלי: להכיר את התחושות — תהליך שחרור ב-7 שלבים ---
+function w4Sensations() {
+  const d = S.getToolData(4, "sensProcess") || {};
+  const qChips = SENS_QUALITIES.map(q =>
+    `<button class="chip mini sq-chip ${(d.quality || []).includes(q) ? "on" : ""}" data-q="${q}">${q}</button>`).join("");
+  const relChips = SENS_RELEASE.map(r =>
+    `<button class="chip mini sr-chip ${(d.release || []).includes(r) ? "on" : ""}" data-r="${r}">${r}</button>`).join("");
+  return `
+    <div class="tool-block">
+      <p class="hint">תהליך עדין להכיר תחושה גופנית וללוות אותה עד שחרור. קח את הזמן, בלי למהר.</p>
+
+      <div class="focus-step"><span class="fs-num">1</span>
+        <div><b>איפה התחושה בגוף?</b>
+          <input class="inp" id="sWhere" value="${esc(d.where || "")}" placeholder="למשל: בחזה, בבטן, בגרון..."></div></div>
+
+      <div class="focus-step"><span class="fs-num">2</span>
+        <div><b>מה אופי התחושה?</b>
+          <div class="chip-row" style="margin-top:6px">${qChips}</div></div></div>
+
+      <div class="focus-step"><span class="fs-num">3</span>
+        <div><b>באיזו עוצמה?</b> (1–10)
+          <div class="rating-row" style="margin-top:6px">
+            <input type="range" id="sIntensity" min="1" max="10" value="${d.intensity ?? 5}">
+            <span class="rate-val" id="sIntensityV">${d.intensity ?? 5}</span>
+          </div></div></div>
+
+      <div class="focus-step"><span class="fs-num">4</span>
+        <div><b>תן שם לתחושה</b> — "הנה כיווץ בחזה", "הנה שריפה בבטן"
+          <input class="inp" id="sName" value="${esc(d.name || "")}" placeholder="הנה ______ ב______"></div></div>
+
+      <div class="focus-step"><span class="fs-num">5</span>
+        <div><b>אפשר לתחושה להיות.</b> אל תילחם בה — פשוט תן לה מקום כמה נשימות.</div></div>
+
+      <div class="focus-step"><span class="fs-num">6</span>
+        <div><b>האם אני מסכים לשחרר את התחושה?</b>
+          <div class="chip-row" style="margin-top:6px">
+            <button class="chip ${d.agree === "yes" ? "on" : ""}" data-sagree="yes">כן</button>
+            <button class="chip ${d.agree === "no" ? "on" : ""}" data-sagree="no">עדיין לא</button>
+          </div></div></div>
+
+      <div class="focus-step"><span class="fs-num">7</span>
+        <div><b>אם כן — אפשר לתחושה להשתחרר.</b> בחר כיצד:
+          <div class="chip-row" style="margin-top:6px">${relChips}</div>
+          <div class="release-stage" id="sReleaseStage"></div>
+          <button class="btn ghost2" id="sReleaseBtn" style="margin-top:8px">🌬️ שחרור</button></div></div>
+
+      <button class="btn" id="saveSensProcess">שמירה + טעינת האווטר</button>
+    </div>`;
+}
+
+// --- תת-כלי: כלי ויסות — מדיטציות שבוע 4 + כניסה לטראנס ---
+function w4Regulation() {
+  const meds = S.getMeditationsByWeek(4);
+  return `
+    <div class="tool-block med-block">
+      <p class="hint">כלים לוויסות עצמי — מיינדפולנס, אימון אוטוגני, הרפיית ג'ייקובסון וכניסה לטראנס.
+        בחר כלי אחד שמתאים לך עכשיו ותרגל אותו.</p>
+      ${meds.length ? meds.map(medCard).join("") : `<p class="tiny-note">טרם הוגדרו כלים — ניתן להוסיף במסך הניהול.</p>`}
+    </div>`;
 }
 
 // --- תת-כלי 1: סריקת גוף + נשימת בטן + מחוון נשימה ---
@@ -1762,6 +1830,33 @@ function mountWeek4Handlers() {
   const sd = app.querySelector("#scanDone");
   if (sd) sd.addEventListener("click", () => { S.logActivity("exercise", "סריקה ונשימה"); toast("יפה! טענת את האווטר ✓"); });
 
+  // תת-כלי: להכיר את התחושות (תהליך שחרור)
+  const sInt = app.querySelector("#sIntensity");
+  if (sInt) sInt.addEventListener("input", () => app.querySelector("#sIntensityV").textContent = sInt.value);
+  app.querySelectorAll(".sq-chip, .sr-chip").forEach(b => b.addEventListener("click", () => b.classList.toggle("on")));
+  app.querySelectorAll("[data-sagree]").forEach(b => b.addEventListener("click", () => {
+    app.querySelectorAll("[data-sagree]").forEach(x => x.classList.remove("on")); b.classList.add("on");
+  }));
+  const srb = app.querySelector("#sReleaseBtn");
+  if (srb) srb.addEventListener("click", () => {
+    const stage = app.querySelector("#sReleaseStage");
+    stage.innerHTML = `<div class="release-orb"></div><div class="release-text">משחררים… תן לתחושה להתפזר עם נשימה ארוכה</div>`;
+    S.logActivity("exposure", "שחרור תחושה");
+  });
+  const ssp = app.querySelector("#saveSensProcess");
+  if (ssp) ssp.addEventListener("click", () => {
+    S.setToolData(4, "sensProcess", {
+      where: qv("#sWhere"),
+      quality: [...app.querySelectorAll(".sq-chip.on")].map(b => b.dataset.q),
+      intensity: Number(app.querySelector("#sIntensity")?.value || 5),
+      name: qv("#sName"),
+      agree: app.querySelector("[data-sagree].on")?.dataset.sagree || "",
+      release: [...app.querySelectorAll(".sr-chip.on")].map(b => b.dataset.r),
+    });
+    S.logActivity("exercise", "להכיר את התחושות");
+    toast("נשמר ✓");
+  });
+
   // תת-כלי 2 — טיימרים מונחים
   const handPhases = [];
   for (let cyc = 1; cyc <= 3; cyc++) {
@@ -1859,7 +1954,7 @@ function toolWeek5(c) {
 
 // --- תת-כלי 0: בדיקה מהירה של מחשבה (30 שניות) — ברירת המחדל הפשוטה ---
 function w5Quick() {
-  const d = S.getToolData(5, "quickCheck") || {};
+  const d = S.getToolData(6, "quickCheck") || {};
   return `
     <div class="tool-block">
       <p class="hint">בדיקה מהירה של מחשבה מטרידה — 30 שניות, ארבע שאלות. זו ברירת המחדל.
@@ -1903,7 +1998,7 @@ function w5Learn() {
 
 // --- תת-כלי 2: טבלת החלפת מחשבות (7 עמודות) ---
 function w5Table() {
-  const rows = S.getToolData(5, "thoughtTable") || [emptyThoughtRow()];
+  const rows = S.getToolData(6, "thoughtTable") || [emptyThoughtRow()];
   return `
     <div class="tool-block">
       <p class="hint">גרסת העומק (אופציונלית): מלא אירוע אחר אירוע — מהמחשבה האוטומטית, דרך זיהוי עיוות החשיבה,
@@ -1965,18 +2060,18 @@ function w5Checker() {
 
 function mountWeek5Handlers() {
   app.querySelectorAll("[data-w5tab]").forEach(b =>
-    b.addEventListener("click", () => { stashWeek5Drafts(); week5Tab = b.dataset.w5tab; renderChapter(5); }));
+    b.addEventListener("click", () => { stashWeek5Drafts(); week5Tab = b.dataset.w5tab; renderChapter(6); }));
 
   // בדיקה מהירה (30 שניות)
   const sq = app.querySelector("#saveQuick");
   if (sq) sq.addEventListener("click", () => {
     const d = { q1: qv("#q1"), q2: qv("#q2"), q3: qv("#q3"), q4: qv("#q4") };
-    S.setToolData(5, "quickCheck", d);
+    S.setToolData(6, "quickCheck", d);
     if (Object.values(d).some(Boolean)) S.logActivity("thought", "בדיקה מהירה של מחשבה");
     toast("נשמר ✓");
   });
   const tod = app.querySelector("#toDepth");
-  if (tod) tod.addEventListener("click", () => { stashWeek5Drafts(); week5Tab = "table"; renderChapter(5); });
+  if (tod) tod.addEventListener("click", () => { stashWeek5Drafts(); week5Tab = "table"; renderChapter(6); });
 
   // לימוד
   const ld = app.querySelector("#learnDone");
@@ -1984,26 +2079,26 @@ function mountWeek5Handlers() {
 
   // טבלה
   app.querySelectorAll(".tt-input").forEach(inp =>
-    inp.addEventListener("change", () => S.setToolData(5, "thoughtTable", collectThoughtRows())));
+    inp.addEventListener("change", () => S.setToolData(6, "thoughtTable", collectThoughtRows())));
   const at = app.querySelector("#addThought");
   if (at) at.addEventListener("click", () => {
     const rows = collectThoughtRows(); rows.push(emptyThoughtRow());
-    S.setToolData(5, "thoughtTable", rows); renderChapter(5);
+    S.setToolData(6, "thoughtTable", rows); renderChapter(6);
   });
   app.querySelectorAll(".tt-del").forEach(b =>
     b.addEventListener("click", () => {
       const rows = collectThoughtRows(); rows.splice(Number(b.dataset.del), 1);
-      S.setToolData(5, "thoughtTable", rows.length ? rows : [emptyThoughtRow()]); renderChapter(5);
+      S.setToolData(6, "thoughtTable", rows.length ? rows : [emptyThoughtRow()]); renderChapter(6);
     }));
   const stt = app.querySelector("#saveThoughtTable");
   if (stt) stt.addEventListener("click", () => {
     const rows = collectThoughtRows();
-    S.setToolData(5, "thoughtTable", rows);
+    S.setToolData(6, "thoughtTable", rows);
     if (rows.some(r => Object.values(r).some(Boolean))) S.logActivity("thought", "החלפת מחשבה");
-    toast("הטבלה נשמרה ✓"); renderChapter(5);
+    toast("הטבלה נשמרה ✓"); renderChapter(6);
   });
   const pt = app.querySelector("#pdfThought");
-  if (pt) pt.addEventListener("click", () => { S.setToolData(5, "thoughtTable", collectThoughtRows()); openThoughtPrint(collectThoughtRows()); });
+  if (pt) pt.addEventListener("click", () => { S.setToolData(6, "thoughtTable", collectThoughtRows()); openThoughtPrint(collectThoughtRows()); });
 
   // בודק AI
   const tc = app.querySelector("#tcCheck");
@@ -2022,8 +2117,8 @@ function mountWeek5Handlers() {
 }
 
 function stashWeek5Drafts() {
-  if (app.querySelectorAll("#thoughtRows .exp-row").length) S.setToolData(5, "thoughtTable", collectThoughtRows());
-  if (app.querySelector("#q1")) S.setToolData(5, "quickCheck", { q1: qv("#q1"), q2: qv("#q2"), q3: qv("#q3"), q4: qv("#q4") });
+  if (app.querySelectorAll("#thoughtRows .exp-row").length) S.setToolData(6, "thoughtTable", collectThoughtRows());
+  if (app.querySelector("#q1")) S.setToolData(6, "quickCheck", { q1: qv("#q1"), q2: qv("#q2"), q3: qv("#q3"), q4: qv("#q4") });
 }
 
 function openThoughtPrint(rows) {
@@ -2033,7 +2128,7 @@ function openThoughtPrint(rows) {
   const body = rows.map(r =>
     `<tr>${THOUGHT_TABLE_COLS.map(co => `<td>${esc(r[co.key] || "")}</td>`).join("")}</tr>`).join("");
   const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
-    <title>טבלת החלפת מחשבות — שבוע 5</title>
+    <title>טבלת החלפת מחשבות — שבוע 6</title>
     <style>
       @page{size:landscape}
       body{font-family:"Segoe UI",Arial,sans-serif;color:#20353a;padding:22px}
@@ -2046,7 +2141,7 @@ function openThoughtPrint(rows) {
       @media print{.noprint{display:none}}
     </style></head><body>
     <h1>טבלת החלפת מחשבות</h1>
-    <p class="sub">מסע 8 השבועות · שבוע 5 — הנהגת המחשבות</p>
+    <p class="sub">מסע 8 השבועות · שבוע 6 — הנהגת המחשבות</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -2064,8 +2159,16 @@ let week6Tab = "identity";
 const W6_TABS = [
   { id: "identity", label: "מי אני בלי הבעיה" },
   { id: "guided",   label: "מפגש החמלה" },
+  { id: "burden",   label: "הסרת העול" },
   { id: "meds",     label: "מדיטציות" },
   { id: "write",    label: "כתיבה 5 דק׳" },
+];
+// הסרת העול — 4 עומסים שאני מניח מעליי
+const BURDEN_FIELDS = [
+  { key: "guilt",   icon: "🪶", label: "איזו אשמה אני מוריד מעליי?", ph: "אשמה שנשאתי ולא באמת שלי..." },
+  { key: "others",  icon: "🎒", label: "איזה עול של אחרים אני מוריד מעליי?", ph: "אחריות/רגשות של אחרים שלקחתי על עצמי..." },
+  { key: "pleasing", icon: "🙇", label: "איזה ריצוי אני מוריד מעליי?", ph: "לרצות ולהתאים את עצמי כדי שיאהבו אותי..." },
+  { key: "perfect", icon: "🎯", label: "איזה משהו שאני עושה בפרפקציוניזם אני מוריד מעליי?", ph: "דרישה מעצמי שהכול יהיה מושלם..." },
 ];
 const WORRY_REMINDER = {
   title: "דייט עם הדאגה — 5 דקות",
@@ -2079,6 +2182,7 @@ function toolWeek6(c) {
   let body = "";
   if (week6Tab === "identity") body = w6Identity();
   if (week6Tab === "guided") body = w6Guided();
+  if (week6Tab === "burden") body = w6Burden();
   if (week6Tab === "meds") body = w6Meds();
   if (week6Tab === "write") body = w6Write();
   return tabs + `<div id="w6body">${body}</div>`;
@@ -2161,6 +2265,22 @@ function w6HealAvatar(count) {
   if (happy) happy.style.opacity = happyOn ? "1" : "0";
 }
 
+// --- הסרת העול — 4 עומסים שאני מניח מעליי ---
+function w6Burden() {
+  const d = S.getToolData(5, "burden") || {};
+  return `
+    <div class="tool-block">
+      <p class="hint">כהורה מיטיב לעצמי — אני בוחר להניח מעליי את מה שאני נושא ולא באמת שלי.
+        לכל שורה: מה בדיוק אני מוריד מעליי כרגע?</p>
+      ${BURDEN_FIELDS.map(f => `
+        <div class="burden-item">
+          <label class="mini-label">${f.icon} ${f.label}</label>
+          <textarea class="ta burden-ta" data-b="${f.key}" placeholder="${f.ph}">${esc(d[f.key] || "")}</textarea>
+        </div>`).join("")}
+      <button class="btn" id="saveBurden">🪶 הנחתי את זה מעליי — שמירה</button>
+    </div>`;
+}
+
 // --- כתיבה חופשית 5 דקות + טיימר + תזכורת יומית ---
 function w6Write() {
   const st = S.getState();
@@ -2197,7 +2317,7 @@ function w6Write() {
 
 // --- תהליך מודרך (פוקוסינג) ---
 function w6Guided() {
-  const d = S.getToolData(6, "focusing") || {};
+  const d = S.getToolData(5, "focusing") || {};
   const sensChips = FOCUS_SENSATIONS.map(s =>
     `<button class="chip mini focus-sens ${(d.sens || []).includes(s) ? "on" : ""}" data-sens="${s}">${s}</button>`).join("");
   return `
@@ -2244,7 +2364,7 @@ function w6Guided() {
 
 // --- מדיטציות שבוע 6 ---
 function w6Meds() {
-  const meds = S.getMeditationsByWeek(6);
+  const meds = S.getMeditationsByWeek(5);
   return `
     <div class="tool-block med-block">
       <p class="hint">מדיטציות ללווי העבודה על הורות עצמית מיטיבה, סליחה ואהבה עצמית.</p>
@@ -2265,6 +2385,15 @@ function mountWeek6Handlers() {
   if (si) si.addEventListener("click", () => {
     S.logActivity("exercise", "מי אני בלי הבעיה");
     celebrate(); toast("יפה — נזכרת במי שאתה 🌱");
+  });
+
+  // הסרת העול
+  const sb = app.querySelector("#saveBurden");
+  if (sb) sb.addEventListener("click", () => {
+    const d = {}; app.querySelectorAll(".burden-ta").forEach(t => d[t.dataset.b] = t.value.trim());
+    S.setToolData(5, "burden", d);
+    if (Object.values(d).some(Boolean)) S.logActivity("exercise", "הסרת העול");
+    celebrate(); toast("🪶 הנחת את זה מעליך");
   });
 
   // טקס הקערה — כותבים בעיה ומשליכים אותה לקערה
@@ -2304,7 +2433,7 @@ function mountWeek6Handlers() {
   }
 
   app.querySelectorAll("[data-w6tab]").forEach(b =>
-    b.addEventListener("click", () => { stopActiveTimer(); stashWeek6Drafts(); week6Tab = b.dataset.w6tab; renderChapter(6); }));
+    b.addEventListener("click", () => { stopActiveTimer(); stashWeek6Drafts(); week6Tab = b.dataset.w6tab; renderChapter(5); }));
 
   // כתיבה 5 דקות
   const ws = app.querySelector("#writeStart");
@@ -2319,7 +2448,7 @@ function mountWeek6Handlers() {
   if (sw) sw.addEventListener("click", () => {
     const v = app.querySelector("#freeWrite").value.trim();
     if (!v) return toast("כתוב משהו קודם");
-    S.saveToolEntry(6, "freewrite", { text: v });
+    S.saveToolEntry(5, "freewrite", { text: v });
     S.logActivity("exercise", "דייט עם הדאגה — כתיבה");
     toast("נשמר ✓"); app.querySelector("#freeWrite").value = "";
   });
@@ -2343,7 +2472,7 @@ function mountWeek6Handlers() {
       needs: app.querySelector("#fNeeds").value.trim(),
       agree: app.querySelector("[data-agree].on")?.dataset.agree || "",
     };
-    S.setToolData(6, "focusing", data);
+    S.setToolData(5, "focusing", data);
     S.logActivity("exercise", "דייט עם הדאגה — מודרך");
     toast("נשמר ✓");
   });
@@ -2371,42 +2500,122 @@ function mountWeek6Handlers() {
 function stashWeek6Drafts() {
   const fw = app.querySelector("#fWord");
   if (fw || app.querySelector("#fNeeds")) {
-    S.setToolData(6, "focusing", {
+    S.setToolData(5, "focusing", {
       sens: [...app.querySelectorAll(".focus-sens.on")].map(b => b.dataset.sens),
       word: app.querySelector("#fWord")?.value.trim() || "",
       needs: app.querySelector("#fNeeds")?.value.trim() || "",
       agree: app.querySelector("[data-agree].on")?.dataset.agree || "",
     });
   }
+  if (app.querySelector(".burden-ta")) {
+    const d = {}; app.querySelectorAll(".burden-ta").forEach(t => d[t.dataset.b] = t.value.trim());
+    S.setToolData(5, "burden", d);
+  }
 }
 
 // ============================================================
 //  שבוע 7 — פעולה למרות פחד: כללים והכנה, חשיפה בדמיון, סולם פחדים
 // ============================================================
+let week7Part = "a";
 let week7Tab = "rules";
-const W7_TABS = [
-  { id: "rules",    label: "כללים והכנה" },
-  { id: "ladder",   label: "סולם פחדים" },
-  { id: "imaginal", label: "חשיפה בדמיון" },
-  { id: "internal", label: "חשיפות פנימיות" },
-  { id: "journal",  label: "יומן חשיפות" },
-  { id: "advisor",  label: "יועץ חשיפות" },
+const W7_PARTS = [
+  { id: "a", label: "חלק א · הכנה", tabs: [
+    { id: "rules",    label: "כללים והכנה" },
+    { id: "prep",     label: "הכנה לחשיפה" },
+    { id: "imaginal", label: "חשיפה בדמיון" },
+    { id: "ladder",   label: "סולם פחדים" },
+  ]},
+  { id: "b", label: "חלק ב · ביצוע ומעקב", tabs: [
+    { id: "internal", label: "חשיפות פנימיות" },
+    { id: "journal",  label: "יומן חשיפות" },
+    { id: "after",    label: "אחרי חשיפה" },
+    { id: "advisor",  label: "יועץ חשיפות" },
+  ]},
 ];
+// רגשות מוצעים בטופס ההכנה לחשיפה
+const PREP_EMOTIONS = ["פחד", "חרדה", "עצבנות", "כעס", "תסכול", "עצב", "מבוכה", "בושה", "שנאה"];
 
 // שיחת ייעוץ החשיפות — נשמרת בזיכרון למשך הגלישה (כמו מאמן ה-AI)
 let expAdvisorThread = [];
 
 function toolWeek7(c) {
-  const tabs = `<div class="subtool-tabs">${W7_TABS.map(t =>
+  const part = W7_PARTS.find(p => p.id === week7Part) || W7_PARTS[0];
+  if (!part.tabs.some(t => t.id === week7Tab)) week7Tab = part.tabs[0].id;
+  const partToggle = `<div class="part-toggle">${W7_PARTS.map(p =>
+    `<button class="part-btn ${week7Part === p.id ? "on" : ""}" data-w7part="${p.id}">${p.label}</button>`).join("")}</div>`;
+  const tabs = `<div class="subtool-tabs">${part.tabs.map(t =>
     `<button class="subtool-tab ${week7Tab === t.id ? "on" : ""}" data-w7tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body = "";
   if (week7Tab === "rules") body = w7Rules();
+  if (week7Tab === "prep") body = w7Prep();
   if (week7Tab === "imaginal") body = w7Imaginal();
-  if (week7Tab === "internal") body = w4Table();
   if (week7Tab === "ladder") body = w7Ladder();
+  if (week7Tab === "internal") body = w4Table();
   if (week7Tab === "journal") body = w7Journal();
+  if (week7Tab === "after") body = w7After();
   if (week7Tab === "advisor") body = w7Advisor();
-  return tabs + `<div id="w7body">${body}</div>`;
+  return partToggle + tabs + `<div id="w7body">${body}</div>`;
+}
+
+// --- חלק א: טופס הכנה לחשיפה (דיגיטלי) ---
+function w7Prep() {
+  const d = S.getToolData(7, "prepForm") || {};
+  const emoChips = PREP_EMOTIONS.map(e =>
+    `<button class="chip mini prep-emo ${(d.emotions || []).includes(e) ? "on" : ""}" data-e="${e}">${e}</button>`).join("");
+  const f = (key, label, ph) => `<label class="mini-label">${label}</label>
+    <textarea class="ta prepf" data-f="${key}" placeholder="${esc(ph)}">${esc(d[key] || "")}</textarea>`;
+  return `
+    <div class="tool-block">
+      <p class="hint">טופס הכנה לחשיפה — ממלאים <b>לפני</b> החשיפה. תכנון טוב מפחית הפתעות ומחזק את ההנהגה העצמית.</p>
+      ${f("situation", "מצב שיש להיחשף אליו", "תאר את הסיטואציה שאליה תיחשף...")}
+      ${f("autoThoughts", "מחשבות אוטומטיות שעולות בראשך לגבי המצב", "מה המוח אומר על המצב...")}
+      <label class="mini-label">רגשות שאתה מניח שתרגיש בזמן האירוע</label>
+      <div class="chip-row">${emoChips}</div>
+      <input class="inp prepf" data-f="emotionOther" value="${esc(d.emotionOther || "")}" placeholder="אחר (פרט)...">
+      ${f("distortions", "טעויות / עיוותי חשיבה", "איזה עיוות חשיבה מופיע כאן...")}
+      <div class="prep-challenge">
+        <div class="prep-ch-title">🔍 שאלות מאתגרות</div>
+        ${f("sure", "האם אני בטוח ש...", "...")}
+        ${f("evidence", "מה הן הראיות שיש לי שמוכיחות ש...", "...")}
+        ${f("worst", "מה הדבר הכי גרוע שעלול לקרות? עד כמה זה גרוע?", "...")}
+        ${f("alt", "האם קיים הסבר אחר אפשרי ל...", "...")}
+      </div>
+      ${f("altThoughts", "מחשבות חלופיות (שינוי במחשבות האוטומטיות אחרי אתגור)", "הניסוח המדויק והמאוזן יותר...")}
+      ${f("rational", "תגובה רציונאלית — מנטרות הגיוניות וקצרות שיעזרו לי", "משפט קצר שיעזור לי בזמן החשיפה...")}
+      ${f("goal", "המטרה", "היעד ההתנהגותי שלי לחשיפה הזאת...")}
+      <button class="btn" id="savePrepForm">שמירה + טעינת האווטר</button>
+    </div>`;
+}
+function collectPrepForm() {
+  const d = {};
+  app.querySelectorAll("#w7body .prepf").forEach(el => d[el.dataset.f] = el.value.trim());
+  d.emotions = [...app.querySelectorAll("#w7body .prep-emo.on")].map(b => b.dataset.e);
+  return d;
+}
+
+// --- חלק ב: טופס אחרי חשיפה (דיגיטלי) ---
+function w7After() {
+  const d = S.getToolData(7, "afterForm") || {};
+  const f = (key, label, ph) => `<label class="mini-label">${label}</label>
+    <textarea class="ta afterf" data-f="${key}" placeholder="${esc(ph)}">${esc(d[key] || "")}</textarea>`;
+  return `
+    <div class="tool-block">
+      <p class="hint">טופס אחרי חשיפה — ממלאים <b>אחרי</b> החשיפה, כדי לעגן את הלמידה החדשה.</p>
+      ${f("goalsAchieved", "האם השגת את היעדים ההתנהגותיים שכתבת בהכנה לחשיפה?", "...")}
+      <div class="prep-challenge">
+        <div class="prep-ch-title">🔍 בדיקה של מחשבות אוטומטיות בפועל</div>
+        ${f("predicted", "האם המחשבות שצפית מראש אכן היו?", "...")}
+        ${f("helped", "עד כמה ההבניה הקוגניטיבית סייעה לך להתגבר עליהן?", "...")}
+        ${f("unexpected", "האם היו מחשבות בלתי צפויות — ומה עשית איתן?", "...")}
+      </div>
+      ${f("learned", "מה למדת?", "הלמידה החדשה מהחוויה הזאת...")}
+      <button class="btn" id="saveAfterForm">שמירה + טעינת האווטר</button>
+    </div>`;
+}
+function collectAfterForm() {
+  const d = {};
+  app.querySelectorAll("#w7body .afterf").forEach(el => d[el.dataset.f] = el.value.trim());
+  return d;
 }
 
 // --- כללים + הכנה ---
@@ -2690,8 +2899,30 @@ async function sendExpMsg() {
 }
 
 function mountWeek7Handlers() {
+  app.querySelectorAll("[data-w7part]").forEach(b =>
+    b.addEventListener("click", () => {
+      stashWeek7Drafts(); week7Part = b.dataset.w7part;
+      const part = W7_PARTS.find(p => p.id === week7Part); week7Tab = part.tabs[0].id;
+      renderChapter(7);
+    }));
   app.querySelectorAll("[data-w7tab]").forEach(b =>
     b.addEventListener("click", () => { stashWeek7Drafts(); week7Tab = b.dataset.w7tab; renderChapter(7); }));
+
+  // טופס הכנה לחשיפה
+  app.querySelectorAll(".prep-emo").forEach(b => b.addEventListener("click", () => b.classList.toggle("on")));
+  const spf = app.querySelector("#savePrepForm");
+  if (spf) spf.addEventListener("click", () => {
+    S.setToolData(7, "prepForm", collectPrepForm());
+    S.logActivity("exercise", "הכנה לחשיפה");
+    toast("נשמר ✓");
+  });
+  // טופס אחרי חשיפה
+  const saf = app.querySelector("#saveAfterForm");
+  if (saf) saf.addEventListener("click", () => {
+    S.setToolData(7, "afterForm", collectAfterForm());
+    S.logActivity("exposure", "אחרי חשיפה — למידה");
+    toast("נשמר ✓");
+  });
 
   // הכנה
   const sp = app.querySelector("#savePrep");
@@ -2854,6 +3085,8 @@ function stashWeek7Drafts() {
   if (app.querySelectorAll("#rungs .rung").length) S.setToolData(7, "ladder", collectLadder());
   if (app.querySelectorAll(".exp-day-row").length) S.setToolData(7, "exposurePlan", collectExpPlan());
   if (app.querySelectorAll(".exp-row").length) S.setToolData(4, "exposures", collectExposures());
+  if (app.querySelector("#w7body .prepf")) S.setToolData(7, "prepForm", collectPrepForm());
+  if (app.querySelector("#w7body .afterf")) S.setToolData(7, "afterForm", collectAfterForm());
 }
 
 function openLadderPrint(L) {
@@ -2896,8 +3129,13 @@ const W8_TABS = [
   { id: "values",   label: "בחירת ערכים" },
   { id: "realize",  label: "הגשמת הערכים" },
   { id: "schedule", label: "לוח שבועי" },
-  { id: "comm",     label: "תקשורת" },
+  { id: "relapse",  label: "טריגרים לנסיגה" },
+  { id: "bonus",    label: "בונוסים" },
 ];
+// דוגמאות לטריגרים שמסמנים נסיגה
+const RELAPSE_EXAMPLES = ["הססנות", "קושי בקבלת החלטות", "ביקורת עצמית", "חוסר סבלנות",
+  "חוסר עניין והנאה", "עייפות", "אכילת יתר", "חוסר תיאבון", "כבדות", "עצבנות",
+  "מחשבות חרדתיות", "התמקדות בשלילי", "חוסר התלהבות", "פרפקציוניזם", "הימנעות חברתית", "גוף דרוך"];
 const VALUE_REMINDER = {
   title: "הגשמת ערך — מסע 8 השבועות",
   description: "פעולה קטנה שמגשימה ערך שחשוב לך. לא לחכות שהפחד ייעלם — לפעול לכיוון שחשוב לך.",
@@ -2910,8 +3148,30 @@ function toolWeek8(c) {
   if (week8Tab === "values") body = w8Values();
   if (week8Tab === "realize") body = w8Realize();
   if (week8Tab === "schedule") body = w8Schedule();
-  if (week8Tab === "comm") body = w8Comm();
+  if (week8Tab === "relapse") body = w8Relapse();
+  if (week8Tab === "bonus") body = w8Comm();
   return tabs + `<div id="w8body">${body}</div>`;
+}
+
+// --- טריגרים לנסיגה + מענה עצמי ---
+function w8Relapse() {
+  const d = S.getToolData(8, "relapse") || {};
+  const t = d.triggers || ["", "", ""];
+  const chips = RELAPSE_EXAMPLES.map(x => `<button class="chip mini relapse-ex" data-x="${esc(x)}">${esc(x)}</button>`).join("");
+  return `
+    <div class="tool-block">
+      <p class="hint">מפת נסיגה — לזהות מראש את הסימנים שאני מתחיל להיסחף, ולהכין לעצמי מענה מתוך מה שכבר למדתי במסע.</p>
+      <h5>🚩 אלו 3 טריגרים מסמנים לי שאני בנסיגה?</h5>
+      <p class="hint">לחץ על דוגמה כדי למלא, או כתוב משלך:</p>
+      <div class="chip-row" style="margin-bottom:10px">${chips}</div>
+      <input class="inp relapse-t" data-i="0" value="${esc(t[0] || "")}" placeholder="טריגר 1">
+      <input class="inp relapse-t" data-i="1" value="${esc(t[1] || "")}" placeholder="טריגר 2">
+      <input class="inp relapse-t" data-i="2" value="${esc(t[2] || "")}" placeholder="טריגר 3">
+      <h5 style="margin-top:12px">💪 מה המענה שאני אתן לעצמי ברגע שאני בנסיגה?</h5>
+      <p class="hint">מתוך מה שכבר למדתי — איך אני, המבוגר המיטיב, מנהיג את עצמי חזרה?</p>
+      <textarea class="ta" id="relapseResponse" placeholder="המענה שלי לעצמי...">${esc(d.response || "")}</textarea>
+      <button class="btn" id="saveRelapse">שמירה + טעינת האווטר</button>
+    </div>`;
 }
 
 // --- בחירת ודירוג ערכים ---
@@ -3034,6 +3294,9 @@ function collectSchedule() {
 function w8Comm() {
   return `
     <div class="tool-block">
+      <p class="hint">🎁 בונוס — כלים נוספים שיעזרו לך לחיות מתוך הערכים גם במערכות היחסים שלך.</p>
+    </div>
+    <div class="tool-block">
       <h5>🗣️ עקרונות התקשורת המקרבת</h5>
       <div class="dist-list">
         ${COMMUNICATION_PRINCIPLES.map(p => `
@@ -3055,6 +3318,21 @@ function w8Comm() {
 function mountWeek8Handlers() {
   app.querySelectorAll("[data-w8tab]").forEach(b =>
     b.addEventListener("click", () => { stashWeek8Drafts(); week8Tab = b.dataset.w8tab; renderChapter(8); }));
+
+  // טריגרים לנסיגה
+  app.querySelectorAll(".relapse-ex").forEach(b => b.addEventListener("click", () => {
+    const inputs = [...app.querySelectorAll(".relapse-t")];
+    const empty = inputs.find(i => !i.value.trim());
+    if (empty) empty.value = b.dataset.x; else toast("שלושת הטריגרים מלאים");
+  }));
+  const srl = app.querySelector("#saveRelapse");
+  if (srl) srl.addEventListener("click", () => {
+    const triggers = [...app.querySelectorAll(".relapse-t")].map(i => i.value.trim());
+    const response = qv("#relapseResponse");
+    S.setToolData(8, "relapse", { triggers, response });
+    if (triggers.some(Boolean) || response) S.logActivity("exercise", "מפת נסיגה");
+    toast("נשמר ✓");
+  });
 
   // ערכים
   const collectValues = () => [...app.querySelectorAll(".val-input")].map(i => i.value.trim());
@@ -3145,6 +3423,8 @@ function stashWeek8Drafts() {
     S.setToolData(8, "realize", realize);
   }
   if (app.querySelectorAll("#w8sched .day-row").length) S.setToolData(8, "schedule", collectSchedule());
+  if (app.querySelector("#relapseResponse") || app.querySelector(".relapse-t"))
+    S.setToolData(8, "relapse", { triggers: [...app.querySelectorAll(".relapse-t")].map(i => i.value.trim()), response: qv("#relapseResponse") });
 }
 
 function openSchedulePrint(plan) {

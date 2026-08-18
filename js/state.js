@@ -66,6 +66,19 @@ function load() {
     // ניקוי הערת "קובץ זמני" ישנה מאימון אוטוגני (אצל משתמשים קיימים)
     const ag = merged.meditations.find(m => m.id === "autogenic");
     if (ag && ag.note && ag.note.includes("זמני")) ag.note = "";
+    // עדכון שיוך שבועות של מדיטציות (העברת טכניקות הוויסות לשבוע 4, מדיטציות החמלה לשבוע 5)
+    const MED_WEEK = { mindfulness: 4, autogenic: 4, jacobson: 4, trance: 4, forgiveness: 5, metta: 5, gratitude: 5 };
+    merged.meditations.forEach(m => { if (MED_WEEK[m.id] != null) m.week = MED_WEEK[m.id]; });
+    // החלפת שבוע 5 ו-6 (הורות עצמית מיטיבה עברה להיות שבוע 5, הנהגת המחשבות שבוע 6) — פעם אחת
+    if (!merged.swap56Done) {
+      merged.chapters = merged.chapters || {};
+      const tmp = merged.chapters["5"];
+      merged.chapters["5"] = merged.chapters["6"];
+      merged.chapters["6"] = tmp;
+      if (merged.chapters["5"] === undefined) delete merged.chapters["5"];
+      if (merged.chapters["6"] === undefined) delete merged.chapters["6"];
+      merged.swap56Done = true;
+    }
     // הסרת שורות "טשטוש ראייה" ו-"ניתוק / דה-ריאליזציה" מטבלת החשיפות הפנימיות (אצל משתמשים קיימים)
     const expData = merged.chapters && merged.chapters["4"] && merged.chapters["4"].data;
     if (expData && Array.isArray(expData.exposures)) {
@@ -84,6 +97,7 @@ function fresh() {
   s.aiPrompts = structuredClone(DEFAULT_AI_PROMPTS);
   s.meditations = structuredClone(DEFAULT_MEDITATIONS);
   s.medLibrary = structuredClone(DEFAULT_MED_LIBRARY);
+  s.swap56Done = true; // משתמשים חדשים כבר במבנה החדש
   return s;
 }
 
