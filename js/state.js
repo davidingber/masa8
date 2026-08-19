@@ -79,6 +79,16 @@ function load() {
       if (merged.chapters["6"] === undefined) delete merged.chapters["6"];
       merged.swap56Done = true;
     }
+    // החלפת הכלים החיצוניים של שבוע 5 ו-6 (סוויש עבר לשבוע 6, המסע הרגשי לשבוע 5) — פעם אחת
+    if (!merged.swapTools56Done) {
+      merged.externalTools = merged.externalTools || {};
+      const t5 = merged.externalTools["5"];
+      merged.externalTools["5"] = merged.externalTools["6"];
+      merged.externalTools["6"] = t5;
+      if (merged.externalTools["5"] === undefined) delete merged.externalTools["5"];
+      if (merged.externalTools["6"] === undefined) delete merged.externalTools["6"];
+      merged.swapTools56Done = true;
+    }
     // הסרת שורות "טשטוש ראייה" ו-"ניתוק / דה-ריאליזציה" מטבלת החשיפות הפנימיות (אצל משתמשים קיימים)
     const expData = merged.chapters && merged.chapters["4"] && merged.chapters["4"].data;
     if (expData && Array.isArray(expData.exposures)) {
@@ -98,6 +108,7 @@ function fresh() {
   s.meditations = structuredClone(DEFAULT_MEDITATIONS);
   s.medLibrary = structuredClone(DEFAULT_MED_LIBRARY);
   s.swap56Done = true; // משתמשים חדשים כבר במבנה החדש
+  s.swapTools56Done = true;
   return s;
 }
 
