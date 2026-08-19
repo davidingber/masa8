@@ -1610,8 +1610,17 @@ let activeTimer = null;
 const W4_TABS = [
   { id: "scan",       label: "סריקה ונשימה" },
   { id: "sensations", label: "להכיר את התחושות" },
+  { id: "contract",   label: "החוזה שלי" },
   { id: "exposure",   label: "חשיפה תוך-גופנית" },
   { id: "regulation", label: "כלי ויסות" },
+];
+// שדות "החוזה שלי עם התחושות"
+const CONTRACT_FIELDS = [
+  { key: "sensation", label: "איזו תחושה יש לי?", ph: "תיאור התחושה והיכן היא יושבת..." },
+  { key: "dangerous", label: "האם ידוע לי שהיא מסוכנת?", ph: "מה אני יודע בוודאות — לא מה שהחרדה אומרת..." },
+  { key: "vital", label: "האם היא באיבר חיוני?", ph: "למשל: לב, ראש, נשימה — או אזור לא חיוני..." },
+  { key: "duration", label: "כמה זמן מותר לה להיות בלי שהיא תעיד על סכנה?", ph: "למשל: 3 ימים, שבוע..." },
+  { key: "contract", label: "החוזה שלי עם עצמי:", ph: "אני מתחייב ל..." },
 ];
 // שלבי "להכיר את התחושות" — תהליך שחרור מודרך
 const SENS_QUALITIES = ["כיווץ", "כבדות", "משהו שרוצה להתפרץ", "מחנק", "דקירה", "נימול", "חום", "זרמים", "ריקנות", "לחץ"];
@@ -1625,9 +1634,30 @@ function toolWeek4(c) {
   let body = "";
   if (week4Tab === "scan") body = w4Scan();
   if (week4Tab === "sensations") body = w4Sensations();
+  if (week4Tab === "contract") body = w4Contract();
   if (week4Tab === "exposure") body = w4Exposure();
   if (week4Tab === "regulation") body = w4Regulation();
   return tabs + `<div id="w4body">${body}</div>`;
+}
+
+// --- החוזה שלי עם התחושות ---
+function w4Contract() {
+  const d = S.getToolData(4, "contract") || {};
+  return `
+    <div class="tool-block">
+      <p class="hint">חוזה עם התחושה — במקום להיבהל מכל מיחוש, אני קובע מראש, כמבוגר מיטיב, כמה מקום וזמן
+        לתת לתחושה לפני שהיא בכלל מעידה על סכנה.</p>
+      ${CONTRACT_FIELDS.map(f => `
+        <label class="mini-label">${f.label}</label>
+        <textarea class="ta contract-ta" data-c="${f.key}" placeholder="${f.ph}">${esc(d[f.key] || "")}</textarea>`).join("")}
+      <div class="identity-close" style="text-align:right">
+        <b>📄 חוזה לדוגמה:</b><br>
+        "אם יש לי כאב בכתף — או בכל אזור לא חיוני אחר — אתן לכאב <b>3 ימים</b> להיות,
+        כל עוד הוא לא הולך ומתעצם, וכל עוד מדובר במיחוש ולא בכאב ממשי."
+      </div>
+      <div class="warn-note">⚠️ אם אתם חוששים שמדובר בסכנה — כדאי ללכת להיבדק.</div>
+      <button class="btn" id="saveContract">שמירה + טעינת האווטר</button>
+    </div>`;
 }
 
 // --- תת-כלי: להכיר את התחושות — תהליך שחרור ב-7 שלבים ---
@@ -1909,6 +1939,15 @@ function mountWeek4Handlers() {
     toast("נשמר ✓");
   });
 
+  // החוזה שלי עם התחושות
+  const sct = app.querySelector("#saveContract");
+  if (sct) sct.addEventListener("click", () => {
+    const d = {}; app.querySelectorAll(".contract-ta").forEach(t => d[t.dataset.c] = t.value.trim());
+    S.setToolData(4, "contract", d);
+    if (Object.values(d).some(Boolean)) S.logActivity("exercise", "החוזה שלי עם התחושות");
+    toast("החוזה נשמר ✓");
+  });
+
   // תת-כלי 2 — טיימרים מונחים
   const handPhases = [];
   for (let cyc = 1; cyc <= 3; cyc++) {
@@ -1950,7 +1989,12 @@ function mountWeek4Handlers() {
 
 }
 
-function stashWeek4Drafts() {}
+function stashWeek4Drafts() {
+  if (app.querySelector(".contract-ta")) {
+    const d = {}; app.querySelectorAll(".contract-ta").forEach(t => d[t.dataset.c] = t.value.trim());
+    S.setToolData(4, "contract", d);
+  }
+}
 
 function openExposurePrint(rows) {
   const st = S.getState();
