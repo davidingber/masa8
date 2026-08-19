@@ -8,7 +8,8 @@ import { COURSE, ACTIVITY_TYPES, EMOTION_ALTERNATIVES, ALT_EMOTION_POOL,
          EXPOSURE_EMOTIONS, EXPOSURE_RULES, EXPOSURE_EXAMPLES, IMAGINAL_STEPS,
          VALUES_SUGGESTIONS, COMMUNICATION_PRINCIPLES, ASSERTIVENESS_STEPS, DAILY_PRACTICES,
          BREATH_PATTERNS, BADGES, CALMING_PHRASES, GROUNDING_STEPS, HOTLINES, GOAL_TOOL,
-         CENTRAL_QUESTION, WEEK_FRAMING, METHODS_SUBTEXT } from "./data.js";
+         CENTRAL_QUESTION, WEEK_FRAMING, METHODS_SUBTEXT,
+         JOURNEY_PROMISE, RESPONSE_PROTOCOL, MAP_PHASES } from "./data.js";
 import * as S from "./state.js";
 import { renderAvatar, avatarMessage } from "./avatar.js";
 import { askAI } from "./ai.js";
@@ -281,7 +282,8 @@ function renderOnboarding() {
   if (onbStep === 0) body = `
     ${onbArt(0)}
     <h2>${onb.gender === "f" ? "ברוכה הבאה" : "ברוך הבא"} למסע 8 השבועות</h2>
-    <p class="onb-sub">מהישרדות פנימית להנהגה עצמית. נתחיל בהיכרות קצרה.</p>
+    <p class="onb-promise">${JOURNEY_PROMISE}</p>
+    <p class="onb-sub">נתחיל בהיכרות קצרה.</p>
     <label class="onb-label">איך קוראים לך?</label>
     <input class="inp" id="onbName" placeholder="השם שלך" value="${esc(onb.name)}">
     <label class="onb-label">אני:</label>
@@ -440,6 +442,15 @@ function renderHome() {
       <button class="btn" id="goalToolBtn">✍️ ${st.goal ? "פתיחת הגדרת המטרה" : (G("בוא", "בואי") + " נגדיר את המטרה")}</button>
     </section>
 
+    <section class="card protocol-card">
+      <div class="card-head"><h3>🧭 פרוטוקול המענה</h3></div>
+      <p class="subtle">כשמשהו בתוכי מפחד — 5 צעדים של המבוגר המיטיב, לכל רגע.</p>
+      <div class="protocol-mini">
+        ${RESPONSE_PROTOCOL.steps.map((s, i) => `<span class="protocol-chip">${i + 1}. ${s.icon} ${esc(s.t)}</span>`).join("")}
+      </div>
+      <button class="btn ghost2" id="openProtocol">פתיחת הפרוטוקול המלא</button>
+    </section>
+
     ${st.emotion.name ? `
     <section class="card checkin-card">
       <div class="card-head"><h3>🌡️ צ'ק-אין יומי</h3>
@@ -517,6 +528,7 @@ function renderHome() {
   if (eg) eg.addEventListener("click", () => go("goal"));
   app.querySelector("#goalToolBtn").addEventListener("click", () => go("goal"));
   app.querySelector("#shareProgress").addEventListener("click", shareProgress);
+  app.querySelector("#openProtocol")?.addEventListener("click", () => { sosView = "protocol"; renderSOS(); });
   app.querySelectorAll("[data-qa]").forEach(el =>
     el.addEventListener("click", () => { const [r, p] = QA_NAV[el.dataset.qa]; go(r, p); }));
 
@@ -930,7 +942,8 @@ function renderChapters() {
         const pct = Math.round(done / total * 100);
         const live = c.week === 1;
         const fr = WEEK_FRAMING[c.week];
-        return `
+        const phase = MAP_PHASES[c.week] ? `<div class="map-phase">${MAP_PHASES[c.week]}</div>` : "";
+        return phase + `
         <button class="chapter-item" data-week="${c.week}">
           <div class="ch-icon">${c.icon}</div>
           <div class="ch-body">
@@ -1453,7 +1466,8 @@ function toolWeek3(c) {
   const tabs = `<div class="subtool-tabs">${W3_TABS.map(t =>
     `<button class="subtool-tab ${week3Tab === t.id ? "on" : ""}" data-w3tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   const body = week3Tab === "defusion" ? w3Defusion() : w3Reframe();
-  return tabs + `<div id="w3body">${body}</div>`;
+  return `<p class="week-distinction">🍃 בשבוע הזה לא נצמדים למחשבה — שמים לב שהיא רק מחשבה. <b>בשבוע 6 נבדוק אם היא מדויקת.</b></p>`
+    + tabs + `<div id="w3body">${body}</div>`;
 }
 
 function w3Defusion() {
@@ -2063,7 +2077,8 @@ function toolWeek5(c) {
   if (week5Tab === "learn") body = w5Learn();
   if (week5Tab === "table") body = w5Table();
   if (week5Tab === "checker") body = w5Checker();
-  return tabs + `<div id="w5body">${body}</div>`;
+  return `<p class="week-distinction">🧠 בשבוע 3 תרגלנו לא להיצמד למחשבה. <b>כאן, כמנהיגים, בודקים אם היא מדויקת — עובדה או סיפור.</b></p>`
+    + tabs + `<div id="w5body">${body}</div>`;
 }
 
 // --- תת-כלי 0: בדיקה מהירה של מחשבה (30 שניות) — ברירת המחדל הפשוטה ---
@@ -3244,6 +3259,7 @@ const W8_TABS = [
   { id: "realize",  label: "הגשמת הערכים" },
   { id: "schedule", label: "לוח שבועי" },
   { id: "relapse",  label: "טריגרים לנסיגה" },
+  { id: "identity", label: "הזהות החדשה שלי" },
   { id: "bonus",    label: "בונוסים" },
 ];
 // דוגמאות לטריגרים שמסמנים נסיגה
@@ -3271,6 +3287,7 @@ function toolWeek8(c) {
   if (week8Tab === "realize") body = w8Realize();
   if (week8Tab === "schedule") body = w8Schedule();
   if (week8Tab === "relapse") body = w8Relapse();
+  if (week8Tab === "identity") body = w8Identity();
   if (week8Tab === "bonus") body = w8Comm();
   return tabs + `<div id="w8body">${body}</div>`;
 }
@@ -3304,6 +3321,29 @@ function w8Relapse() {
       <p class="hint">מתוך מה שכבר למדתי — איך אני, המבוגר המיטיב, מנהיג את עצמי חזרה?</p>
       <textarea class="ta" id="relapseResponse" placeholder="המענה שלי לעצמי...">${esc(d.response || "")}</textarea>
       <button class="btn" id="saveRelapse">שמירה + טעינת האווטר</button>
+    </div>`;
+}
+
+// --- סגירת לולאת הזהות: מי רציתי להיות (שבוע 1) → מי הפכתי להיות ---
+function w8Identity() {
+  const start = (S.getToolData(1, "dickens") || {}).identity || "";
+  const d = S.getToolData(8, "identityClose") || {};
+  return `
+    <div class="tool-block">
+      <p class="hint">הגעת לסוף המסע. הרגע הזה סוגר מעגל — ממי שרצית להיות, אל מי שהפכת להיות.</p>
+
+      ${start ? `<div class="identity-then">
+        <div class="identity-then-label">✍️ בשבוע 1 כתבת שאתה רוצה להיות:</div>
+        <p>${esc(start).replace(/\n/g, "<br>")}</p>
+      </div>` : `<p class="hint">בשבוע 1 (תרגיל דיקנס) המקום ל"מי אני רוצה להיות" נשאר ריק — זה בסדר. כתוב עכשיו מי הפכת להיות.</p>`}
+
+      <label class="mini-label">🌅 ומי הפכתי להיות? — כתוב בלשון הווה, כמבוגר המיטיב שאתה כבר</label>
+      <textarea class="ta big" id="identityNow" placeholder="אני אדם ש... החרדה כבר לא מנהלת אותי... אני יודע לתת לעצמי מענה... היציבה שלי...">${esc(d.text || "")}</textarea>
+
+      <div class="identity-close" style="text-align:center">
+        מהיום — כשמשהו בתוכי מפחד, <b>אני זה שמנהיג את הבית.</b> 🌱
+      </div>
+      <button class="btn" id="saveIdentityNow">חתימת הזהות + טעינת האווטר</button>
     </div>`;
 }
 
@@ -3465,6 +3505,15 @@ function mountWeek8Handlers() {
     const empty = inputs.find(i => !i.value.trim());
     if (empty) empty.value = b.dataset.x; else toast("שלושת הטריגרים מלאים");
   }));
+  // הזהות החדשה שלי (סגירת המעגל)
+  const sin = app.querySelector("#saveIdentityNow");
+  if (sin) sin.addEventListener("click", () => {
+    const text = qv("#identityNow");
+    S.setToolData(8, "identityClose", { text });
+    if (text) { S.logActivity("values", "חתימת הזהות החדשה"); celebrate(); }
+    toast("🌱 הזהות נחתמה");
+  });
+
   const srl = app.querySelector("#saveRelapse");
   if (srl) srl.addEventListener("click", () => {
     const data = collectRelapse();
@@ -3564,6 +3613,7 @@ function stashWeek8Drafts() {
   if (app.querySelectorAll("#w8sched .day-row").length) S.setToolData(8, "schedule", collectSchedule());
   if (app.querySelector("#relapseResponse") || app.querySelector(".relapse-t") || app.querySelector(".renewal-ta"))
     S.setToolData(8, "relapse", collectRelapse());
+  if (app.querySelector("#identityNow")) S.setToolData(8, "identityClose", { text: qv("#identityNow") });
 }
 
 function openSchedulePrint(plan) {
@@ -4300,6 +4350,7 @@ function renderSOS() {
       <h2>רגע קשה? אני כאן איתך</h2>
       <p class="sos-sub">${G("אתה בטוח", "את בטוחה")}. מה ש${G("אתה מרגיש", "את מרגישה")} הוא גל — הוא יעלה ויחלוף. ${G("בוא", "בואי")} נעבור אותו יחד, צעד אחד.</p>
       <div class="sos-menu">
+        <button class="sos-item protocol" data-sos="protocol"><span>🧭</span> פרוטוקול המענה — 5 צעדים</button>
         <button class="sos-item" data-sos="breath"><span>🫁</span> נשימה מרגיעה</button>
         <button class="sos-item" data-sos="ground"><span>🖐️</span> עיגון 5-4-3-2-1</button>
         <button class="sos-item" data-sos="safe"><span>🏝️</span> המקום הבטוח שלי</button>
@@ -4311,6 +4362,17 @@ function renderSOS() {
           ? `<a class="sos-hot" href="tel:${h.phone.replace(/[^0-9]/g, "")}">${esc(h.name)} · ${esc(h.phone)}</a>`
           : `<a class="sos-hot" href="${esc(h.url)}" target="_blank" rel="noopener">${esc(h.name)}</a>`).join("")}
       </div>`;
+  } else if (sosView === "protocol") {
+    body = `
+      <div class="sos-emoji">🧭</div>
+      <h2>${RESPONSE_PROTOCOL.title}</h2>
+      <p class="sos-sub">${RESPONSE_PROTOCOL.subtitle}</p>
+      <div class="protocol-list">
+        ${RESPONSE_PROTOCOL.steps.map((s, i) => `
+          <div class="protocol-step"><span class="protocol-n">${i + 1}</span>
+            <div><b>${s.icon} ${esc(s.t)}</b><div class="protocol-d">${esc(s.d)}</div></div></div>`).join("")}
+      </div>
+      <button class="btn sos-back" data-sos="menu">חזרה</button>`;
   } else if (sosView === "ground") {
     body = `
       <div class="sos-emoji">🖐️</div>
