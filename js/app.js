@@ -1068,6 +1068,7 @@ let week1Tab = "emotion";
 let week1EmoOther = false;
 const W1_TABS = [
   { id: "emotion",    label: "רגש ודירוג" },
+  { id: "calm",       label: "סריקה ורגיעה" },
   { id: "dickens",    label: "תרגיל דיקנס" },
   { id: "activation", label: "יומן פעילות" },
 ];
@@ -1077,9 +1078,21 @@ function toolWeek1(c) {
     `<button class="subtool-tab ${week1Tab === t.id ? "on" : ""}" data-w1tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body = "";
   if (week1Tab === "emotion") body = w1Emotion();
+  if (week1Tab === "calm") body = w1Calm();
   if (week1Tab === "dickens") body = w1Dickens();
   if (week1Tab === "activation") body = w1Activation();
   return tabs + `<div id="w1body">${body}</div>`;
+}
+
+// --- סריקת גוף + נשימה מונחית + מיינדפולנס ---
+function w1Calm() {
+  const mindfulness = S.getMeditations().find(m => m.id === "mindfulness");
+  return w4Scan() + (mindfulness ? `
+    <div class="tool-block med-block">
+      <h4>🧘 מיינדפולנס</h4>
+      <p class="hint">תרגול נוכחות עדין — לשים לב לרגע הזה כמו שהוא, בלי לשפוט.</p>
+      ${medCard(mindfulness)}
+    </div>` : "");
 }
 
 // חלק 1 — רגש מרכזי + דירוג + רגש חלופי
@@ -1894,11 +1907,8 @@ function runGuidedSequence(displayId, phases, onDone) {
   }, 1000);
 }
 
-function mountWeek4Handlers() {
-  app.querySelectorAll("[data-w4tab]").forEach(b =>
-    b.addEventListener("click", () => { stopActiveTimer(); stashWeek4Drafts(); week4Tab = b.dataset.w4tab; renderChapter(4); }));
-
-  // תת-כלי 1
+// מטפל משותף לסריקת הגוף + הנשימה המונחית (בשימוש בשבוע 1 ובשבוע 4)
+function mountScanBreathHandlers() {
   const bt = app.querySelector("#breathToggle");
   if (bt) bt.addEventListener("click", () => {
     const circle = app.querySelector("#breathCircle");
@@ -1911,6 +1921,14 @@ function mountWeek4Handlers() {
   });
   const sd = app.querySelector("#scanDone");
   if (sd) sd.addEventListener("click", () => { S.logActivity("exercise", "סריקה ונשימה"); toast("יפה! טענת את האווטר ✓"); });
+}
+
+function mountWeek4Handlers() {
+  app.querySelectorAll("[data-w4tab]").forEach(b =>
+    b.addEventListener("click", () => { stopActiveTimer(); stashWeek4Drafts(); week4Tab = b.dataset.w4tab; renderChapter(4); }));
+
+  // תת-כלי 1 — סריקה ונשימה
+  mountScanBreathHandlers();
 
   // תת-כלי: להכיר את התחושות (תהליך שחרור)
   const sInt = app.querySelector("#sIntensity");
@@ -3595,6 +3613,9 @@ function mountWeek1Handlers() {
       week1Tab = b.dataset.w1tab;
       renderChapter(1);
     }));
+
+  // סריקה ורגיעה — סריקת גוף + נשימה מונחית
+  mountScanBreathHandlers();
 
   // חלק 1 — רגש
   app.querySelectorAll("[data-emotion]").forEach(b =>
