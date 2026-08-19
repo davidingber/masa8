@@ -3250,6 +3250,14 @@ const W8_TABS = [
 const RELAPSE_EXAMPLES = ["הססנות", "קושי בקבלת החלטות", "ביקורת עצמית", "חוסר סבלנות",
   "חוסר עניין והנאה", "עייפות", "אכילת יתר", "חוסר תיאבון", "כבדות", "עצבנות",
   "מחשבות חרדתיות", "התמקדות בשלילי", "חוסר התלהבות", "פרפקציוניזם", "הימנעות חברתית", "גוף דרוך"];
+// חוזה עם עצמי — 5 דברים שיתחדשו סביב הנסיגה, ולכל אחד "מה יעזור לי?"
+const RENEWAL_GOALS = [
+  { key: "detect", goal: "שנזהה את הנסיגה כבר בתחילתה", q: "מה יעזור לי לגלות את זה?" },
+  { key: "rarer", goal: "שהנסיגה תהיה לעיתים רחוקות יותר", q: "מה יעזור לי?" },
+  { key: "shallower", goal: "שהנסיגה תהיה פחות עמוקה מפעם לפעם", q: "מה יעזור לי?" },
+  { key: "faster", goal: "שהקימה מהנסיגה תהיה מהירה יותר", q: "מה יעזור לי?" },
+  { key: "activity", goal: "לצד הנסיגה אשמור על פעילות מיטיבה ככל האפשר", q: "מה יעזור לי?" },
+];
 const VALUE_REMINDER = {
   title: "הגשמת ערך — מסע 8 השבועות",
   description: "פעולה קטנה שמגשימה ערך שחשוב לך. לא לחכות שהפחד ייעלם — לפעול לכיוון שחשוב לך.",
@@ -3272,10 +3280,21 @@ function w8Relapse() {
   const d = S.getToolData(8, "relapse") || {};
   const t = d.triggers || ["", "", ""];
   const chips = RELAPSE_EXAMPLES.map(x => `<button class="chip mini relapse-ex" data-x="${esc(x)}">${esc(x)}</button>`).join("");
+  const c = d.contract || {};
   return `
     <div class="tool-block">
       <p class="hint">מפת נסיגה — לזהות מראש את הסימנים שאני מתחיל להיסחף, ולהכין לעצמי מענה מתוך מה שכבר למדתי במסע.</p>
-      <h5>🚩 אלו 3 טריגרים מסמנים לי שאני בנסיגה?</h5>
+
+      <h5>📜 חוזה עם עצמי</h5>
+      <p class="hint">אני בידיעה שנסיגה היא <b>אנושית וטבעית</b>. המטרה שיתחדשו 5 דברים — ולכל אחד: מה יעזור לי?</p>
+      ${RENEWAL_GOALS.map((g, i) => `
+        <div class="focus-step"><span class="fs-num">${i + 1}</span>
+          <div><b>${g.goal}</b>
+            <label class="mini-label">${g.q}</label>
+            <textarea class="ta renewal-ta" data-g="${g.key}" placeholder="מה יעזור לי...">${esc(c[g.key] || "")}</textarea>
+          </div></div>`).join("")}
+
+      <h5 style="margin-top:14px">🚩 אלו 3 טריגרים מסמנים לי שאני בנסיגה?</h5>
       <p class="hint">לחץ על דוגמה כדי למלא, או כתוב משלך:</p>
       <div class="chip-row" style="margin-bottom:10px">${chips}</div>
       <input class="inp relapse-t" data-i="0" value="${esc(t[0] || "")}" placeholder="טריגר 1">
@@ -3429,6 +3448,13 @@ function w8Comm() {
     </div>`;
 }
 
+function collectRelapse() {
+  const triggers = [...app.querySelectorAll(".relapse-t")].map(i => i.value.trim());
+  const contract = {};
+  app.querySelectorAll(".renewal-ta").forEach(t => contract[t.dataset.g] = t.value.trim());
+  return { triggers, response: qv("#relapseResponse"), contract };
+}
+
 function mountWeek8Handlers() {
   app.querySelectorAll("[data-w8tab]").forEach(b =>
     b.addEventListener("click", () => { stashWeek8Drafts(); week8Tab = b.dataset.w8tab; renderChapter(8); }));
@@ -3441,10 +3467,9 @@ function mountWeek8Handlers() {
   }));
   const srl = app.querySelector("#saveRelapse");
   if (srl) srl.addEventListener("click", () => {
-    const triggers = [...app.querySelectorAll(".relapse-t")].map(i => i.value.trim());
-    const response = qv("#relapseResponse");
-    S.setToolData(8, "relapse", { triggers, response });
-    if (triggers.some(Boolean) || response) S.logActivity("exercise", "מפת נסיגה");
+    const data = collectRelapse();
+    S.setToolData(8, "relapse", data);
+    if (data.triggers.some(Boolean) || data.response || Object.values(data.contract).some(Boolean)) S.logActivity("exercise", "מפת נסיגה");
     toast("נשמר ✓");
   });
 
@@ -3537,8 +3562,8 @@ function stashWeek8Drafts() {
     S.setToolData(8, "realize", realize);
   }
   if (app.querySelectorAll("#w8sched .day-row").length) S.setToolData(8, "schedule", collectSchedule());
-  if (app.querySelector("#relapseResponse") || app.querySelector(".relapse-t"))
-    S.setToolData(8, "relapse", { triggers: [...app.querySelectorAll(".relapse-t")].map(i => i.value.trim()), response: qv("#relapseResponse") });
+  if (app.querySelector("#relapseResponse") || app.querySelector(".relapse-t") || app.querySelector(".renewal-ta"))
+    S.setToolData(8, "relapse", collectRelapse());
 }
 
 function openSchedulePrint(plan) {
