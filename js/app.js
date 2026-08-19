@@ -1749,7 +1749,7 @@ function w4Scan() {
       </div>
 
       <div class="def-tech">
-        <h5>🌬️ קובץ הנשימה (מהפרק הקודם)</h5>
+        <h5>🌬️ קובץ הנשימה</h5>
         <div class="med-actions">
           ${breathing.link ? `<a class="btn ghost2" href="${esc(breathing.link)}" target="_blank" rel="noopener">▶ צפייה / האזנה</a>` : ""}
           ${breathing.file ? `<a class="btn ghost2" href="${esc(breathing.file)}" target="_blank" rel="noopener">⬇ קובץ הנשימה</a>` : ""}
