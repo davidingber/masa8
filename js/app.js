@@ -2636,8 +2636,8 @@ const W7_PARTS = [
   { id: "a", label: "חלק א · הכנה", tabs: [
     { id: "rules",    label: "כללים והכנה" },
     { id: "prep",     label: "הכנה לחשיפה" },
-    { id: "imaginal", label: "חשיפה בדמיון" },
     { id: "ladder",   label: "סולם פחדים" },
+    { id: "imaginal", label: "חשיפה בדמיון" },
   ]},
   { id: "b", label: "חלק ב · ביצוע ומעקב", tabs: [
     { id: "internal", label: "חשיפות פנימיות" },
