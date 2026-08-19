@@ -114,7 +114,7 @@ function renderGoalTool() {
   app.innerHTML = `
     <header class="topbar chapter-head">
       <button class="back-btn" id="back">›</button>
-      <div><div class="greeting">🎯 הגדרת המטרה</div><div class="subtle">מודל דיסני · NLP</div></div>
+      <div><div class="greeting">🎯 הגדרת המטרה</div><div class="subtle">מודל דיסני</div></div>
     </header>
     <section class="card"><p class="hint">${GOAL_TOOL.intro}</p></section>
     ${GOAL_TOOL.sections.map((s, si) => `
@@ -181,7 +181,7 @@ function openGoalPrint(plan) {
       @media print{.noprint{display:none}}
     </style></head><body>
     <h1>הגדרת המטרה</h1>
-    <p class="sub">מסע 8 השבועות · מודל דיסני ו-NLP</p>
+    <p class="sub">מסע 8 השבועות · מודל דיסני</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     ${body}
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -436,7 +436,7 @@ function renderHome() {
       <div class="card-head"><h3>🎯 המטרה שלי</h3>
         ${st.goal ? `<button class="link-btn" id="editGoal">עריכה</button>` : ""}</div>
       ${st.goal ? `<p class="goal-text">${esc(st.goal)}</p>`
-        : `<p class="subtle">${G("הגדר", "הגדרי")} מטרה מדויקת ומעצימה בעזרת מודל דיסני ו-NLP — שלב אחר שלב.</p>`}
+        : `<p class="subtle">${G("הגדר", "הגדרי")} מטרה מדויקת ומעצימה בעזרת מודל דיסני — שלב אחר שלב.</p>`}
       <button class="btn" id="goalToolBtn">✍️ ${st.goal ? "פתיחת הגדרת המטרה" : (G("בוא", "בואי") + " נגדיר את המטרה")}</button>
     </section>
 
@@ -774,7 +774,7 @@ function editGoal() {
 function trustBlock() {
   return `
     <section class="card trust-card">
-      <div class="trust-methods">🧠 מבוסס CBT · ACT · NLP · מיינדפולנס</div>
+      <div class="trust-methods">🧠 מבוסס CBT · ACT · מיינדפולנס</div>
       <p class="trust-author">פותח על ידי <b>דוד אינגבר</b> — הורות עצמית מיטיבה להתמודדות עם חרדה.</p>
       <p class="trust-privacy">🔒 הנתונים שלך נשמרים במכשיר שלך בלבד ואינם נשלחים לאף אחד.</p>
       <div class="trust-safety">
@@ -1446,7 +1446,7 @@ function openCyclePrint(rows, empty) {
 let week3Tab = "defusion";
 const W3_TABS = [
   { id: "defusion", label: "הרחקת מחשבות" },
-  { id: "reframe",  label: "מסגור מחדש (NLP)" },
+  { id: "reframe",  label: "מסגור מחדש" },
 ];
 
 function toolWeek3(c) {
@@ -1501,7 +1501,7 @@ function w3Reframe() {
   const saved = S.getToolData(3, "reframe") || [];
   return `
     <div class="tool-block">
-      <p class="hint">מסגור מחדש מגישת NLP (שלבים 0–6) — עבודה עם החלק שאחראי על ההתנהגות הלא רצויה.
+      <p class="hint">מסגור מחדש (שלבים 0–6) — עבודה עם החלק שאחראי על ההתנהגות הלא רצויה.
         השאלות מימין, מקום לתשובות משמאל.</p>
       <div class="reframe-list">
         ${NLP_REFRAME_STEPS.map((s, i) => `
@@ -1567,7 +1567,7 @@ function mountWeek3Handlers() {
   if (sref) sref.addEventListener("click", () => {
     const arr = collectReframe();
     S.setToolData(3, "reframe", arr);
-    if (arr.some(Boolean)) S.logActivity("exercise", "מסגור מחדש NLP");
+    if (arr.some(Boolean)) S.logActivity("exercise", "מסגור מחדש");
     toast("התרגיל נשמר ✓"); renderChapter(3);
   });
   const pref = app.querySelector("#pdfReframe");
@@ -1590,7 +1590,7 @@ function openReframePrint(answers) {
       <td class="a">${esc(answers[i] || "")}</td>
     </tr>`).join("");
   const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
-    <title>מסגור מחדש NLP — שבוע 3</title>
+    <title>מסגור מחדש — שבוע 3</title>
     <style>
       body{font-family:"Segoe UI",Arial,sans-serif;color:#20353a;padding:28px}
       h1{color:#0f766e;margin:0 0 4px}.sub{color:#6a8189;margin:0 0 8px}
@@ -1603,7 +1603,7 @@ function openReframePrint(answers) {
       .btn{background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:15px;cursor:pointer;margin-top:16px}
       @media print{.noprint{display:none}}
     </style></head><body>
-    <h1>מסגור מחדש בשישה שלבים (NLP)</h1>
+    <h1>מסגור מחדש בשישה שלבים</h1>
     <p class="sub">מסע 8 השבועות · שבוע 3 — עבודה עם החלקים הפנימיים</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><tbody>${rows}</tbody></table>
