@@ -1238,7 +1238,26 @@ function emptyCycleRow() {
   const r = {}; CYCLE_STAGES.forEach(s => r[s.key] = ""); return r;
 }
 
+let week2Tab = "journal";
+const W2_TABS = [
+  { id: "journal", label: "יומן המעגל" },
+  { id: "map",     label: "מיפוי אישי" },
+];
+// מיפוי אישי — דפוסי החלק המפוחד
+const SELFMAP_FIELDS = [
+  { key: "trigger", icon: "⚡", label: "מה מפעיל אותי רגשית?", ph: "אנשים, מצבים או מחשבות שמציתים בי תגובה..." },
+  { key: "avoid",   icon: "🚪", label: "מאלו דברים אני בהימנעות?", ph: "מה אני נמנע מלעשות, לומר או להרגיש..." },
+  { key: "overdo",  icon: "🔁", label: "אלו דברים אני עושה יותר מדי מתוך חשש?", ph: "בדיקות, ריצוי, שליטה, הכנות יתר..." },
+];
+
 function toolWeek2(c) {
+  const tabs = `<div class="subtool-tabs">${W2_TABS.map(t =>
+    `<button class="subtool-tab ${week2Tab === t.id ? "on" : ""}" data-w2tab="${t.id}">${t.label}</button>`).join("")}</div>`;
+  const body = week2Tab === "map" ? w2Map() : w2Journal();
+  return tabs + `<div id="w2body">${body}</div>`;
+}
+
+function w2Journal() {
   const rows = S.getToolData(2, "cycleJournal") || [emptyCycleRow()];
   const meds = S.getMeditationsByWeek(2);
   return `
@@ -1260,6 +1279,19 @@ function toolWeek2(c) {
       <p class="hint">תרגול יומי מרגיע את מערכת העצבים. האזן/צפה בקישור, או הורד את הקובץ.</p>
       ${meds.map(medCard).join("")}
     </div>` : ""}`;
+}
+
+// --- מיפוי אישי — מה מפעיל, ממה נמנע, מה עושה יותר מדי ---
+function w2Map() {
+  const d = S.getToolData(2, "selfMap") || {};
+  return `
+    <div class="tool-block">
+      <p class="hint">מיפוי אישי — לזהות את הדפוסים שהחלק המפוחד מפעיל בי, כדי שאוכל להנהיג אותם במקום להישלט על-ידם.</p>
+      ${SELFMAP_FIELDS.map(f => `
+        <label class="mini-label">${f.icon} ${f.label}</label>
+        <textarea class="ta selfmap-ta" data-m="${f.key}" placeholder="${f.ph}">${esc(d[f.key] || "")}</textarea>`).join("")}
+      <button class="btn" id="saveSelfMap">שמירה + טעינת האווטר</button>
+    </div>`;
 }
 
 function cycleCase(r, i) {
@@ -1307,7 +1339,27 @@ function collectCycleRows() {
   return rows;
 }
 
+function stashWeek2Drafts() {
+  if (app.querySelectorAll(".cyc-input").length) S.setToolData(2, "cycleJournal", collectCycleRows());
+  if (app.querySelector(".selfmap-ta")) {
+    const d = {}; app.querySelectorAll(".selfmap-ta").forEach(t => d[t.dataset.m] = t.value.trim());
+    S.setToolData(2, "selfMap", d);
+  }
+}
+
 function mountWeek2Handlers() {
+  app.querySelectorAll("[data-w2tab]").forEach(b =>
+    b.addEventListener("click", () => { stashWeek2Drafts(); week2Tab = b.dataset.w2tab; renderChapter(2); }));
+
+  // מיפוי אישי
+  const sm = app.querySelector("#saveSelfMap");
+  if (sm) sm.addEventListener("click", () => {
+    const d = {}; app.querySelectorAll(".selfmap-ta").forEach(t => d[t.dataset.m] = t.value.trim());
+    S.setToolData(2, "selfMap", d);
+    if (Object.values(d).some(Boolean)) S.logActivity("exercise", "מיפוי אישי");
+    toast("נשמר ✓");
+  });
+
   // שמירה אוטומטית ב-blur כדי לא לאבד טקסט בעת ריענון
   app.querySelectorAll(".cyc-input").forEach(inp =>
     inp.addEventListener("change", () => S.setToolData(2, "cycleJournal", collectCycleRows())));
