@@ -10,17 +10,22 @@
    מסע 8 השבועות — עיצוב (RTL, פלטה רגועה טורקיז/מרווה)
    ============================================================ */
 :root{
-  --bg:#f2f7f6; --bg2:#e6f0ee;
-  --card:#ffffff; --ink:#20353a; --subtle:#6a8189;
-  --teal:#0f766e; --teal-2:#14b8a6; --sage:#84b59f; --accent:#e07a5f; --gold:#e9b949;
-  --calm:#5b8def; --rose:#c07bb0;
-  --line:#dfeae7; --shadow:0 6px 22px rgba(20,60,55,.09);
-  --radius:18px;
+  --bg:#f6f2ea; --bg2:#ede7db;
+  --card:#ffffff; --ink:#2b2b28; --subtle:#8a897f;
+  --teal:#45614f; --teal-2:#6e8c7d; --sage:#8fb69c; --accent:#c08457; --gold:#b08a57;
+  --calm:#7e93a8; --rose:#b98ba8;
+  --line:#e7e1d4; --shadow:0 8px 24px rgba(69,97,79,.09);
+  --radius:20px;
+  --font-head:'Frank Ruhl Libre','David','Rubik',serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--ink);
+html,body{background:radial-gradient(120% 42% at 50% -8%, rgba(126,169,140,.16), rgba(126,169,140,0) 60%),
+  linear-gradient(180deg,var(--bg),var(--bg2));color:var(--ink);
   font-family:'Rubik',"Assistant","Segoe UI",system-ui,Arial,sans-serif;-webkit-tap-highlight-color:transparent;
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+/* כותרות בפונט עיתונאי (מתדרדר בעדינות ל-David/Rubik באופליין) */
+.greeting,.card h3,.card h4,.ch-title,.central-q-text,.flag-text,.shift-to,.leader-label,
+.benefit-line,.identity-then p,.lead-line b{font-family:var(--font-head);letter-spacing:-.005em}
 body{min-height:100vh}
 .view{max-width:520px;margin:0 auto;padding:16px 16px 96px}
 
@@ -41,7 +46,7 @@ body{min-height:100vh}
 .link-btn{background:none;border:none;color:var(--teal);font-weight:700;font-size:14px}
 
 /* אווטר */
-.avatar-card{text-align:center;background:linear-gradient(160deg,#ffffff,#eefbf8)}
+.avatar-card{text-align:center;background:linear-gradient(160deg,#ffffff,#f2f7f1)}
 .avatar-wrap{display:flex;justify-content:center}
 .avatar-svg{width:210px;height:250px}
 .charge-row{display:flex;align-items:center;gap:10px;margin:6px 8px 4px}
@@ -64,7 +69,7 @@ body{min-height:100vh}
 .qa-btn.static{cursor:default}
 .qa-btn.static:active{transform:none}
 .qa-note{font-size:12px;color:var(--subtle);text-align:center;margin-top:8px;line-height:1.5}
-.work-clock{margin-top:10px;font-size:14px;color:var(--teal);background:#eefaf6;border:1px solid #cdeee5;
+.work-clock{margin-top:10px;font-size:14px;color:var(--teal);background:#eef3ec;border:1px solid #d8e6da;
   border-radius:99px;padding:7px 14px;display:inline-block}
 .work-clock b{font-variant-numeric:tabular-nums;font-size:15px}
 .qa-btn.burst{animation:pop .4s ease}
@@ -107,7 +112,7 @@ body{min-height:100vh}
 .ch-arrow{font-size:26px;color:var(--subtle)}
 
 /* השאלה המרכזית במפת המסע */
-.central-q-card{text-align:center;background:linear-gradient(160deg,#0f766e,#0b5c55);color:#fff}
+.central-q-card{text-align:center;background:linear-gradient(160deg,#45614f,#33493c);color:#fff}
 .central-q-label{font-size:12px;opacity:.85;letter-spacing:.02em;margin-bottom:6px}
 .central-q-text{font-size:20px;font-weight:800;line-height:1.4}
 .central-q-sub{font-size:13px;opacity:.9;margin-top:8px;line-height:1.5}
@@ -115,17 +120,17 @@ body{min-height:100vh}
 .map-phase{font-size:12px;font-weight:800;color:var(--teal);letter-spacing:.03em;
   margin:14px 4px 2px;padding-bottom:4px;border-bottom:2px solid var(--teal-2);display:inline-block}
 /* פרוטוקול המענה — כרטיס בית */
-.protocol-card{background:linear-gradient(160deg,#fff,#eefbf8)}
+.protocol-card{background:linear-gradient(160deg,#fff,#f2f7f1)}
 [data-theme="dark"] .protocol-card{background:linear-gradient(160deg,var(--card),#10201e)}
 .protocol-mini{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}
 .protocol-chip{background:var(--bg2);border:1px solid var(--line);border-radius:99px;
   padding:5px 10px;font-size:12.5px;font-weight:700;color:var(--ink)}
 /* משפט הבחנה בין שבועות דומים */
-.week-distinction{font-size:12.5px;color:var(--teal);line-height:1.6;background:#eefaf6;
+.week-distinction{font-size:12.5px;color:var(--teal);line-height:1.6;background:#eef3ec;
   border:1px dashed #bfe3d9;border-radius:10px;padding:8px 11px;margin-bottom:12px}
 [data-theme="dark"] .week-distinction{background:#122a27;border-color:#1f4d45}
 /* סגירת הזהות בשבוע 8 */
-.identity-then{background:#eefaf6;border:1px solid #cdeee5;border-radius:12px;padding:12px 14px;
+.identity-then{background:#eef3ec;border:1px solid #d8e6da;border-radius:12px;padding:12px 14px;
   margin-bottom:12px;line-height:1.7}
 .identity-then-label{font-size:12.5px;color:var(--subtle);font-weight:700;margin-bottom:4px}
 [data-theme="dark"] .identity-then{background:#122a27;border-color:#1f4d45}
@@ -133,15 +138,15 @@ body{min-height:100vh}
 .onb-promise{font-size:16px;font-weight:700;line-height:1.55;color:var(--teal);margin-bottom:8px}
 
 /* פרק בודד — תועלת ורגע הדגל */
-.benefit-card{background:linear-gradient(160deg,#fff,#eefbf8)}
+.benefit-card{background:linear-gradient(160deg,#fff,#f2f7f1)}
 .benefit-line{font-size:17px;font-weight:700;line-height:1.55;margin-bottom:12px}
-.flag-moment{background:#0f766e;color:#fff;border-radius:14px;padding:14px 16px;text-align:center}
+.flag-moment{background:#45614f;color:#fff;border-radius:14px;padding:14px 16px;text-align:center}
 .flag-label{font-size:12px;opacity:.9;margin-bottom:4px}
 .flag-text{font-size:20px;font-weight:800;line-height:1.35}
 .lead-line{font-size:13px;color:var(--teal);line-height:1.6;margin-bottom:12px;
-  background:#eefaf6;border:1px dashed #bfe3d9;border-radius:12px;padding:10px 12px}
+  background:#eef3ec;border:1px dashed #bfe3d9;border-radius:12px;padding:10px 12px}
 .lead-line b{font-size:15px;color:var(--teal)}
-.shift-card{text-align:center;background:linear-gradient(160deg,#fff,#eefbf8)}
+.shift-card{text-align:center;background:linear-gradient(160deg,#fff,#f2f7f1)}
 .shift-from{color:var(--subtle);text-decoration:line-through;font-size:15px}
 .shift-arrow{color:var(--teal);font-size:20px;margin:4px 0}
 .shift-to{color:var(--teal);font-weight:800;font-size:19px}
@@ -154,11 +159,11 @@ body{min-height:100vh}
 .task{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);
   border-radius:12px;cursor:pointer;transition:background .15s}
 .task input{width:20px;height:20px;accent-color:var(--teal);flex-shrink:0}
-.task.done{background:#eefaf6;border-color:#cdeee5}
+.task.done{background:#eef3ec;border-color:#d8e6da}
 .task.done span{color:var(--subtle);text-decoration:line-through}
 
 /* כלים */
-.tool-card{background:linear-gradient(160deg,#fff,#f6fbfa)}
+.tool-card{background:linear-gradient(160deg,#fff,#f7f9f4)}
 .tool-block h4{font-size:14px;margin:14px 0 8px}
 .chip-row,.chip-row{display:flex;flex-wrap:wrap;gap:8px}
 .chip{background:var(--bg2);border:1px solid var(--line);border-radius:99px;padding:8px 14px;
@@ -199,7 +204,7 @@ body{min-height:100vh}
 .prep-ch-title{font-weight:800;color:var(--teal);font-size:14px;margin-bottom:6px}
 [data-theme="dark"] .prep-challenge{background:#0f1e20;border-color:#1f4d45}
 .burden-item{margin-bottom:8px}
-.hint{font-size:13.5px;color:var(--ink);line-height:1.6;margin-bottom:10px;background:#eefaf6;
+.hint{font-size:13.5px;color:var(--ink);line-height:1.6;margin-bottom:10px;background:#eef3ec;
   border-radius:10px;padding:9px 11px}
 .chip.alt.on{background:var(--sage);border-color:var(--sage)}
 .chip.mini{padding:6px 11px;font-size:13px}
@@ -209,7 +214,7 @@ body{min-height:100vh}
 /* דיקנס */
 .dickens-section{border-radius:12px;padding:12px;margin-bottom:12px}
 .dickens-section.stay{background:#fbf3f0;border:1px solid #f0d9d0}
-.dickens-section.change{background:#eefaf6;border:1px solid #cdeee5}
+.dickens-section.change{background:#eef3ec;border:1px solid #d8e6da}
 .dickens-section h4{margin:0 0 8px}
 .mini-label{display:block;font-size:12.5px;color:var(--subtle);font-weight:700;margin:6px 0 3px}
 .ta.big{min-height:110px}
@@ -236,7 +241,7 @@ body{min-height:100vh}
 .gcal-block{margin:10px 0 14px}
 .ics-block{border-top:1px solid #cfe4f0;padding-top:12px}
 .gcal-link{background:#fff;border:1px solid var(--teal);color:var(--teal);text-align:right}
-.gcal-link:active{background:#eefaf6}
+.gcal-link:active{background:#eef3ec}
 
 /* שבוע 2 — יומן מיפוי מעגל */
 .cycle-case{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px;background:#fbfdfc}
@@ -303,7 +308,7 @@ body{min-height:100vh}
 }
 
 /* טיימר מונחה */
-.timer-display{background:#eefaf6;border:1px solid #cdeee5;border-radius:14px;padding:16px;
+.timer-display{background:#eef3ec;border:1px solid #d8e6da;border-radius:14px;padding:16px;
   text-align:center;margin:8px 0}
 .timer-phase{font-size:15px;font-weight:800;color:var(--teal)}
 .timer-count{font-size:40px;font-weight:800;color:var(--ink);letter-spacing:1px;margin:4px 0;font-variant-numeric:tabular-nums}
@@ -316,7 +321,7 @@ body{min-height:100vh}
 
 /* טבלת חשיפות */
 .exp-table{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px}
-.exp-head{display:flex;background:#eefaf6;font-weight:800;font-size:12.5px;color:var(--teal)}
+.exp-head{display:flex;background:#eef3ec;font-weight:800;font-size:12.5px;color:var(--teal)}
 .exp-head>div{padding:8px 6px;border-left:1px solid #d7e9e4}
 .exp-del-col{flex-basis:28px;flex-shrink:0}
 .exp-row{display:flex;border-top:1px solid var(--line);align-items:stretch}
@@ -334,11 +339,11 @@ body{min-height:100vh}
   .exp-lvl{flex-direction:row!important;align-items:center;gap:8px}
   .exp-lvl::before{content:"רמת עצימות:";font-size:12px;font-weight:700;color:var(--teal)}
 }
-.exp-group{background:#0f766e;color:#fff;font-weight:800;font-size:13px;padding:7px 10px}
+.exp-group{background:#45614f;color:#fff;font-weight:800;font-size:13px;padding:7px 10px}
 .exp-group.lvl-2{background:#158a7e}
 .exp-group.lvl-3{background:#b0603f}
 .exp-lvl-sel{text-align:center;font-weight:800;color:var(--teal);cursor:pointer}
-.edge-note{background:#eefaf6;border:1px dashed #bfe3d9;border-radius:10px;padding:9px 11px;margin-top:8px}
+.edge-note{background:#eef3ec;border:1px dashed #bfe3d9;border-radius:10px;padding:9px 11px;margin-top:8px}
 [data-theme="dark"] .edge-note{background:#122a27;border-color:#1f4d45}
 .intero-disclaimer{margin:4px 0 12px;line-height:1.6}
 .intero-ack{background:#fff6ee;border:1px solid #f0d3bd;border-radius:12px;padding:12px;margin:8px 0;
@@ -366,7 +371,7 @@ body{min-height:100vh}
 .rules-list li{font-size:13.5px;line-height:1.5}
 .tc-result{margin-top:12px}
 .tc-loading{color:var(--subtle);font-style:italic;padding:10px}
-.tc-reply{background:#eefaf6;border:1px solid #cdeee5;border-radius:12px;padding:12px 14px;
+.tc-reply{background:#eef3ec;border:1px solid #d8e6da;border-radius:12px;padding:12px 14px;
   line-height:1.6;font-size:14.5px}
 
 /* שבוע 6 — תהליך מודרך (פוקוסינג) */
@@ -377,7 +382,7 @@ body{min-height:100vh}
 .focus-step .inp,.focus-step .ta{margin-top:6px;margin-bottom:0}
 .release-stage{min-height:0;display:flex;flex-direction:column;align-items:center;gap:8px}
 .release-orb{width:70px;height:70px;border-radius:50%;margin-top:12px;
-  background:radial-gradient(circle,#cdeee5,#84b59f);animation:release 3.5s ease-out forwards}
+  background:radial-gradient(circle,#d8e6da,#84b59f);animation:release 3.5s ease-out forwards}
 .release-text{color:var(--teal);font-weight:700;font-size:14px;animation:fadein 1s}
 @keyframes release{0%{transform:scale(1);opacity:.9}100%{transform:scale(2.2);opacity:0}}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
@@ -439,13 +444,13 @@ body{min-height:100vh}
 .med-actions .btn{text-decoration:none;font-size:13.5px;padding:9px 14px}
 
 /* מאמן AI */
-.coach-actions-card{background:linear-gradient(160deg,#fff,#f6fbfa)}
+.coach-actions-card{background:linear-gradient(160deg,#fff,#f7f9f4)}
 .coach-actions-title{font-weight:800;font-size:15px;margin-bottom:10px;text-align:center}
 .coach-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .coach-action{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--line);
   border-radius:12px;padding:11px 12px;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;
   text-align:right;transition:background .15s,transform .1s}
-.coach-action:hover{background:#eefaf6;transform:translateY(-1px)}
+.coach-action:hover{background:#eef3ec;transform:translateY(-1px)}
 .coach-action .ca-ico{font-size:18px;flex-shrink:0}
 [data-theme="dark"] .coach-actions-card{background:linear-gradient(160deg,var(--card),#10201e)}
 [data-theme="dark"] .coach-action:hover{background:#122a27}
@@ -528,7 +533,7 @@ body{min-height:100vh}
 .onb-dot{width:9px;height:9px;border-radius:99px;background:var(--line)}
 .onb-dot.done{background:var(--sage)}
 .onb-dot.on{background:var(--teal);transform:scale(1.25)}
-.onb-card{text-align:center;background:linear-gradient(160deg,#fff,#eefbf8);padding:26px 20px}
+.onb-card{text-align:center;background:linear-gradient(160deg,#fff,#f2f7f1);padding:26px 20px}
 .onb-emoji{font-size:52px;margin-bottom:8px}
 .onb-card h2{font-size:22px;margin-bottom:8px}
 .onb-sub{color:var(--subtle);line-height:1.6;margin-bottom:16px}
@@ -541,11 +546,11 @@ body{min-height:100vh}
 .onb-actions .onb-next{flex:1}
 
 /* המשימה של היום */
-.today-card{background:linear-gradient(160deg,#fff,#f6fbfa)}
+.today-card{background:linear-gradient(160deg,#fff,#f7f9f4)}
 .today-block{padding:12px 0;border-bottom:1px solid var(--line)}
 .today-block:last-child{border-bottom:none;padding-bottom:2px}
 .today-tag{display:inline-block;font-size:11px;font-weight:800;color:var(--teal);
-  background:#eefaf6;border:1px solid #cdeee5;border-radius:99px;padding:3px 10px;margin-bottom:8px}
+  background:#eef3ec;border:1px solid #d8e6da;border-radius:99px;padding:3px 10px;margin-bottom:8px}
 .today-text{line-height:1.55}
 .today-meta{font-size:12px;color:var(--subtle);margin-top:4px}
 .today-actions{display:flex;gap:8px;margin-top:10px;align-items:center}
@@ -553,11 +558,11 @@ body{min-height:100vh}
 
 /* ============ מצב כהה ============ */
 :root[data-theme="dark"]{
-  --bg:#0d1a1c; --bg2:#0a1416;
-  --card:#152528; --ink:#e7f1ee; --subtle:#8fa6a3; --line:#26393c;
-  --teal:#0d9488; --teal-2:#2dd4bf; --sage:#5f9c86; --accent:#e08a6f; --gold:#e9b949;
-  --calm:#7aa2f0; --rose:#cf8fc2;
-  --shadow:0 6px 22px rgba(0,0,0,.42);
+  --bg:#1b201c; --bg2:#151a16;
+  --card:#232a24; --ink:#ece7dc; --subtle:#9a9b8f; --line:#333a33;
+  --teal:#5c8871; --teal-2:#8fb69c; --sage:#6e8c7d; --accent:#d69a72; --gold:#d9b968;
+  --calm:#9fb0c4; --rose:#c9a0bd;
+  --shadow:0 10px 30px rgba(0,0,0,.5);
 }
 [data-theme="dark"] .avatar-card,[data-theme="dark"] .shift-card,[data-theme="dark"] .tool-card,
 [data-theme="dark"] .today-card,[data-theme="dark"] .onb-card,[data-theme="dark"] .med-block,
@@ -679,7 +684,7 @@ body{min-height:100vh}
 .sos-back{margin-top:4px}
 
 /* ============ בלוק אמון ובטיחות ============ */
-.trust-card{text-align:center;background:linear-gradient(160deg,var(--card),#f6fbfa)}
+.trust-card{text-align:center;background:linear-gradient(160deg,var(--card),#f7f9f4)}
 [data-theme="dark"] .trust-card{background:linear-gradient(160deg,var(--card),#10201e)}
 .trust-methods{font-weight:800;color:var(--teal);font-size:14px;margin-bottom:6px}
 .trust-author{font-size:14px;line-height:1.6;margin-bottom:8px}
@@ -729,7 +734,7 @@ body{font-size:15.5px;line-height:1.5}
 .check-chip{display:inline-flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--line);
   border-radius:99px;padding:8px 13px;font-size:13.5px;font-weight:600;cursor:pointer}
 .check-chip input{width:17px;height:17px;accent-color:var(--teal)}
-.goal-anchor{background:#eefaf6;border:1px solid #cdeee5;border-radius:14px;padding:14px 16px;line-height:1.6}
+.goal-anchor{background:#eef3ec;border:1px solid #d8e6da;border-radius:14px;padding:14px 16px;line-height:1.6}
 .goal-anchor p{margin-bottom:10px}
 [data-theme="dark"] .goal-anchor{background:#122a27;border-color:#1f4d45}
 .goal-card .btn{margin-top:10px;width:100%}
@@ -740,7 +745,7 @@ body{font-size:15.5px;line-height:1.5}
 .other-emo-row .btn{white-space:nowrap}
 
 /* מי אני בלי הבעיה — דמיון מודרך */
-.identity-guide{background:#eefaf6;border:1px solid #cdeee5;border-radius:14px;padding:16px 16px 6px;margin-bottom:12px}
+.identity-guide{background:#eef3ec;border:1px solid #d8e6da;border-radius:14px;padding:16px 16px 6px;margin-bottom:12px}
 .identity-guide h4{color:var(--teal);margin-bottom:10px;font-size:15px}
 .identity-guide p{line-height:1.75;margin-bottom:12px}
 .identity-close{background:#fff;border:1px dashed var(--teal-2);border-radius:12px;padding:12px 14px;text-align:center}
