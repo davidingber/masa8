@@ -501,9 +501,10 @@ body{min-height:100vh}
 .del-topic{color:var(--accent)}
 
 /* ניווט תחתון */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);
+.bottom-nav{position:fixed;bottom:0;left:50%;right:auto;transform:translateX(-50%);
+  width:100%;max-width:520px;background:rgba(255,255,255,.92);
   backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;
-  max-width:520px;margin:0 auto;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
 .nav-btn{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;
   gap:2px;padding:6px 2px;color:var(--subtle);font:inherit;font-size:11px;font-weight:600;cursor:pointer}
 .nav-btn.active{color:var(--teal)}
@@ -653,6 +654,8 @@ body{min-height:100vh}
   border-radius:999px;padding:11px 16px;font:inherit;font-weight:800;font-size:14px;
   box-shadow:0 8px 22px rgba(200,90,63,.4);cursor:pointer}
 .sos-fab:active{transform:scale(.95)}
+/* במסך רחב — יישור הכפתור לעמודת התוכן (520px ממורכזת) */
+@media (min-width:552px){ .sos-fab{inset-inline-end:auto;left:calc(50% - 246px);right:auto} }
 .sos-overlay{position:fixed;inset:0;z-index:210;color:#eafaf6;
   background-image:linear-gradient(180deg,rgba(38,59,46,.88),rgba(20,35,28,.94)),url('img/sos.jpg'),linear-gradient(180deg,#2c4636,#182a20);
   background-size:cover,cover,cover;background-position:center,center,center;background-repeat:no-repeat;
