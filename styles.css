@@ -28,6 +28,23 @@ html,body{background:radial-gradient(120% 42% at 50% -8%, rgba(126,169,140,.16),
 .benefit-line,.identity-then p,.lead-line b{font-family:var(--font-head);letter-spacing:-.005em}
 body{min-height:100vh}
 .view{max-width:520px;margin:0 auto;padding:16px 16px 96px}
+/* דסקטופ — קנבס רגוע מעוצב במקום שוליים ריקים; האפליקציה כפאנל ממורכז */
+@media (min-width:760px){
+  body{background:
+    radial-gradient(38% 40% at 12% 6%, rgba(126,169,140,.20), transparent 62%),
+    radial-gradient(34% 38% at 90% 16%, rgba(176,138,87,.13), transparent 62%),
+    radial-gradient(52% 46% at 50% 106%, rgba(126,169,140,.15), transparent 60%),
+    linear-gradient(160deg,#ece5d6,#e2d8c4)}
+  .view{background:linear-gradient(180deg,#f9f6f0,#f6f2ea);min-height:100vh;
+    box-shadow:0 0 0 1px rgba(69,97,79,.05), 0 26px 70px -24px rgba(69,97,79,.28)}
+  .bottom-nav{border-radius:22px 22px 0 0;box-shadow:0 -6px 26px rgba(69,97,79,.10);
+    border-inline:1px solid rgba(69,97,79,.05)}
+  :root[data-theme="dark"] body{background:
+    radial-gradient(38% 40% at 12% 6%, rgba(126,169,140,.10), transparent 62%),
+    radial-gradient(52% 46% at 50% 106%, rgba(126,169,140,.08), transparent 60%),
+    linear-gradient(160deg,#12160f,#0e120c)}
+  :root[data-theme="dark"] .view{background:linear-gradient(180deg,#1e241d,#1b201c)}
+}
 
 /* כותרת עליונה */
 .topbar{display:flex;align-items:center;gap:12px;padding:8px 2px 16px}
