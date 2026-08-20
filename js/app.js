@@ -421,6 +421,7 @@ function renderHome() {
     ${installBanner()}
 
     <section class="card avatar-card">
+      <div class="avatar-cover"></div>
       ${streak > 0 ? `<div class="streak-chip" title="ימים רצופים של עבודה">🔥 ${streak} ${streak === 1 ? "יום" : "ימים"} ברצף</div>` : ""}
       <div class="avatar-wrap">${renderAvatar(charge)}</div>
       <div class="leader-label">🏠 המנהיג הפנימי שלי</div>
