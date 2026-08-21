@@ -69,7 +69,7 @@ export const COURSE = {
     },
     {
       week: 4,
-      icon: "🫀",
+      icon: "❤️",
       title: "להנהיג את הגוף",
       shift: { from: "הגוף שלי מסוכן", to: "אני יכול להרגיש ולהישאר בטוח" },
       learn: [

@@ -100,7 +100,7 @@ function goalField(f, plan) {
   }
   if (f.type === "anchor") {
     return `<div class="goal-anchor"><p>${f.label}</p>
-      <button class="btn ghost2" id="goalBreath">🫁 נשימה מודרכת</button></div>`;
+      <button class="btn ghost2" id="goalBreath">🌬️ נשימה מודרכת</button></div>`;
   }
   if (f.type === "text") {
     return `<div class="goal-field"><label class="mini-label">${f.label}</label>
@@ -362,7 +362,7 @@ function onbNext() {
   captureOnb();
   if (onbStep === 0 && !onb.name.trim()) return toast("איך לקרוא לך? 🙂");
   if (onbStep === 1 && !onb.emotion) return toast("בחר רגש אחד");
-  if (onbStep === 3 && !onb.breathDone) return toast("קח נשימה אחת עמוקה 🫁");
+  if (onbStep === 3 && !onb.breathDone) return toast("קח נשימה אחת עמוקה 🌬️");
   if (onbStep < ONB_TOTAL - 1) { onbStep++; renderOnboarding(); }
   else finishOnboarding();
 }
@@ -483,7 +483,7 @@ function renderHome() {
         <div class="today-actions">
           ${pracDone ? `<span class="today-done">✓ בוצע היום — כל הכבוד</span>`
             : `<button class="btn" id="pracDone">עשיתי ✓</button>`}
-          ${prac.name.includes("נשימ") ? `<button class="btn ghost2" id="pracBreath">🫁 מודרך</button>` : ""}
+          ${prac.name.includes("נשימ") ? `<button class="btn ghost2" id="pracBreath">🌬️ מודרך</button>` : ""}
         </div>
       </div>
     </section>
@@ -794,7 +794,7 @@ function trustBlock() {
         <b>⚠️ חשוב:</b> האפליקציה היא כלי עזר ואינה תחליף לטיפול מקצועי.
         במצוקה חריפה או מחשבות אובדניות — פנה מיד לעזרה: ער״ן <b>1201</b> · מוקד חירום <b>101</b>.
       </div>
-      <button class="btn ghost2" id="trustSOS">🫂 צריך רגע עכשיו?</button>
+      <button class="btn ghost2" id="trustSOS">🤗 צריך רגע עכשיו?</button>
     </section>`;
 }
 
@@ -4212,7 +4212,7 @@ function renderLibrary() {
       <div class="subtle">לפי נושאים</div></div></header>
 
     <section class="card breath-card">
-      <div class="card-head"><h3>🫁 נשימה מודרכת</h3></div>
+      <div class="card-head"><h3>🌬️ נשימה מודרכת</h3></div>
       <p class="subtle">תרגול נשימה עם אנימציה שמובילה אותך — שאיפה, החזקה, נשיפה. מרגיע את מערכת העצבים תוך דקות.</p>
       <button class="btn" id="openBreath">פתיחת נגן הנשימה ▶</button>
     </section>
@@ -4330,7 +4330,7 @@ function mountSOS() {
   if (sosFab) return;
   sosFab = document.createElement("button");
   sosFab.id = "sosFab"; sosFab.className = "sos-fab";
-  sosFab.innerHTML = "🫂 רגע קשה";
+  sosFab.innerHTML = "🤗 רגע קשה";
   sosFab.title = "צריך רגע? לחץ כאן";
   sosFab.addEventListener("click", openSOS);
   document.body.appendChild(sosFab);
@@ -4347,12 +4347,12 @@ function renderSOS() {
   let body = "";
   if (sosView === "menu") {
     body = `
-      <div class="sos-emoji">🫂</div>
+      <div class="sos-emoji">🤗</div>
       <h2>רגע קשה? אני כאן איתך</h2>
       <p class="sos-sub">${G("אתה בטוח", "את בטוחה")}. מה ש${G("אתה מרגיש", "את מרגישה")} הוא גל — הוא יעלה ויחלוף. ${G("בוא", "בואי")} נעבור אותו יחד, צעד אחד.</p>
       <div class="sos-menu">
         <button class="sos-item protocol" data-sos="protocol"><span>🧭</span> פרוטוקול המענה — 5 צעדים</button>
-        <button class="sos-item" data-sos="breath"><span>🫁</span> נשימה מרגיעה</button>
+        <button class="sos-item" data-sos="breath"><span>🌬️</span> נשימה מרגיעה</button>
         <button class="sos-item" data-sos="ground"><span>🖐️</span> עיגון 5-4-3-2-1</button>
         <button class="sos-item" data-sos="safe"><span>🏝️</span> המקום הבטוח שלי</button>
         <button class="sos-item" data-sos="phrase"><span>💗</span> משפט שמרגיע אותי</button>
