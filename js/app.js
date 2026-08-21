@@ -1566,13 +1566,12 @@ function openCyclePrint(rows, empty) {
 let week3Tab = "defusion";
 const W3_TABS = [
   { id: "defusion", label: "הרחקת מחשבות" },
-  { id: "reframe",  label: "מסגור מחדש" },
 ];
 
 function toolWeek3(c) {
   const tabs = `<div class="subtool-tabs">${W3_TABS.map(t =>
     `<button class="subtool-tab ${week3Tab === t.id ? "on" : ""}" data-w3tab="${t.id}">${t.label}</button>`).join("")}</div>`;
-  const body = week3Tab === "defusion" ? w3Defusion() : w3Reframe();
+  const body = w3Defusion();
   return `<p class="week-distinction">🍃 בשבוע הזה לא נצמדים למחשבה — שמים לב שהיא רק מחשבה. <b>בשבוע 6 נבדוק אם היא מדויקת.</b></p>`
     + tabs + `<div id="w3body">${body}</div>`;
 }
@@ -2440,8 +2439,8 @@ const W6_TABS = [
   { id: "identity", label: "מי אני בלי הבעיה" },
   { id: "guided",   label: "מפגש החמלה" },
   { id: "burden",   label: "הסרת העול" },
+  { id: "reframe",  label: "מסגור מחדש" },
   { id: "meds",     label: "מדיטציות" },
-  { id: "write",    label: "כתיבה 5 דק׳" },
 ];
 // הסרת העול — 4 עומסים שאני מניח מעליי
 const BURDEN_FIELDS = [
@@ -2463,8 +2462,8 @@ function toolWeek6(c) {
   if (week6Tab === "identity") body = w6Identity();
   if (week6Tab === "guided") body = w6Guided();
   if (week6Tab === "burden") body = w6Burden();
+  if (week6Tab === "reframe") body = w3Reframe();
   if (week6Tab === "meds") body = w6Meds();
-  if (week6Tab === "write") body = w6Write();
   return tabs + `<div id="w6body">${body}</div>`;
 }
 
@@ -2715,6 +2714,18 @@ function mountWeek6Handlers() {
   app.querySelectorAll("[data-w6tab]").forEach(b =>
     b.addEventListener("click", () => { stopActiveTimer(); stashWeek6Drafts(); week6Tab = b.dataset.w6tab; renderChapter(5); }));
 
+  // מסגור מחדש (עבר לפרק 5)
+  app.querySelectorAll(".rf-input").forEach(inp =>
+    inp.addEventListener("change", () => S.setToolData(3, "reframe", collectReframe())));
+  const sref = app.querySelector("#saveReframe");
+  if (sref) sref.addEventListener("click", () => {
+    const arr = collectReframe(); S.setToolData(3, "reframe", arr);
+    if (arr.some(Boolean)) S.logActivity("exercise", "מסגור מחדש");
+    toast("התרגיל נשמר ✓"); renderChapter(5);
+  });
+  const pref = app.querySelector("#pdfReframe");
+  if (pref) pref.addEventListener("click", () => { S.setToolData(3, "reframe", collectReframe()); openReframePrint(collectReframe()); });
+
   // כתיבה 5 דקות
   const ws = app.querySelector("#writeStart");
   if (ws) ws.addEventListener("click", () => {
@@ -2791,6 +2802,7 @@ function stashWeek6Drafts() {
     const d = {}; app.querySelectorAll(".burden-ta").forEach(t => d[t.dataset.b] = t.value.trim());
     S.setToolData(5, "burden", d);
   }
+  if (app.querySelectorAll(".rf-input").length) S.setToolData(3, "reframe", collectReframe());
 }
 
 // ============================================================
