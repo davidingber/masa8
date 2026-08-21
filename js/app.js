@@ -12,6 +12,7 @@ import { COURSE, ACTIVITY_TYPES, EMOTION_ALTERNATIVES, ALT_EMOTION_POOL,
          JOURNEY_PROMISE, RESPONSE_PROTOCOL, MAP_PHASES } from "./data.js";
 import * as S from "./state.js";
 import { renderAvatar, renderAvatarPhoto, avatarMessage } from "./avatar.js";
+import { buildPartsMap } from "./partsMap.js";
 import { askAI } from "./ai.js";
 import { requestPermission, startReminderLoop } from "./reminders.js";
 import { downloadWeeklyICS, googleEventUrl, downloadDailyICS, googleDailyUrl } from "./calendar.js";
@@ -80,6 +81,73 @@ function render() {
   if (route === "settings") return (S.getAdminPin() && !adminUnlocked) ? renderPinGate() : renderSettings();
   if (route === "achievements") return renderAchievements();
   if (route === "goal") { week1Tab = "goal"; return renderChapter(1); }
+  if (route === "self") return renderSelf();
+}
+
+// ============================================================
+//  מפת החלקים / "הדמות שלי" — דשבורד מרכזי מסונכרן מכל השבועות
+// ============================================================
+function renderSelf() {
+  const m = buildPartsMap(S);
+  const pct = Math.round(m.balance * 100);
+  const resPct = pct;                 // גובה עמודת המשאב
+  const sufPct = 100 - pct;           // גובה עמודת הסבל
+  const has = m.counts.secondary + m.counts.resource > 0;
+
+  const chip = (it, cls) => `<span class="pm-chip ${cls}"><b>${esc(it.label)}</b>${esc(it.text.length > 42 ? it.text.slice(0, 42) + "…" : it.text)}</span>`;
+  const groupByLabel = (arr) => {
+    const g = {}; arr.forEach(it => (g[it.label] = g[it.label] || []).push(it)); return g;
+  };
+  const resChips = m.resource.map(it => chip(it, "pm-res")).join("");
+  const sufChips = m.secondary.map(it => chip(it, "pm-suf")).join("");
+
+  app.innerHTML = `
+    <header class="topbar chapter-head">
+      <button class="back-btn" id="back">›</button>
+      <div><div class="greeting">🌱 הדמות שלי</div><div class="subtle">מפת החלקים — מסונכרן מכל השבועות</div></div>
+    </header>
+
+    <section class="card self-hero">
+      <div class="avatar-wrap">${renderAvatarPhoto(pct)}</div>
+      <div class="self-balance">
+        <div class="pm-col">
+          <div class="pm-bar pm-bar-res" style="height:${34 + resPct * 0.9}px">משאב</div>
+          <div class="pm-col-lbl cl-res">▲ ${m.counts.resource}</div>
+        </div>
+        <div class="pm-fulcrum">
+          ${m.primary
+            ? `<div class="pm-held">${esc(m.primary.name)}${m.primary.intensity != null ? ` · ${m.primary.intensity}/10` : ""}<small>מתוקף · נראה · מוגן</small></div>`
+            : `<div class="pm-held pm-held-empty">הרגש הראשוני<small>ייקבע בפרק 1</small></div>`}
+        </div>
+        <div class="pm-col">
+          <div class="pm-bar pm-bar-suf" style="height:${34 + sufPct * 0.9}px">סבל</div>
+          <div class="pm-col-lbl cl-suf">▼ ${m.counts.secondary}</div>
+        </div>
+      </div>
+      <div class="self-note"><b>הכאב לא חייב להישאר — אבל גם לא מגרשים אותו בכוח.</b> מה שנמס הוא הסבל סביבו; המשאב גדל ומוביל.</div>
+    </section>
+
+    ${!has ? `<section class="card"><p class="subtle" style="text-align:center;line-height:1.7">
+        כאן נבנית הדמות שלך לאורך המסע. ככל ${G("שתכתוב", "שתכתבי")} בשבועות — רגש, מחשבות, פעילות, חשיפות —
+        הכול יופיע כאן, ו${G("תראה", "תראי")} בדיוק איך המאזן נע.</p></section>` : `
+
+    <section class="card">
+      <div class="pm-side-title st-res">▲ צד המשאב — גדל ומוביל <span class="pm-count">${m.counts.resource}</span></div>
+      ${m.counts.resource ? `<div class="pm-chips">${resChips}</div>` : `<p class="subtle">עוד אין פריטים — כל בחירה מנהיגה תופיע כאן.</p>`}
+    </section>
+
+    <section class="card">
+      <div class="pm-side-title st-suf">צד הכאב</div>
+      ${m.primary ? `<div class="pm-group-lbl">כאב ראשוני · מתוקף, נראה ומוגן</div>
+        <div class="pm-chips"><span class="pm-chip pm-held-chip"><b>${esc(m.primary.name)}</b>${m.primary.intensity != null ? m.primary.intensity + "/10" : ""}</span></div>` : ""}
+      <div class="pm-group-lbl" style="margin-top:12px">▼ סבל משני · הולך ופוחת <span class="pm-count">${m.counts.secondary}</span></div>
+      ${m.counts.secondary ? `<div class="pm-chips">${sufChips}</div>` : `<p class="subtle">עוד אין פריטים.</p>`}
+    </section>`}
+
+    <div class="chapter-footer"><button class="btn ghost2 back-all" id="backHome">↩ חזרה לבית</button></div>`;
+
+  app.querySelector("#back").addEventListener("click", () => go("home"));
+  app.querySelector("#backHome").addEventListener("click", () => go("home"));
 }
 
 // ============================================================
@@ -471,8 +539,9 @@ function renderHome() {
       </div>
       <p class="avatar-msg">${avatarMessage(stage)}</p>
       <p class="leader-hint">מתחזק בכל פעם שאני בוחר להנהיג — לא כשהפחד נעלם.</p>
+      <button class="btn" id="openSelf">🌱 מפת החלקים שלי</button>
       <div class="work-clock" title="זמן העבודה שלך השבוע">⏱️ זמן עבודה השבוע: <b id="workClock">${fmtHM(S.getWeekWorkTime())}</b></div>
-      <button class="btn share-btn" id="shareProgress">📤 שיתוף ההתקדמות שלי</button>
+      <button class="btn share-btn ghost2" id="shareProgress">📤 שיתוף ההתקדמות שלי</button>
     </section>
 
     <section class="card goal-card">
@@ -568,6 +637,7 @@ function renderHome() {
   const eg = app.querySelector("#editGoal");
   if (eg) eg.addEventListener("click", () => go("goal"));
   app.querySelector("#goalToolBtn").addEventListener("click", () => go("goal"));
+  app.querySelector("#openSelf")?.addEventListener("click", () => go("self"));
   app.querySelector("#shareProgress").addEventListener("click", shareProgress);
   app.querySelector("#openProtocol")?.addEventListener("click", () => { sosView = "protocol"; renderSOS(); });
   app.querySelectorAll("[data-qa]").forEach(el =>
