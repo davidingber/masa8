@@ -185,6 +185,14 @@ function goalField(f, plan) {
     return `<div class="goal-anchor"><p>${f.label}</p>
       <button class="btn ghost2" id="goalBreath">🌬️ נשימה מודרכת</button></div>`;
   }
+  if (f.type === "part-show") {
+    const st = S.getState();
+    return `<div class="goal-field emotion-pick">
+      <label class="mini-label">${esc(f.label)}</label>
+      ${st.partName
+        ? `<p class="target-line">🧩 <b>${esc(st.partName)}</b> <span class="subtle">— נבחר בלשונית "החלקים בנפש"</span></p>`
+        : `<p class="subtle">${G("בחר", "בחרי")} קודם את שם החלק בלשונית "החלקים בנפש".</p>`}</div>`;
+  }
   if (f.type === "part-pick") {
     const st = S.getState();
     const parts = ["הפגיע", "החרד", "המפוחד", "חסר האונים", "הדחוי", "הביקורתי"];
@@ -308,7 +316,7 @@ function openGoalPrint(plan) {
   const body = GOAL_TOOL.sections.map(s => {
     const items = s.fields.filter(f => f.type !== "anchor").map(f => {
       let a = plan[f.key];
-      if (f.type === "part-pick") a = st.partName || "";
+      if (f.type === "part-pick" || f.type === "part-show") a = st.partName || "";
       else if (f.type === "ideal-name") a = st.idealName || "";
       else if (f.type === "emotion-start") a = st.emotion.name
         ? st.emotion.name + (st.emotion.ratings.length ? ` (עוצמה ${st.emotion.ratings[st.emotion.ratings.length - 1].value}/10)` : "") : "";
@@ -2167,12 +2175,10 @@ function openExposurePrint(rows) {
 // ============================================================
 //  שבוע 5 — עיוותי חשיבה, טבלת החלפת מחשבות, בודק AI
 // ============================================================
-let week5Tab = "quick";
+let week5Tab = "learn";
 const W5_TABS = [
-  { id: "quick",   label: "בדיקה מהירה" },
-  { id: "beliefs", label: "החלפת אמונות" },
   { id: "learn",   label: "עיוותי חשיבה" },
-  { id: "table",   label: "טבלה מלאה" },
+  { id: "beliefs", label: "החלפת אמונות" },
   { id: "checker", label: "בדיקת מחשבה (AI)" },
 ];
 
@@ -2180,10 +2186,8 @@ function toolWeek5(c) {
   const tabs = `<div class="subtool-tabs">${W5_TABS.map(t =>
     `<button class="subtool-tab ${week5Tab === t.id ? "on" : ""}" data-w5tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body = "";
-  if (week5Tab === "quick") body = w5Quick();
-  if (week5Tab === "beliefs") body = w5Beliefs();
   if (week5Tab === "learn") body = w5Learn();
-  if (week5Tab === "table") body = w5Table();
+  if (week5Tab === "beliefs") body = w5Beliefs();
   if (week5Tab === "checker") body = w5Checker();
   return `<p class="week-distinction">🧠 בשבוע 3 תרגלנו לא להיצמד למחשבה. <b>כאן, כמנהיגים, בודקים אם היא מדויקת — עובדה או סיפור.</b></p>`
     + tabs + `<div id="w5body">${body}</div>`;
@@ -3489,25 +3493,79 @@ function w8Relapse() {
 
 // --- סגירת לולאת הזהות: מי רציתי להיות (שבוע 1) → מי הפכתי להיות ---
 function w8Identity() {
-  const start = (S.getToolData(1, "dickens") || {}).identity || "";
+  const m = buildPartsMap(S);
   const d = S.getToolData(8, "identityClose") || {};
+  const byLabel = (arr, labels) => arr.filter(it => labels.includes(it.label)).map(it => it.text);
+  const join = a => [...new Set(a.filter(Boolean))].join("\n");
+  const pref = (k, derived) => d[k] != null ? d[k] : derived;
+
+  const nameVal = pref("name", m.idealName || "");
+  const beliefsVal = pref("beliefs", join([m.resource.belief, ...byLabel(m.resource.thought, ["אמונה חדשה"])]));
+  const thoughtsVal = pref("thoughts", join(byLabel(m.resource.thought, ["מחשבה חלופית", "מנטרה", "מסגור מחדש", "אי-הזדהות", "הסבר אחר", "בדיקת מציאות", "רווח משומר", "חזון", "חזון הזהות", "המטרה שלי"])));
+  const exposureVal = pref("exposure", join(byLabel(m.resource.thought, ["למידה מחשיפה"])));
+  const activityVal = pref("activity", join(byLabel(m.resource.behavior, ["פעילות מהנה"])));
+  const valuesVal = pref("values", join(byLabel(m.resource.behavior, ["ערך מנחה"])));
+  const compassionVal = pref("compassion", join(byLabel(m.resource.behavior, ["מדיטציות", "מה החלק צריך", "הסרת העול"])));
+
+  const sec = (id, icon, label, val, ph) => `
+    <label class="mini-label">${icon} ${label}</label>
+    <textarea class="ta idf" data-k="${id}" placeholder="${esc(ph)}">${esc(val)}</textarea>`;
+
   return `
     <div class="tool-block">
-      <p class="hint">הגעת לסוף המסע. הרגע הזה סוגר מעגל — ממי שרצית להיות, אל מי שהפכת להיות.</p>
+      <p class="hint">הגעת לסוף המסע. הזהות החדשה שלך נבנתה כאן <b>אוטומטית מכל מה שעבדת עליו</b> — ${G("ערוך", "ערכי")} או ${G("הוסף", "הוסיפי")} כרצונך, ואז ${G("שמור", "שמרי")}.</p>
 
-      ${start ? `<div class="identity-then">
-        <div class="identity-then-label">✍️ בשבוע 1 כתבת שאתה רוצה להיות:</div>
-        <p>${esc(start).replace(/\n/g, "<br>")}</p>
-      </div>` : `<p class="hint">בשבוע 1 (תרגיל דיקנס) המקום ל"מי אני רוצה להיות" נשאר ריק — זה בסדר. כתוב עכשיו מי הפכת להיות.</p>`}
+      <label class="mini-label">🌟 השם של האני האידיאלי שלי</label>
+      <input class="inp idf" data-k="name" value="${esc(nameVal)}" placeholder="השם שנתת לדמות המיטיבה בפרק 1...">
 
-      <label class="mini-label">🌅 ומי הפכתי להיות? — כתוב בלשון הווה, כמבוגר המיטיב שאתה כבר</label>
-      <textarea class="ta big" id="identityNow" placeholder="אני אדם ש... החרדה כבר לא מנהלת אותי... אני יודע לתת לעצמי מענה... היציבה שלי...">${esc(d.text || "")}</textarea>
+      ${sec("beliefs", "🌰", "האמונות שאני כבר מחזיק", beliefsVal, "אמונות היסוד החדשות שלי על עצמי ועל העולם...")}
+      ${sec("thoughts", "💭", "המחשבות שלי", thoughtsVal, "המחשבות המיטיבות והחלופיות...")}
+      ${sec("exposure", "🦋", "החשיפה לפחד — מה למדתי", exposureVal, "מה גיליתי כשנחשפתי, למרות הפחד...")}
+      ${sec("activity", "🎨", "פעילות מהנה", activityVal, "מה ממלא ומשמח אותי...")}
+      ${sec("values", "🧭", "הערכים שמנחים אותי", valuesVal, "מה באמת חשוב לי...")}
+      ${sec("compassion", "💗", "פעילות חומלת (כמו מדיטציה)", compassionVal, "איך אני מטפל בעצמי בחמלה...")}
 
-      <div class="identity-close" style="text-align:center">
+      <div class="identity-close" style="text-align:center;margin-top:6px">
         מהיום — כשמשהו בתוכי מפחד, <b>אני זה שמנהיג את הבית.</b> 🌱
       </div>
-      <button class="btn" id="saveIdentityNow">חתימת הזהות + טעינת האווטר</button>
+      <div class="activation-actions">
+        <button class="btn" id="saveIdentityNow">חתימת הזהות + שמירה</button>
+        <button class="btn ghost2" id="pdfIdentity">⬇ הורדה כ-PDF</button>
+      </div>
     </div>`;
+}
+
+function collectIdentity() {
+  const d = {};
+  app.querySelectorAll(".idf").forEach(el => d[el.dataset.k] = el.value.trim());
+  return d;
+}
+
+function openIdentityPrint(d) {
+  const st = S.getState();
+  const today = new Date().toLocaleDateString("he-IL");
+  const rows = [
+    ["🌰 האמונות שאני מחזיק", d.beliefs], ["💭 המחשבות שלי", d.thoughts],
+    ["🦋 מה למדתי מהחשיפה לפחד", d.exposure], ["🎨 פעילות מהנה", d.activity],
+    ["🧭 הערכים שמנחים אותי", d.values], ["💗 פעילות חומלת", d.compassion],
+  ].filter(r => r[1]).map(r => `<div class="q"><div class="ql">${esc(r[0])}</div><div class="qa">${esc(r[1]).replace(/\n/g, "<br>")}</div></div>`).join("");
+  const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
+    <title>הזהות החדשה שלי — מסע 8 השבועות</title>
+    <style>body{font-family:'Segoe UI',Arial,sans-serif;color:#20353a;padding:30px;max-width:760px;margin:auto}
+    h1{color:#45614f;margin:0 0 2px} .sub{color:#6a8189;margin:0 0 16px;font-size:13px}
+    .name{font-size:20px;font-weight:800;color:#45614f;margin:10px 0 18px}
+    .q{margin-bottom:12px} .ql{font-weight:700;font-size:14px;margin-bottom:4px}
+    .qa{border:1px solid #d8e6da;border-radius:8px;padding:9px 11px;min-height:30px;font-size:14px;background:#f7f9f4;line-height:1.6}
+    .btn{background:#45614f;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:15px;cursor:pointer;margin-top:18px}
+    @media print{.noprint{display:none}}</style></head><body>
+    <h1>הזהות החדשה שלי</h1><p class="sub">מסע 8 השבועות · ${esc(st.name) || ""} · ${today}</p>
+    ${d.name ? `<div class="name">🌟 ${esc(d.name)}</div>` : ""}
+    ${rows}
+    <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
+    <script>setTimeout(()=>window.print(),400)<\/script></body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) { toast("אפשר חלונות קופצים כדי להוריד"); return; }
+  w.document.write(html); w.document.close();
 }
 
 // --- בחירת ודירוג ערכים ---
@@ -3671,11 +3729,13 @@ function mountWeek8Handlers() {
   // הזהות החדשה שלי (סגירת המעגל)
   const sin = app.querySelector("#saveIdentityNow");
   if (sin) sin.addEventListener("click", () => {
-    const text = qv("#identityNow");
-    S.setToolData(8, "identityClose", { text });
-    if (text) { S.logActivity("values", "חתימת הזהות החדשה"); celebrate(); }
+    const d = collectIdentity();
+    S.setToolData(8, "identityClose", d);
+    if (Object.values(d).some(Boolean)) { S.logActivity("values", "חתימת הזהות החדשה"); celebrate(); }
     toast("🌱 הזהות נחתמה");
   });
+  const pin = app.querySelector("#pdfIdentity");
+  if (pin) pin.addEventListener("click", () => { const d = collectIdentity(); S.setToolData(8, "identityClose", d); openIdentityPrint(d); });
 
   const srl = app.querySelector("#saveRelapse");
   if (srl) srl.addEventListener("click", () => {

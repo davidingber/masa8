@@ -78,7 +78,6 @@ export function buildPartsMap(S) {
   add(resource, "thought", "חזון הזהות", (td(1, "dickens") || {}).identity, 1);
   add(resource, "thought", "חזון", goal.dream_feel, 1);
   add(resource, "thought", "המטרה שלי", goal.goal_precise, 1);
-  add(resource, "thought", "זהות חדשה", (td(8, "identityClose") || {}).text, 8);
   // כלי החלפת אמונות (שבוע 6)
   add(pain, "thought", "אמונה", beliefTool.belief, 6);
   add(pain, "emotion", "רגש", beliefTool.emotion, 6);
