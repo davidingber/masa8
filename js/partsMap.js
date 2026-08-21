@@ -3,12 +3,10 @@
 //  נגזר מהנתונים האמיתיים של כל השבועות (בלי כפילויות),
 //  ולכן תמיד מסונכרן עם מה שהלקוח כתב.
 //
-//  מחזיר:
-//   primary   — הרגש הראשוני (מתוקף · נראה · מוגן) או null
-//   secondary — שכבת הסבל המשני (מחשבות, התנהגות, הימנעות, פחד...)
-//   resource  — צד המשאב (רגש חלופי, אי-הזדהות, פעילות, חמלה, חזון...)
-//   counts    — כמה פריטים בכל צד
-//   balance   — 0..1, יחס המשאב מול הסבל (מניע את המאזן והאווטר)
+//  שני צדדים, כל אחד עם אנטומיה מסודרת:
+//   pain (החלק):      belief, thought[], emotion[], sensation[], over[], avoid[]
+//   resource (ההורה): belief, thought[], emotion[], sensation[], behavior[]
+//   + partName, idealName, primary (מגמת הרגש), counts, balance
 // ============================================================
 
 export function buildPartsMap(S) {
@@ -16,75 +14,92 @@ export function buildPartsMap(S) {
   const goal = S.getGoalPlan() || {};
   const td = (w, k) => S.getToolData(w, k);
 
-  const secondary = [];
-  const resource = [];
+  const pain = { belief: "", thought: [], emotion: [], sensation: [], over: [], avoid: [] };
+  const resource = { belief: "", thought: [], emotion: [], sensation: [], behavior: [] };
   const seen = new Set();
-  const add = (arr, label, text, week) => {
+  const add = (side, cat, label, text, week) => {
     const t = (text == null ? "" : String(text)).trim();
     if (!t) return;
-    const sig = label + "|" + t;
-    if (seen.has(sig)) return;      // מונע כפילויות מאותו טקסט
+    const sig = cat + "|" + t;
+    if (seen.has(sig)) return;
     seen.add(sig);
-    arr.push({ label, text: t, week });
+    side[cat].push({ label, text: t, week });
   };
 
-  // ===== כאב ראשוני =====
-  const ratings = st.emotion.ratings || [];
-  const lastRating = ratings.length ? ratings[ratings.length - 1].value : null;
-  const primary = st.emotion.name ? { name: st.emotion.name, intensity: lastRating } : null;
+  // ===== אמונות יסוד =====
+  const selfMap = td(2, "selfMap") || {};
+  pain.belief = (selfMap.belief || "").trim();
+  const beliefTool = td(6, "beliefSwap") || {};      // כלי החלפת אמונות (שבוע 6)
+  resource.belief = (st.idealBelief || beliefTool.newBelief || "").trim();
 
-  // ===== סבל משני =====
+  // ===== רגש ראשוני + מגמה =====
+  const ratings = st.emotion.ratings || [];
+  const primary = st.emotion.name
+    ? { name: st.emotion.name, first: ratings[0]?.value ?? null, last: ratings.length ? ratings[ratings.length - 1].value : null }
+    : null;
+
+  // ===== צד החלק (כאב) =====
   // מחשבות
-  add(secondary, "מחשבה", goal.cur_thoughts, 1);
+  add(pain, "thought", "מחשבה", goal.cur_thoughts, 1);
+  add(pain, "thought", "מחשבה", selfMap.thoughts, 2);
   (td(6, "thoughtTable") || []).forEach(r => {
-    add(secondary, "מחשבה", r.thought, 6);
-    add(secondary, "עיוות חשיבה", r.distortion, 6);
-    add(resource, "מחשבה חלופית", r.alternative, 6);
+    add(pain, "thought", "מחשבה", r.thought, 6);
+    add(pain, "thought", "עיוות חשיבה", r.distortion, 6);
+    add(pain, "emotion", "רגש", r.emotion, 6);
+    add(pain, "sensation", "תחושה", r.sensation, 6);
+    add(resource, "thought", "מחשבה חלופית", r.alternative, 6);
   });
   (td(2, "cycleJournal") || []).forEach(r => {
-    add(secondary, "מחשבה", r.thought, 2);
-    add(secondary, "תגובה", r.response, 2);
+    add(pain, "thought", "מחשבה", r.thought, 2);
+    add(pain, "emotion", "רגש", r.interpretation, 2);
+    add(pain, "sensation", "תחושה", r.sensation, 2);
+    add(pain, "over", "תגובה", r.response, 2);
   });
-  // התנהגות + הימנעות + כפייתיות
-  add(secondary, "התנהגות", goal.cur_behavior, 1);
-  (goal.cur_avoid || []).forEach(a => add(secondary, "הימנעות", a, 1));
-  add(secondary, "הימנעות", goal.cur_avoid_detail, 1);
-  // מחיר ההישארות (דיקנס)
-  const dick = td(1, "dickens") || {};
-  add(secondary, "מחיר ההישארות", dick.stay5feel, 1);
-  add(secondary, "מחיר ההישארות", dick.stay10feel, 1);
+  // התנהגות — עשיית יתר / הימנעות
+  add(pain, "over", "עשיית יתר", goal.cur_behavior, 1);
+  add(pain, "over", "עשיית יתר", selfMap.overdoing, 2);
+  (goal.cur_avoid || []).forEach(a => add(pain, "avoid", "הימנעות", a, 1));
+  add(pain, "avoid", "הימנעות", goal.cur_avoid_detail, 1);
+  add(pain, "avoid", "הימנעות", selfMap.avoidance, 2);
   // חשיפה — פחד ומחשבות לפני
   const prep = td(7, "prepForm") || {};
-  (prep.emotions || []).forEach(e => add(secondary, "פחד בחשיפה", e, 7));
-  add(secondary, "מחשבה בחשיפה", prep.autoThoughts, 7);
-  add(secondary, "עיוות חשיבה", prep.distortions, 7);
-  // טריגרים לנסיגה
-  ((td(8, "relapse") || {}).triggers || []).forEach(t => add(secondary, "טריגר לנסיגה", t, 8));
+  (prep.emotions || []).forEach(e => add(pain, "emotion", "פחד בחשיפה", e, 7));
+  add(pain, "thought", "מחשבה בחשיפה", prep.autoThoughts, 7);
 
-  // ===== משאב =====
-  if (st.emotion.target) add(resource, "רגש חלופי", st.emotion.target, 1);
-  // מחשבות חלופיות / מנטרות / למידה מחשיפה
-  add(resource, "מחשבה חלופית", prep.altThoughts, 7);
-  add(resource, "מנטרה", prep.rational, 7);
-  add(resource, "למידה מחשיפה", (td(7, "afterForm") || {}).learned, 7);
-  // אי-הזדהות ומסגור מחדש
-  (td(3, "reframe") || []).forEach(t => add(resource, "מסגור מחדש", t, 3));
-  add(resource, "אי-הזדהות", td(3, "thirdPerson"), 3);
-  // פעילות מהנה
-  Object.values(td(1, "activityPlan") || {}).forEach(v => add(resource, "פעילות מהנה", v && v.activity, 1));
-  // חמלה / הורות עצמית (שבוע 5)
-  add(resource, "מה החלק צריך", (td(5, "focusing") || {}).needs, 5);
-  Object.values(td(5, "burden") || {}).forEach(v => add(resource, "הסרת העול", v, 5));
-  // חזון הזהות
-  add(resource, "חזון הזהות", dick.identity, 1);
-  add(resource, "חזון", goal.dream_feel, 1);
-  add(resource, "המטרה שלי", goal.goal_precise, 1);
-  add(resource, "זהות חדשה", (td(8, "identityClose") || {}).text, 8);
-  (td(8, "values") || []).forEach(v => add(resource, "ערך מנחה", v, 8));
+  // ===== צד המשאב (ההורה המיטיב) =====
+  if (st.emotion.target) add(resource, "emotion", "רגש חלופי", st.emotion.target, 1);
+  // מחשבות חדשות
+  add(resource, "thought", "מחשבה חלופית", prep.altThoughts, 7);
+  add(resource, "thought", "מנטרה", prep.rational, 7);
+  add(resource, "thought", "למידה מחשיפה", (td(7, "afterForm") || {}).learned, 7);
+  (td(3, "reframe") || []).forEach(t => add(resource, "thought", "מסגור מחדש", t, 3));
+  add(resource, "thought", "אי-הזדהות", td(3, "thirdPerson"), 3);
+  add(resource, "thought", "חזון הזהות", (td(1, "dickens") || {}).identity, 1);
+  add(resource, "thought", "חזון", goal.dream_feel, 1);
+  add(resource, "thought", "המטרה שלי", goal.goal_precise, 1);
+  add(resource, "thought", "זהות חדשה", (td(8, "identityClose") || {}).text, 8);
+  // כלי החלפת אמונות (שבוע 6) — המחשבה/אמונה החדשה
+  add(resource, "thought", "אמונה חדשה", beliefTool.newBelief, 6);
+  add(resource, "thought", "הסבר אחר", beliefTool.reframe, 6);
+  // התנהגות מיטיבה
+  Object.values(td(1, "activityPlan") || {}).forEach(v => add(resource, "behavior", "פעילות מהנה", v && v.activity, 1));
+  (td(8, "values") || []).forEach(v => add(resource, "behavior", "ערך מנחה", v, 8));
+  add(resource, "behavior", "מה החלק צריך", (td(5, "focusing") || {}).needs, 5);
+  Object.values(td(5, "burden") || {}).forEach(v => add(resource, "behavior", "הסרת העול", v, 5));
+  add(resource, "behavior", "משאב חסר", beliefTool.resources, 6);
+  // האזנה למדיטציות — כמספר האזנות שנרשמו
+  const medListens = (st.activities || []).filter(a => a.type === "meditation").length;
+  if (medListens) resource.behavior.push({ label: "מדיטציות", text: `האזנת ${medListens} פעמים`, week: 4 });
 
-  const sCount = secondary.length;
-  const rCount = resource.length;
-  const balance = (sCount + rCount) === 0 ? 0.5 : rCount / (sCount + rCount);
+  const painCount = pain.thought.length + pain.emotion.length + pain.sensation.length + pain.over.length + pain.avoid.length;
+  const resCount = resource.thought.length + resource.emotion.length + resource.sensation.length + resource.behavior.length;
+  const balance = (painCount + resCount) === 0 ? 0.5 : resCount / (painCount + resCount);
 
-  return { primary, secondary, resource, counts: { secondary: sCount, resource: rCount }, balance };
+  return {
+    partName: (st.partName || "").trim(),
+    idealName: (st.idealName || "").trim(),
+    primary, pain, resource,
+    counts: { pain: painCount, resource: resCount },
+    balance,
+  };
 }

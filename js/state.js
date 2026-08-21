@@ -9,6 +9,8 @@ const DEFAULT_STATE = {
   name: "",
   gender: "m",                        // "m" | "f" — להתאמת לשון הפנייה
   goal: "",
+  partName: "",                       // שם החלק הפגיע שעליו עובדים
+  idealName: "",                      // שם הדמות האידיאלית (ההורה המיטיב)
   emotion: { name: "", ratings: [] }, // ratings: [{date, value}]
   activities: [],                     // [{type, date, note}]
   chapters: {},                       // { "1": { tasks: {0:true}, tools:{...} } }
@@ -144,6 +146,10 @@ export function setEmotion(name) {
   }
   save();
 }
+
+// שם החלק הפגיע שעליו עובדים, ושם הדמות האידיאלית (ההורה המיטיב)
+export function setPartName(v) { state.partName = (v || "").trim(); save(); }
+export function setIdealName(v) { state.idealName = (v || "").trim(); save(); }
 
 export function logEmotionRating(value) {
   state.emotion.ratings.push({ date: new Date().toISOString(), value: Number(value) });

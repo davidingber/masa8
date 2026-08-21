@@ -91,48 +91,65 @@ function render() {
 function partsDashCards(m, opts = {}) {
   const pct = Math.round(m.balance * 100);
   const resPct = pct, sufPct = 100 - pct;
-  const has = m.counts.secondary + m.counts.resource > 0;
-  const chip = (it, cls) => `<span class="pm-chip ${cls}"><b>${esc(it.label)}</b>${esc(it.text.length > 42 ? it.text.slice(0, 42) + "…" : it.text)}</span>`;
-  const resChips = m.resource.map(it => chip(it, "pm-res")).join("");
-  const sufChips = m.secondary.map(it => chip(it, "pm-suf")).join("");
+  const has = m.counts.pain + m.counts.resource > 0;
+  const clip = (t) => t.length > 40 ? t.slice(0, 40) + "…" : t;
+  const dchip = (it, side) => `<span class="dchip d-${side}">${esc(clip(it.text))}</span>`;
+
+  // בלוק קטגוריה בעמודה
+  const blk = (title, items, side, answered) => items.length ? `
+    <div class="dblk"><div class="dblk-lbl">${title}${answered ? ` <span class="dblk-ans">✓ יש מענה</span>` : ""}</div>
+      <div class="dmini">${items.map(it => dchip(it, side)).join("")}</div></div>` : "";
+
+  // מגמת הרגש
+  const p = m.primary;
+  const emoTrend = p ? (
+    (p.first != null && p.last != null && p.first !== p.last)
+      ? `<div class="emo-trend"><span class="old">${p.first}</span><span class="ar">→</span><span>${p.last}</span> <span>${esc(p.name)} ${p.last < p.first ? "↓" : ""}</span></div>`
+      : `<div class="emo-trend"><span>${esc(p.name)}${p.last != null ? ` · ${p.last}/10` : ""}</span></div>`
+  ) : "";
+
+  const partHdr = m.partName ? `החלק · ${esc(m.partName)}` : "החלק";
+  const idealHdr = m.idealName ? esc(m.idealName) : "ההורה המיטיב";
+
   return `
     <section class="card self-hero">
       ${opts.streak > 0 ? `<div class="streak-chip" title="ימים רצופים של עבודה">🔥 ${opts.streak} ${opts.streak === 1 ? "יום" : "ימים"} ברצף</div>` : ""}
       <div class="avatar-wrap">${renderAvatarPhoto(pct)}</div>
+      <div class="hero-cap subtle">פורחת ככל שההורה המיטיב מוזן</div>
+      ${emoTrend}
+      ${p ? `<div class="emo-sub subtle">יורד בסביבה בטוחה ובחמלה 🛡️</div>` : ""}
       <div class="self-balance">
-        <div class="pm-col">
-          <div class="pm-bar pm-bar-res" style="height:${34 + resPct * 0.9}px">משאב</div>
-          <div class="pm-col-lbl cl-res">▲ ${m.counts.resource}</div>
-        </div>
-        <div class="pm-fulcrum">
-          ${m.primary
-            ? `<div class="pm-held">${esc(m.primary.name)}${m.primary.intensity != null ? ` · ${m.primary.intensity}/10` : ""}<small>מתוקף · נראה · מוגן</small></div>`
-            : `<div class="pm-held pm-held-empty">הרגש הראשוני<small>ייקבע בפרק 1</small></div>`}
-        </div>
-        <div class="pm-col">
-          <div class="pm-bar pm-bar-suf" style="height:${34 + sufPct * 0.9}px">סבל</div>
-          <div class="pm-col-lbl cl-suf">▼ ${m.counts.secondary}</div>
-        </div>
+        <div class="pm-col"><div class="pm-bar pm-bar-res" style="height:${34 + resPct * 0.9}px">משאב</div><div class="pm-col-lbl cl-res">▲ ${m.counts.resource}</div></div>
+        <div class="pm-col"><div class="pm-bar pm-bar-suf" style="height:${34 + sufPct * 0.9}px">כאב</div><div class="pm-col-lbl cl-suf">▼ ${m.counts.pain}</div></div>
       </div>
-      <div class="self-note"><b>הכאב לא חייב להישאר — אבל גם לא מגרשים אותו בכוח.</b> מה שנמס הוא הסבל סביבו; המשאב גדל ומוביל.</div>
+      <div class="self-note"><b>בסביבה בטוחה ובחמלה — הרגש יורד.</b> ולחלק יש כמה רגשות: גם אם הפחד עוד כאן, התסכול, הכעס והחוסר-אונים שסביבו פוחתים.</div>
     </section>
 
     ${!has ? `<section class="card"><p class="subtle" style="text-align:center;line-height:1.7">
-        כאן נבנית הדמות שלך לאורך המסע. ככל ${G("שתכתוב", "שתכתבי")} בשבועות — רגש, מחשבות, פעילות, חשיפות —
-        הכול יופיע כאן, ו${G("תראה", "תראי")} בדיוק איך המאזן נע.</p></section>` : `
+        כאן נבנית הדמות שלך לאורך המסע. ${m.partName ? "" : `${G("בחר", "בחרי")} קודם את שם החלק בפרק 1. `}ככל ${G("שתכתוב", "שתכתבי")} בשבועות — אמונה, מחשבות, רגש, פעילות, חשיפות — הכול יופיע כאן.</p></section>` : `
 
-    <section class="card">
-      <div class="pm-side-title st-res">▲ צד המשאב — גדל ומוביל <span class="pm-count">${m.counts.resource}</span></div>
-      ${m.counts.resource ? `<div class="pm-chips">${resChips}</div>` : `<p class="subtle">עוד אין פריטים — כל בחירה מנהיגה תופיע כאן.</p>`}
-    </section>
+    <div class="dash-cols">
+      <div class="dash-side d-partside">
+        <div class="dash-head dh-part">${partHdr}</div>
+        ${m.pain.belief ? `<div class="dblk"><div class="dblk-lbl">אמונה ראשית</div><div class="belief b-part">${esc(m.pain.belief)}</div></div>` : ""}
+        ${blk("מחשבות", m.pain.thought, "part", m.resource.thought.length > 0)}
+        ${blk("רגשות", m.pain.emotion, "part", m.resource.emotion.length > 0)}
+        ${blk("תחושות", m.pain.sensation, "part", m.resource.sensation.length > 0)}
+        ${(m.pain.over.length || m.pain.avoid.length) ? `<div class="dblk"><div class="dblk-lbl">התנהגות${m.resource.behavior.length ? ` <span class="dblk-ans">✓ יש מענה</span>` : ""}</div>
+          ${m.pain.over.length ? `<div class="dblk-sub">עשיית יתר</div><div class="dmini">${m.pain.over.map(it => dchip(it, "part")).join("")}</div>` : ""}
+          ${m.pain.avoid.length ? `<div class="dblk-sub">הימנעות / חוסר עשייה</div><div class="dmini">${m.pain.avoid.map(it => dchip(it, "part")).join("")}</div>` : ""}
+        </div>` : ""}
+      </div>
 
-    <section class="card">
-      <div class="pm-side-title st-suf">צד הכאב</div>
-      ${m.primary ? `<div class="pm-group-lbl">כאב ראשוני · מתוקף, נראה ומוגן</div>
-        <div class="pm-chips"><span class="pm-chip pm-held-chip"><b>${esc(m.primary.name)}</b>${m.primary.intensity != null ? m.primary.intensity + "/10" : ""}</span></div>` : ""}
-      <div class="pm-group-lbl" style="margin-top:12px">▼ סבל משני · הולך ופוחת <span class="pm-count">${m.counts.secondary}</span></div>
-      ${m.counts.secondary ? `<div class="pm-chips">${sufChips}</div>` : `<p class="subtle">עוד אין פריטים.</p>`}
-    </section>`}`;
+      <div class="dash-side d-parentside">
+        <div class="dash-head dh-parent">${idealHdr}</div>
+        ${m.resource.belief ? `<div class="dblk"><div class="dblk-lbl">אמונת יסוד חדשה</div><div class="belief b-parent">${esc(m.resource.belief)}</div></div>` : ""}
+        ${blk("מחשבות חדשות", m.resource.thought, "parent")}
+        ${blk("רגש", m.resource.emotion, "parent")}
+        ${blk("תחושה", m.resource.sensation, "parent")}
+        ${blk("התנהגות מיטיבה", m.resource.behavior, "parent")}
+      </div>
+    </div>`}`;
 }
 
 function renderSelf() {
@@ -167,6 +184,30 @@ function goalField(f, plan) {
   if (f.type === "anchor") {
     return `<div class="goal-anchor"><p>${f.label}</p>
       <button class="btn ghost2" id="goalBreath">🌬️ נשימה מודרכת</button></div>`;
+  }
+  if (f.type === "part-pick") {
+    const st = S.getState();
+    const parts = ["הפגיע", "החרד", "המפוחד", "חסר האונים", "הדחוי", "הביקורתי"];
+    const other = w1PartOther || (!!st.partName && !parts.includes(st.partName));
+    return `<div class="goal-field emotion-pick">
+      <label class="mini-label">${esc(f.label)} — ${G("בחר", "בחרי")} שם, או ${G("כתוב", "כתבי")} משלך</label>
+      <p class="hint">זה החלק הפגיע שבתוכך שנלמד להנהיג בחמלה. תן לו שם שמדבר אליך.</p>
+      <div class="chip-row">
+        ${parts.map(p => `<button type="button" class="chip ${st.partName === p ? "on" : ""}" data-part="${esc(p)}">${esc(p)}</button>`).join("")}
+        <button type="button" class="chip ${other ? "on" : ""}" data-part="__other__">אחר…</button>
+      </div>
+      ${other ? `<div class="other-emo-row">
+        <input class="inp" id="partOther" placeholder="${G("כתוב", "כתבי")} שם לחלק..." value="${esc(parts.includes(st.partName) ? "" : (st.partName || ""))}">
+        <button type="button" class="btn ghost2" id="partSave">שמירה</button></div>` : ""}
+      ${st.partName ? `<p class="target-line">🧩 החלק שלי: <b>${esc(st.partName)}</b></p>` : ""}</div>`;
+  }
+  if (f.type === "ideal-name") {
+    const st = S.getState();
+    return `<div class="goal-field emotion-pick">
+      <label class="mini-label">${esc(f.label)}</label>
+      <p class="hint">הדמות המיטיבה שתלווה אותך ותנהיג בחמלה — ${G("תן", "תני")} לה שם (למשל: המבוגר החכם, ההורה הטוב, הגרסה הבוגרת שלי).</p>
+      <input class="inp goal-ideal" id="idealName" value="${esc(st.idealName || "")}" placeholder="שם הדמות האידיאלית...">
+      ${st.idealName ? `<p class="target-line">🌱 ההורה המיטיב שלי: <b>${esc(st.idealName)}</b></p>` : ""}</div>`;
   }
   if (f.type === "emotion-start") {
     const st = S.getState();
@@ -267,7 +308,9 @@ function openGoalPrint(plan) {
   const body = GOAL_TOOL.sections.map(s => {
     const items = s.fields.filter(f => f.type !== "anchor").map(f => {
       let a = plan[f.key];
-      if (f.type === "emotion-start") a = st.emotion.name
+      if (f.type === "part-pick") a = st.partName || "";
+      else if (f.type === "ideal-name") a = st.idealName || "";
+      else if (f.type === "emotion-start") a = st.emotion.name
         ? st.emotion.name + (st.emotion.ratings.length ? ` (עוצמה ${st.emotion.ratings[st.emotion.ratings.length - 1].value}/10)` : "") : "";
       else if (f.type === "emotion-alt") a = st.emotion.target || "";
       if (Array.isArray(a)) a = a.join(", ");
@@ -1056,6 +1099,7 @@ function renderTool(c) {
 // --- שבוע 1: כלי מורחב עם 3 חלקים ---
 let week1Tab = "goal";
 let week1EmoOther = false;
+let w1PartOther = false;
 const W1_TABS = [
   { id: "goal",       label: "הגדרת המטרה" },
   { id: "calm",       label: "סריקה ורגיעה" },
@@ -3711,6 +3755,21 @@ function mountWeek1Handlers() {
   if (rate) rate.addEventListener("input", () => app.querySelector("#rateVal").textContent = rate.value);
   const lr = app.querySelector("#logRate");
   if (lr) lr.addEventListener("click", () => { S.logEmotionRating(app.querySelector("#rate").value); renderChapter(1); });
+
+  // שם החלק + שם הדמות האידיאלית (בכלי הגדרת המטרה)
+  app.querySelectorAll("[data-part]").forEach(b =>
+    b.addEventListener("click", () => {
+      if (b.dataset.part === "__other__") { w1PartOther = true; renderChapter(1); app.querySelector("#partOther")?.focus(); }
+      else { w1PartOther = false; S.setPartName(b.dataset.part); renderChapter(1); }
+    }));
+  const partSave = app.querySelector("#partSave");
+  if (partSave) partSave.addEventListener("click", () => {
+    const v = app.querySelector("#partOther").value.trim();
+    if (!v) return toast("כתוב שם לחלק");
+    w1PartOther = false; S.setPartName(v); renderChapter(1);
+  });
+  const idn = app.querySelector("#idealName");
+  if (idn) idn.addEventListener("change", () => S.setIdealName(idn.value));
 
   // כלי הגדרת המטרה (מוטמע בפרק 1)
   app.querySelectorAll("input[type=range].goal-input").forEach(r =>

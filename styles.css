@@ -789,6 +789,36 @@ body{font-size:15.5px;line-height:1.5}
 [data-theme="dark"] .pm-suf{background:#1f242a;border-color:#333c45;color:#c3ccd4}
 [data-theme="dark"] .pm-held,[data-theme="dark"] .pm-held-chip{background:#2a241a;border-color:#48412f;color:#d8b98a}
 [data-theme="dark"] .self-note{background:#241f16;border-color:#48412f;color:#d8b98a}
+/* מגמת הרגש + שתי העמודות */
+.self-hero .hero-cap{font-size:12px;margin-top:2px}
+.emo-trend{display:flex;align-items:center;justify-content:center;gap:7px;margin:10px 0 2px;font-weight:800;font-size:16px;color:var(--teal)}
+.emo-trend .old{color:#b9c4cd;text-decoration:line-through}
+.emo-trend .ar{color:var(--teal-2)}
+.emo-sub{font-size:11.5px;text-align:center}
+.dash-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.dash-side{border-radius:16px;padding:12px 11px;border:1px solid var(--line)}
+.d-partside{background:#eef1f4}
+.d-parentside{background:#eef3ec}
+[data-theme="dark"] .d-partside{background:#1f242a}
+[data-theme="dark"] .d-parentside{background:#20281f}
+.dash-head{font-size:13px;font-weight:800;text-align:center;padding-bottom:8px;margin-bottom:10px;border-bottom:1px solid rgba(0,0,0,.06)}
+.dh-part{color:#5a6a78}.dh-parent{color:var(--teal)}
+[data-theme="dark"] .dh-part{color:#aebccb}
+.dblk{margin-bottom:10px}
+.dblk-lbl{font-size:10px;font-weight:800;color:var(--subtle);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.dblk-ans{color:#5c9a6e;font-weight:800}
+.dblk-sub{font-size:9.5px;font-weight:700;color:#a9a89d;margin:6px 0 4px}
+.dmini{display:flex;flex-wrap:wrap;gap:5px}
+.dchip{font-size:10.5px;font-weight:600;line-height:1.25;border-radius:8px;padding:4px 8px;background:#fff}
+.d-part{border:1px solid #dfe4e9;color:#4a5a68}
+.d-parent{border:1px solid #dbe7dd;color:#33493c}
+[data-theme="dark"] .dchip{background:#141a15}
+[data-theme="dark"] .d-part{border-color:#333c45;color:#c3ccd4}
+[data-theme="dark"] .d-parent{border-color:#33402d;color:#cfe0d3}
+.belief{font-size:11.5px;font-weight:700;line-height:1.35;border-radius:9px;padding:7px 9px;background:#fff}
+.b-part{border:1px solid #dfe4e9;color:#3f4d5a}
+.b-parent{border:1px solid #dbe7dd;color:#33493c}
+[data-theme="dark"] .belief{background:#141a15}
 
 /* ============ כלי הגדרת מטרה ============ */
 .goal-note{line-height:1.6;margin-bottom:12px}
