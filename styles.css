@@ -70,6 +70,13 @@ body{min-height:100vh}
   background-size:contain,cover;background-position:center,center;background-repeat:no-repeat}
 .avatar-wrap{display:flex;justify-content:center}
 .avatar-svg{width:210px;height:250px}
+/* אווטר-צילום — הצמח בכפות הידיים; מתחלף לפי ההתקדמות */
+.avatar-photo-wrap{width:100%;display:flex;justify-content:center}
+.avatar-photo{display:block;width:100%;max-width:270px;aspect-ratio:1/1;height:auto;object-fit:contain;
+  filter:drop-shadow(0 10px 22px rgba(69,97,79,.14))}
+.avatar-photo-fallback{display:none}
+.avatar-photo-wrap.noimg .avatar-photo{display:none}
+.avatar-photo-wrap.noimg .avatar-photo-fallback{display:block}
 .charge-row{display:flex;align-items:center;gap:10px;margin:6px 8px 4px}
 .charge-bar{flex:1;height:12px;background:var(--bg2);border-radius:99px;overflow:hidden}
 .charge-fill{height:100%;background:linear-gradient(90deg,var(--sage),var(--teal-2),var(--teal));

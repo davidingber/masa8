@@ -11,7 +11,7 @@ import { COURSE, ACTIVITY_TYPES, EMOTION_ALTERNATIVES, ALT_EMOTION_POOL,
          CENTRAL_QUESTION, WEEK_FRAMING, METHODS_SUBTEXT,
          JOURNEY_PROMISE, RESPONSE_PROTOCOL, MAP_PHASES } from "./data.js";
 import * as S from "./state.js";
-import { renderAvatar, avatarMessage } from "./avatar.js";
+import { renderAvatar, renderAvatarPhoto, avatarMessage } from "./avatar.js";
 import { askAI } from "./ai.js";
 import { requestPermission, startReminderLoop } from "./reminders.js";
 import { downloadWeeklyICS, googleEventUrl, downloadDailyICS, googleDailyUrl } from "./calendar.js";
@@ -421,9 +421,8 @@ function renderHome() {
     ${installBanner()}
 
     <section class="card avatar-card">
-      <div class="avatar-cover"></div>
       ${streak > 0 ? `<div class="streak-chip" title="ימים רצופים של עבודה">🔥 ${streak} ${streak === 1 ? "יום" : "ימים"} ברצף</div>` : ""}
-      <div class="avatar-wrap">${renderAvatar(charge)}</div>
+      <div class="avatar-wrap">${renderAvatarPhoto(charge)}</div>
       <div class="leader-label">🏠 המנהיג הפנימי שלי</div>
       <div class="charge-row">
         <div class="charge-bar"><div class="charge-fill" style="width:${charge}%"></div></div>

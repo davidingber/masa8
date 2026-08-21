@@ -126,6 +126,19 @@ export function renderAvatar(charge) {
   </svg>`;
 }
 
+// גרסת תצוגה עם צילום אמיתי — מתחלף לפי ההתקדמות (זרע → צמח → פריחה).
+// נפילה חכמה: אם התמונה חסרה (אופליין בטעינה ראשונה) — מוצג הוקטור.
+export function renderAvatarPhoto(charge) {
+  const t = Math.max(0, Math.min(100, charge)) / 100;
+  const stage = t < 0.34 ? 1 : t < 0.70 ? 2 : 3;
+  return `<div class="avatar-photo-wrap">
+    <img class="avatar-photo" src="img/avatar-${stage}.png"
+         alt="הדמות המתפתחת — שלב ${stage} מתוך 3"
+         onerror="this.closest('.avatar-photo-wrap').classList.add('noimg')">
+    <div class="avatar-photo-fallback">${renderAvatar(charge)}</div>
+  </div>`;
+}
+
 export function avatarMessage(stage) {
   const msgs = [
     "אני קצת כפוף עדיין… בוא נתחיל יחד. כל צעד קטן טוען אותי.",
