@@ -86,28 +86,18 @@ function render() {
 
 // ============================================================
 //  מפת החלקים / "הדמות שלי" — דשבורד מרכזי מסונכרן מכל השבועות
+//  partsDashCards מרנדר את גוף הדשבורד (משמש גם את מסך הבית)
 // ============================================================
-function renderSelf() {
-  const m = buildPartsMap(S);
+function partsDashCards(m, opts = {}) {
   const pct = Math.round(m.balance * 100);
-  const resPct = pct;                 // גובה עמודת המשאב
-  const sufPct = 100 - pct;           // גובה עמודת הסבל
+  const resPct = pct, sufPct = 100 - pct;
   const has = m.counts.secondary + m.counts.resource > 0;
-
   const chip = (it, cls) => `<span class="pm-chip ${cls}"><b>${esc(it.label)}</b>${esc(it.text.length > 42 ? it.text.slice(0, 42) + "…" : it.text)}</span>`;
-  const groupByLabel = (arr) => {
-    const g = {}; arr.forEach(it => (g[it.label] = g[it.label] || []).push(it)); return g;
-  };
   const resChips = m.resource.map(it => chip(it, "pm-res")).join("");
   const sufChips = m.secondary.map(it => chip(it, "pm-suf")).join("");
-
-  app.innerHTML = `
-    <header class="topbar chapter-head">
-      <button class="back-btn" id="back">›</button>
-      <div><div class="greeting">🌱 הדמות שלי</div><div class="subtle">מפת החלקים — מסונכרן מכל השבועות</div></div>
-    </header>
-
+  return `
     <section class="card self-hero">
+      ${opts.streak > 0 ? `<div class="streak-chip" title="ימים רצופים של עבודה">🔥 ${opts.streak} ${opts.streak === 1 ? "יום" : "ימים"} ברצף</div>` : ""}
       <div class="avatar-wrap">${renderAvatarPhoto(pct)}</div>
       <div class="self-balance">
         <div class="pm-col">
@@ -142,10 +132,18 @@ function renderSelf() {
         <div class="pm-chips"><span class="pm-chip pm-held-chip"><b>${esc(m.primary.name)}</b>${m.primary.intensity != null ? m.primary.intensity + "/10" : ""}</span></div>` : ""}
       <div class="pm-group-lbl" style="margin-top:12px">▼ סבל משני · הולך ופוחת <span class="pm-count">${m.counts.secondary}</span></div>
       ${m.counts.secondary ? `<div class="pm-chips">${sufChips}</div>` : `<p class="subtle">עוד אין פריטים.</p>`}
-    </section>`}
+    </section>`}`;
+}
 
+function renderSelf() {
+  const m = buildPartsMap(S);
+  app.innerHTML = `
+    <header class="topbar chapter-head">
+      <button class="back-btn" id="back">›</button>
+      <div><div class="greeting">🌱 הדמות שלי</div><div class="subtle">מפת החלקים — מסונכרן מכל השבועות</div></div>
+    </header>
+    ${partsDashCards(m)}
     <div class="chapter-footer"><button class="btn ghost2 back-all" id="backHome">↩ חזרה לבית</button></div>`;
-
   app.querySelector("#back").addEventListener("click", () => go("home"));
   app.querySelector("#backHome").addEventListener("click", () => go("home"));
 }
@@ -499,6 +497,7 @@ async function finishOnboarding() {
 // ============================================================
 function renderHome() {
   const st = S.getState();
+  const m = buildPartsMap(S);
   const charge = S.computeCharge();
   const stage = S.avatarStage(charge);
   const stt = S.stats();
@@ -529,152 +528,19 @@ function renderHome() {
 
     ${installBanner()}
 
-    <section class="card avatar-card">
-      ${streak > 0 ? `<div class="streak-chip" title="ימים רצופים של עבודה">🔥 ${streak} ${streak === 1 ? "יום" : "ימים"} ברצף</div>` : ""}
-      <div class="avatar-wrap">${renderAvatarPhoto(charge)}</div>
-      <div class="leader-label">🏠 המנהיג הפנימי שלי</div>
-      <div class="charge-row">
-        <div class="charge-bar"><div class="charge-fill" style="width:${charge}%"></div></div>
-        <div class="charge-num">${charge}%</div>
-      </div>
-      <p class="avatar-msg">${avatarMessage(stage)}</p>
-      <p class="leader-hint">מתחזק בכל פעם שאני בוחר להנהיג — לא כשהפחד נעלם.</p>
-      <button class="btn" id="openSelf">🌱 מפת החלקים שלי</button>
-      <div class="work-clock" title="זמן העבודה שלך השבוע">⏱️ זמן עבודה השבוע: <b id="workClock">${fmtHM(S.getWeekWorkTime())}</b></div>
-      <button class="btn share-btn ghost2" id="shareProgress">📤 שיתוף ההתקדמות שלי</button>
-    </section>
-
-    <section class="card goal-card">
-      <div class="card-head"><h3>🎯 המטרה שלי</h3>
-        ${st.goal ? `<button class="link-btn" id="editGoal">עריכה</button>` : ""}</div>
-      ${st.goal ? `<p class="goal-text">${esc(st.goal)}</p>`
-        : `<p class="subtle">${G("הגדר", "הגדרי")} מטרה מדויקת ומעצימה בעזרת מודל דיסני — שלב אחר שלב.</p>`}
-      <button class="btn" id="goalToolBtn">✍️ ${st.goal ? "פתיחת הגדרת המטרה" : (G("בוא", "בואי") + " נגדיר את המטרה")}</button>
-    </section>
-
-    <section class="card protocol-card">
-      <div class="card-head"><h3>🧭 פרוטוקול המענה</h3></div>
-      <p class="subtle">כשמשהו בתוכי מפחד — 5 צעדים של המבוגר המיטיב, לכל רגע.</p>
-      <div class="protocol-mini">
-        ${RESPONSE_PROTOCOL.steps.map((s, i) => `<span class="protocol-chip">${i + 1}. ${s.icon} ${esc(s.t)}</span>`).join("")}
-      </div>
-      <button class="btn ghost2" id="openProtocol">פתיחת הפרוטוקול המלא</button>
-    </section>
-
-    ${st.emotion.name ? `
-    <section class="card checkin-card">
-      <div class="card-head"><h3>🌡️ צ'ק-אין יומי</h3>
-        ${checkedToday ? `<span class="today-done">✓ נבדקת היום</span>` : ""}</div>
-      <p class="checkin-q">איך <b>${esc(st.emotion.name)}</b> מרגיש עכשיו? <span class="subtle">(0–10)</span></p>
-      <div class="rating-row">
-        <input type="range" id="checkinRate" min="0" max="10" value="${todayVal ?? lastR ?? 5}">
-        <span class="rate-val" id="checkinVal">${todayVal ?? lastR ?? 5}</span>
-      </div>
-      <button class="btn" id="checkinSave">${checkedToday ? "עדכון הדירוג" : "שמירת הדירוג היומי"}</button>
-    </section>` : ""}
-
-    <section class="card today-card">
-      <h3>📌 המשימה של היום</h3>
-      <div class="today-block">
-        <div class="today-tag">משימת השבוע</div>
-        ${task ? `
-          <div class="today-text">${esc(task.text)}</div>
-          <div class="today-meta">שבוע ${task.week} · ${esc(task.title)}</div>
-          <div class="today-actions">
-            <button class="btn" data-tasknav="${task.week}">פתיחה</button>
-            <button class="btn ghost2" data-taskdone="${task.week}:${task.i}">✓ סמן כבוצע</button>
-          </div>`
-        : `<div class="today-text">🎉 סיימת את כל המשימות! אפשר לחזור לכל שבוע ולהעמיק.</div>`}
-      </div>
-      <div class="today-block">
-        <div class="today-tag">תרגול יומי מתחלף</div>
-        <div class="today-text">${prac.icon} <b>${esc(prac.name)}</b> — ${esc(prac.text)}</div>
-        <div class="today-actions">
-          ${pracDone ? `<span class="today-done">✓ בוצע היום — כל הכבוד</span>`
-            : `<button class="btn" id="pracDone">עשיתי ✓</button>`}
-          ${prac.name.includes("נשימ") ? `<button class="btn ghost2" id="pracBreath">🌬️ מודרך</button>` : ""}
-        </div>
-      </div>
-    </section>
-
-    <section class="quick-actions">
-      <h3>הפעולות שביצעת במסע</h3>
-      <div class="qa-grid">
-        ${Object.entries(ACTIVITY_TYPES).map(([k, v]) => {
-          const nav = QA_NAV[k];
-          return `<div class="qa-btn ${nav ? "tappable" : "static"}" style="--c:${v.color}" ${nav ? `data-qa="${k}"` : ""}>
-            <span class="qa-ico">${v.icon}</span>
-            <span class="qa-label">${v.label}</span>
-            <span class="qa-count">${stt.counts[k] || 0}</span>
-          </div>`; }).join("")}
-      </div>
-      <p class="qa-note">האווטר נטען מפעולות אמיתיות שאתה מבצע בכלים של כל שבוע.</p>
-    </section>
-
-    <section class="card">
-      <div class="card-head"><h3>💗 הרגש שאני עובד עליו</h3></div>
-      ${st.emotion.name ? `
-        <div class="emotion-row">
-          <span class="emotion-name">${esc(st.emotion.name)}</span>
-          ${first != null ? `<span class="emotion-trend">${first} → ${lastR} ${lastR < first ? "📉" : ""}</span>` : ""}
-        </div>
-        ${renderSparkline(ratings)}
-      ` : `<p class="subtle">בשבוע 1 תבחר רגש ותדרג אותו. כאן נראה אותו יורד לאורך הזמן.</p>`}
-    </section>
-
-    <section class="card summary-card">
-      <div class="sum-item"><b>${stt.tasksDone}</b><span>משימות הושלמו</span></div>
-      <div class="sum-item"><b>${stt.total}</b><span>פעולות שטענו</span></div>
-      <div class="sum-item"><b>${stage}/5</b><span>שלב האווטר</span></div>
-    </section>
+    ${partsDashCards(m, { streak })}
 
     <button class="btn ghost2 achv-link" id="achvLink">🏅 ההישגים שלי · ${badgeCount.unlocked}/${badgeCount.total}</button>
 
     ${trustBlock()}
   `;
 
-  // מאזינים
-  const eg = app.querySelector("#editGoal");
-  if (eg) eg.addEventListener("click", () => go("goal"));
-  app.querySelector("#goalToolBtn").addEventListener("click", () => go("goal"));
-  app.querySelector("#openSelf")?.addEventListener("click", () => go("self"));
-  app.querySelector("#shareProgress").addEventListener("click", shareProgress);
-  app.querySelector("#openProtocol")?.addEventListener("click", () => { sosView = "protocol"; renderSOS(); });
-  app.querySelectorAll("[data-qa]").forEach(el =>
-    el.addEventListener("click", () => { const [r, p] = QA_NAV[el.dataset.qa]; go(r, p); }));
-
-  // המשימה של היום
-  const tn = app.querySelector("[data-tasknav]");
-  if (tn) tn.addEventListener("click", () => go("chapter", Number(tn.dataset.tasknav)));
-  const td = app.querySelector("[data-taskdone]");
-  if (td) td.addEventListener("click", () => {
-    const [w, i] = td.dataset.taskdone.split(":").map(Number);
-    S.toggleTask(w, i); celebrate(); renderHome();
-  });
-  const pd = app.querySelector("#pracDone");
-  if (pd) pd.addEventListener("click", () => {
-    const p = todaysPractice();
-    S.logActivity(p.logType, "תרגול יומי: " + p.name);
-    celebrate(); renderHome();
-  });
+  // מאזינים — מסך בית ממוקד
   app.querySelector("#themeToggle").addEventListener("click", toggleTheme);
   app.querySelector("#achvLink").addEventListener("click", () => go("achievements"));
-  app.querySelector("#trustSOS").addEventListener("click", openSOS);
+  app.querySelector("#trustSOS")?.addEventListener("click", openSOS);
   bindLongPress(app.querySelector("#homeTitle"), openAdmin);
   mountInstallBanner();
-  const pb = app.querySelector("#pracBreath");
-  if (pb) pb.addEventListener("click", () => openBreathingPlayer({ patternId: "478" }));
-  const cr = app.querySelector("#checkinRate");
-  if (cr) cr.addEventListener("input", () => app.querySelector("#checkinVal").textContent = cr.value);
-  const cs = app.querySelector("#checkinSave");
-  if (cs) cs.addEventListener("click", () => {
-    S.logEmotionRating(app.querySelector("#checkinRate").value);
-    toast("הדירוג היומי נשמר ✓"); celebrate(); renderHome();
-  });
-
-  // חגיגה בעליית שלב אווטר (רק כשעולה בתוך המפגש, לא בטעינה ראשונה)
-  if (lastAvatarStage !== null && stage > lastAvatarStage) celebrate();
-  lastAvatarStage = stage;
 }
 let lastAvatarStage = null;
 
