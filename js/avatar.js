@@ -1,111 +1,127 @@
 // ============================================================
-//  האווטר המתפתח
-//  charge 0..100 → משנה: יציבה, הבעה, זוהר/טעינה, צבע
+//  האווטר המתפתח — דמות חמה ומעוצבת
+//  charge 0..100 → משנה: יציבה, הבעה, זוהר, צבע, ונבט שצומח
 // ============================================================
 
 export function renderAvatar(charge) {
   const t = Math.max(0, Math.min(100, charge)) / 100; // 0..1
 
   // יציבה: כפוף (t=0) → זקוף (t=1)
-  const slouch = (1 - t) * 22;          // כמה הראש/גוף נוטים קדימה
-  const bodyLift = t * 14;               // כמה הגוף "מתרומם"
-  const headY = 74 + slouch * 0.5 - bodyLift * 0.4;
+  const slouch = (1 - t) * 20;
+  const bodyLift = t * 14;
+  const headY = 84 + slouch * 0.5 - bodyLift * 0.4;
 
-  // הבעה: עצוב (עקומה למטה) → שמח (עקומה למעלה)
-  const smile = -8 + t * 20;             // -8 (עצוב) .. +12 (שמח)
-  const mouthPath = `M 88 ${150} Q 105 ${150 + smile} 122 ${150}`;
+  // הבעה: עצוב → שליו/שמח
+  const smile = -6 + t * 18;
 
   // עיניים — נעשות פקוחות/ערניות יותר
-  const eyeOpen = 2.4 + t * 2.2;
+  const eyeOpen = 2.6 + t * 2.0;
 
-  // צבע — חיוור/אפרפר → רווי וחם
-  const bodyHue = 175;                   // טורקיז
-  const bodySat = 18 + t * 52;
-  const bodyLight = 62 - t * 8;
-  const bodyColor = `hsl(${bodyHue} ${bodySat}% ${bodyLight}%)`;
-  const bodyColorDark = `hsl(${bodyHue} ${bodySat}% ${bodyLight - 12}%)`;
+  // פלטה חמה תואמת (מרווה/ירוק) במקום טורקיז קר
+  const hue = 150;
+  const sat = 22 + t * 40;                 // חיוור → רווי
+  const light = 66 - t * 12;               // מבהיר עם צל עדין
+  const cTop  = `hsl(${hue} ${sat}% ${Math.min(light + 10, 82)}%)`;
+  const cBot  = `hsl(${hue} ${sat}% ${light}%)`;
+  const cLine = `hsl(${hue} ${sat}% ${Math.max(light - 20, 22)}%)`;
+  const cGlow = `hsl(${hue} ${55 + t * 20}% ${58}%)`;
+  const eyeCol = "#33493c";
 
-  // זוהר/הילה — מספר טבעות לפי הטעינה
-  const glowRings = Math.round(t * 3);   // 0..3
-  const glowOpacity = 0.10 + t * 0.30;
-
-  // "אחוז טעינה" — סוללה קטנה ליד הדמות
-  const batteryFill = t;
-
+  // הילה רכה — טבעות לפי הטעינה
+  const glowRings = Math.round(t * 3);
   let rings = "";
   for (let i = 1; i <= glowRings; i++) {
-    const r = 60 + i * 16;
+    const r = 66 + i * 15;
     rings += `<circle cx="105" cy="120" r="${r}" fill="none"
-      stroke="hsl(${bodyHue} 80% 55%)" stroke-width="2"
-      opacity="${(glowOpacity * (1 - i * 0.22)).toFixed(3)}" />`;
+      stroke="${cGlow}" stroke-width="2"
+      opacity="${(0.16 * (1 - i * 0.24)).toFixed(3)}" />`;
   }
 
-  // ניצוצות כשהטעינה גבוהה
-  let sparks = "";
-  if (t > 0.55) {
-    const s = [[42,64],[168,70],[54,150],[158,148],[105,34]];
-    const n = Math.round((t - 0.55) / 0.45 * s.length);
-    for (let i = 0; i < n; i++) {
-      const [x, y] = s[i];
-      sparks += `<g transform="translate(${x} ${y})" opacity="${0.5 + t * 0.5}">
-        <path d="M0,-6 L1.6,-1.6 L6,0 L1.6,1.6 L0,6 L-1.6,1.6 L-6,0 L-1.6,-1.6 Z"
-          fill="hsl(45 90% 62%)"/></g>`;
-    }
+  // נבט שצומח לצד הדמות — עלה אחד (t>.25), שני (t>.5), פריחה (t>.78)
+  let sprout = "";
+  const grow = Math.max(0, (t - 0.06) / 0.94);          // 0..1
+  if (grow > 0.02) {
+    const stemH = 14 + grow * 40;                        // גובה הגבעול
+    sprout += `<g transform="translate(42 236)">
+      <ellipse cx="0" cy="2" rx="12" ry="3.5" fill="${cBot}" opacity="0.28"/>
+      <path d="M0 0 Q ${grow*4} ${-stemH*0.55} 0 ${-stemH}"
+        fill="none" stroke="hsl(122 34% 42%)" stroke-width="3" stroke-linecap="round"/>`;
+    if (t > 0.25)
+      sprout += `<path d="M0 ${-stemH*0.5} q -15 -3 -21 -15 q 13 -3 21 9 Z" fill="hsl(122 38% 48%)"/>`;
+    if (t > 0.5)
+      sprout += `<path d="M0 ${-stemH*0.75} q 15 -3 21 -15 q -13 -3 -21 9 Z" fill="hsl(124 42% 52%)"/>`;
+    if (t > 0.78)
+      sprout += `<g transform="translate(0 ${-stemH-2})">
+        ${[0,72,144,216,288].map(a=>`<ellipse cx="0" cy="-7" rx="4.8" ry="7.4" fill="hsl(340 58% 76%)" transform="rotate(${a})"/>`).join("")}
+        <circle cx="0" cy="0" r="4.2" fill="hsl(44 80% 62%)"/></g>`;
+    sprout += `</g>`;
   }
 
   return `
-  <svg viewBox="0 0 210 250" xmlns="http://www.w3.org/2000/svg" class="avatar-svg" aria-label="אווטר">
+  <svg viewBox="0 0 210 250" xmlns="http://www.w3.org/2000/svg" class="avatar-svg" aria-label="הדמות המתפתחת">
     <defs>
-      <radialGradient id="floorGrad" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="hsl(${bodyHue} 60% 60%)" stop-opacity="${0.25 + t*0.25}"/>
-        <stop offset="100%" stop-color="hsl(${bodyHue} 60% 60%)" stop-opacity="0"/>
+      <linearGradient id="avBody" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"  stop-color="${cTop}"/>
+        <stop offset="100%" stop-color="${cBot}"/>
+      </linearGradient>
+      <radialGradient id="avAura" cx="50%" cy="46%" r="52%">
+        <stop offset="0%"  stop-color="${cGlow}" stop-opacity="${(0.10 + t*0.20).toFixed(3)}"/>
+        <stop offset="100%" stop-color="${cGlow}" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="avFloor" cx="50%" cy="50%" r="50%">
+        <stop offset="0%"  stop-color="${cBot}" stop-opacity="${(0.22 + t*0.18).toFixed(3)}"/>
+        <stop offset="100%" stop-color="${cBot}" stop-opacity="0"/>
       </radialGradient>
     </defs>
 
-    <!-- הילה -->
+    <!-- הילה רכה -->
+    <circle cx="105" cy="120" r="94" fill="url(#avAura)"/>
     ${rings}
 
-    <!-- רצפה/צל -->
-    <ellipse cx="105" cy="228" rx="${46 + t*10}" ry="11" fill="url(#floorGrad)"/>
+    <!-- צל/רצפה -->
+    <ellipse cx="105" cy="230" rx="${48 + t*10}" ry="12" fill="url(#avFloor)"/>
+    ${sprout}
 
     <g transform="translate(0 ${-bodyLift})">
-      <!-- גוף -->
-      <path d="M 70 ${228}
-               Q 62 ${170 - bodyLift} 74 ${140}
-               Q 80 ${118} 105 ${116}
-               Q 130 ${118} 136 ${140}
-               Q 148 ${170 - bodyLift} 140 ${228} Z"
-            fill="${bodyColor}" stroke="${bodyColorDark}" stroke-width="2"/>
+      <!-- גוף רך עם הצללה -->
+      <path d="M 68 ${228}
+               Q 60 ${168 - bodyLift} 74 ${146}
+               Q 82 ${126} 105 ${124}
+               Q 128 ${126} 136 ${146}
+               Q 150 ${168 - bodyLift} 142 ${228} Z"
+            fill="url(#avBody)" stroke="${cLine}" stroke-width="2"/>
+      <!-- הדגשת אור עדינה -->
+      <path d="M 84 ${150} Q 90 ${134} 105 ${132} Q 96 ${140} 92 ${158} Z"
+            fill="#ffffff" opacity="0.16"/>
+
+      <!-- ידיים -->
+      <path d="M 76 ${156} Q ${62 - t*14} ${156 - t*42} ${60 - t*10} ${124 - t*46}"
+            fill="none" stroke="url(#avBody)" stroke-width="12" stroke-linecap="round"/>
+      <path d="M 134 ${156} Q ${148 + t*14} ${156 - t*42} ${150 + t*10} ${124 - t*46}"
+            fill="none" stroke="url(#avBody)" stroke-width="12" stroke-linecap="round"/>
 
       <!-- ראש -->
       <g transform="rotate(${slouch*0.5} 105 ${headY}) translate(0 ${slouch*0.4})">
-        <circle cx="105" cy="${headY}" r="34" fill="${bodyColor}" stroke="${bodyColorDark}" stroke-width="2"/>
+        <circle cx="105" cy="${headY}" r="33" fill="url(#avBody)" stroke="${cLine}" stroke-width="2"/>
+        <ellipse cx="98" cy="${headY-8}" rx="12" ry="9" fill="#ffffff" opacity="0.14"/>
+        <!-- לחיים חמות -->
+        <circle cx="85"  cy="${headY+9}" r="5.5" fill="hsl(20 60% 72%)" opacity="${(0.25 + t*0.45).toFixed(2)}"/>
+        <circle cx="125" cy="${headY+9}" r="5.5" fill="hsl(20 60% 72%)" opacity="${(0.25 + t*0.45).toFixed(2)}"/>
         <!-- עיניים -->
-        <ellipse cx="93"  cy="${headY-2}" rx="4" ry="${eyeOpen}" fill="#2b3a44"/>
-        <ellipse cx="117" cy="${headY-2}" rx="4" ry="${eyeOpen}" fill="#2b3a44"/>
-        <!-- לחיים ורודות כשמאושר -->
-        <circle cx="84"  cy="${headY+8}" r="5" fill="hsl(5 70% 70%)" opacity="${t*0.6}"/>
-        <circle cx="126" cy="${headY+8}" r="5" fill="hsl(5 70% 70%)" opacity="${t*0.6}"/>
+        <ellipse cx="93"  cy="${headY-2}" rx="3.6" ry="${eyeOpen}" fill="${eyeCol}"/>
+        <ellipse cx="117" cy="${headY-2}" rx="3.6" ry="${eyeOpen}" fill="${eyeCol}"/>
         <!-- פה -->
-        <path d="M ${88} ${headY+22} Q 105 ${headY+22+smile} ${122} ${headY+22}"
-              fill="none" stroke="#2b3a44" stroke-width="3" stroke-linecap="round"/>
+        <path d="M 90 ${headY+20} Q 105 ${headY+20+smile} 120 ${headY+20}"
+              fill="none" stroke="${eyeCol}" stroke-width="3" stroke-linecap="round"/>
       </g>
-
-      <!-- ידיים — עולות כלפי מעלה ככל שהטעינה גבוהה -->
-      <path d="M 74 ${150} Q ${60 - t*14} ${150 - t*40} ${58 - t*10} ${120 - t*46}"
-            fill="none" stroke="${bodyColor}" stroke-width="12" stroke-linecap="round"/>
-      <path d="M 136 ${150} Q ${150 + t*14} ${150 - t*40} ${152 + t*10} ${120 - t*46}"
-            fill="none" stroke="${bodyColor}" stroke-width="12" stroke-linecap="round"/>
     </g>
 
-    ${sparks}
-
-    <!-- סוללת טעינה קטנה -->
-    <g transform="translate(176 108)">
-      <rect x="0" y="0" width="14" height="34" rx="3" fill="none" stroke="#9fb4bd" stroke-width="2"/>
-      <rect x="4" y="-4" width="6" height="4" rx="1" fill="#9fb4bd"/>
-      <rect x="2.5" y="${2 + (30 - 30*batteryFill)}" width="9" height="${30*batteryFill}" rx="2"
-            fill="hsl(${90*batteryFill} 65% 50%)"/>
+    <!-- מחוון טעינה עדין -->
+    <g transform="translate(178 110)">
+      <rect x="0" y="0" width="13" height="32" rx="4" fill="none" stroke="${cLine}" stroke-width="2" opacity="0.7"/>
+      <rect x="3.5" y="-4" width="6" height="4" rx="1.5" fill="${cLine}" opacity="0.7"/>
+      <rect x="2.5" y="${2 + (28 - 28*t)}" width="8" height="${28*t}" rx="2.5"
+            fill="hsl(${120*t + 20} 55% 50%)"/>
     </g>
   </svg>`;
 }
