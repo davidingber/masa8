@@ -41,6 +41,7 @@ export function buildPartsMap(S) {
   // ===== צד החלק (כאב) =====
   // מחשבות
   add(pain, "thought", "מחשבה", goal.cur_thoughts, 1);
+  add(pain, "thought", "חוק", selfMap.rules, 2);
   add(pain, "thought", "מחשבה", selfMap.thoughts, 2);
   (td(6, "thoughtTable") || []).forEach(r => {
     add(pain, "thought", "מחשבה", r.thought, 6);
@@ -78,9 +79,13 @@ export function buildPartsMap(S) {
   add(resource, "thought", "חזון", goal.dream_feel, 1);
   add(resource, "thought", "המטרה שלי", goal.goal_precise, 1);
   add(resource, "thought", "זהות חדשה", (td(8, "identityClose") || {}).text, 8);
-  // כלי החלפת אמונות (שבוע 6) — המחשבה/אמונה החדשה
+  // כלי החלפת אמונות (שבוע 6)
+  add(pain, "thought", "אמונה", beliefTool.belief, 6);
+  add(pain, "emotion", "רגש", beliefTool.emotion, 6);
   add(resource, "thought", "אמונה חדשה", beliefTool.newBelief, 6);
+  add(resource, "thought", "בדיקת מציאות", beliefTool.real, 6);
   add(resource, "thought", "הסבר אחר", beliefTool.reframe, 6);
+  add(resource, "thought", "רווח משומר", beliefTool.keepBenefit, 6);
   // התנהגות מיטיבה
   Object.values(td(1, "activityPlan") || {}).forEach(v => add(resource, "behavior", "פעילות מהנה", v && v.activity, 1));
   (td(8, "values") || []).forEach(v => add(resource, "behavior", "ערך מנחה", v, 8));

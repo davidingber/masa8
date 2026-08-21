@@ -313,7 +313,6 @@ export const GOAL_TOOL = {
       title: "נקודת המוצא — המצב הנוכחי",
       note: "לפני שמכוונים קדימה, נמפה איפה אני נמצא היום — בלי שיפוט, בחמלה.",
       fields: [
-        { key: "part_name", type: "part-pick", label: "החלק שאני עובד עליו" },
         { key: "ideal_name", type: "ideal-name", label: "שם הדמות האידיאלית שלי (ההורה המיטיב)" },
         { key: "cur_emotion", type: "emotion-start", label: "הרגש המרכזי שאני עובד עליו" },
         { key: "cur_thoughts", type: "area", label: "המחשבות החוזרות שעולות בי — מה הראש חוזר ואומר?", ph: "המשפטים שחוזרים על עצמם..." },

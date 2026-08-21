@@ -1097,10 +1097,11 @@ function renderTool(c) {
 }
 
 // --- שבוע 1: כלי מורחב עם 3 חלקים ---
-let week1Tab = "goal";
+let week1Tab = "parts";
 let week1EmoOther = false;
 let w1PartOther = false;
 const W1_TABS = [
+  { id: "parts",      label: "החלקים בנפש" },
   { id: "goal",       label: "הגדרת המטרה" },
   { id: "calm",       label: "סריקה ורגיעה" },
   { id: "dickens",    label: "תרגיל דיקנס" },
@@ -1111,11 +1112,61 @@ function toolWeek1(c) {
   const tabs = `<div class="subtool-tabs">${W1_TABS.map(t =>
     `<button class="subtool-tab ${week1Tab === t.id ? "on" : ""}" data-w1tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body = "";
+  if (week1Tab === "parts") body = w1Parts();
   if (week1Tab === "goal") body = w1Goal();
   if (week1Tab === "calm") body = w1Calm();
   if (week1Tab === "dickens") body = w1Dickens();
   if (week1Tab === "activation") body = w1Activation();
   return tabs + `<div id="w1body">${body}</div>`;
+}
+
+// לשונית ראשונה — שלושת החלקים בנפש + מתן שם לחלק הגולה
+function w1Parts() {
+  const st = S.getState();
+  const d = S.getToolData(1, "threeParts") || {};
+  const exiles = ["פגוע", "דחוי", "מבוהל", "חסר אונים", "בודד", "חלש", "לא נאהב"];
+  const other = w1PartOther || (!!st.partName && !exiles.includes(st.partName));
+  return `
+    <div class="tool-block">
+      <p class="hint">לכל מה שקורה בתוכך יש <b>כוונה חיובית</b>. החלקים המגוננים מפחדים שהחלק הגולה ייפגע שוב — ולכן גם לחרדה יש כוונה חיובית: היא שומרת על הרגש הרך שמתחתיה.</p>
+
+      <div class="parts-cards">
+        <div class="part-info exile">
+          <div class="pi-h">🩹 החלק הגולה (הפגוע)</div>
+          <p>החלק הרך שנפגע פעם — דחוי, פגוע, מבוהל, חסר אונים. <b>זה החלק שאנחנו לומדים להנהיג בחמלה.</b></p>
+        </div>
+        <div class="part-info manager">
+          <div class="pi-h">🛡️ החלק המנהל</div>
+          <p>דואג שלא נגיע לכאב — פרפקציוניזם, ריצוי, ביקורתיות, שליטה.</p>
+        </div>
+        <div class="part-info fire">
+          <div class="pi-h">🧯 החלק המכבה</div>
+          <p>מכבה רגשות כשהם עולים — עבודה, אכילה, מסכים, התמכרות.</p>
+        </div>
+      </div>
+
+      <h4 style="margin-top:6px">1. מה השם של החלק הגולה שלך?</h4>
+      <p class="hint">זה החלק שנעבוד עליו לאורך המסע. ${G("בחר", "בחרי")} שם שמדבר אליך, או ${G("כתוב", "כתבי")} משלך.</p>
+      <div class="chip-row">
+        ${exiles.map(p => `<button type="button" class="chip ${st.partName === p ? "on" : ""}" data-part="${esc(p)}">${esc(p)}</button>`).join("")}
+        <button type="button" class="chip ${other ? "on" : ""}" data-part="__other__">אחר…</button>
+      </div>
+      ${other ? `<div class="other-emo-row">
+        <input class="inp" id="partOther" placeholder="${G("כתוב", "כתבי")} שם לחלק..." value="${esc(exiles.includes(st.partName) ? "" : (st.partName || ""))}">
+        <button type="button" class="btn ghost2" id="partSave">שמירה</button></div>` : ""}
+      ${st.partName ? `<p class="target-line">🧩 החלק הגולה שלי: <b>${esc(st.partName)}</b></p>` : ""}
+
+      <h4 style="margin-top:18px">2. איפה החלק המנהל שלך בא לידי ביטוי?</h4>
+      <div class="chip-row">${["פרפקציוניזם", "ריצוי", "ביקורת עצמית", "שליטה", "דאגנות"].map(x => `<button type="button" class="chip mini tp-ex" data-tp="manager" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+      <textarea class="ta tp-field" data-tp="manager" placeholder="למשל: אני בודק הכל שוב ושוב כדי שלא אטעה...">${esc(d.manager || "")}</textarea>
+
+      <h4 style="margin-top:14px">3. איפה החלק המכבה שלך בא לידי ביטוי?</h4>
+      <div class="chip-row">${["עבודה מרובה", "אכילה", "מסכים", "התמכרות", "הסחות דעת"].map(x => `<button type="button" class="chip mini tp-ex" data-tp="fire" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+      <textarea class="ta tp-field" data-tp="fire" placeholder="למשל: כשעולה מצוקה אני שוקע בעבודה או במסך...">${esc(d.fire || "")}</textarea>
+
+      <button type="button" class="btn" id="saveThreeParts" style="margin-top:14px">שמירה</button>
+      <p class="tiny-note">✨ אחרי שיש לחלק שם — קל יותר להגדיר את מטרת התהליך בלשונית הבאה.</p>
+    </div>`;
 }
 
 // כלי הגדרת המטרה (מודל דיסני) — מוטמע כפרק הראשון, סובב סביב רגש אחד
@@ -1316,9 +1367,15 @@ const W2_TABS = [
 ];
 // מיפוי אישי — דפוסי החלק המפוחד
 const SELFMAP_FIELDS = [
-  { key: "trigger", icon: "⚡", label: "מה מפעיל אותי רגשית?", ph: "אנשים, מצבים או מחשבות שמציתים בי תגובה..." },
-  { key: "avoid",   icon: "🚪", label: "מאלו דברים אני בהימנעות?", ph: "מה אני נמנע מלעשות, לומר או להרגיש..." },
-  { key: "overdo",  icon: "🔁", label: "אלו דברים אני עושה יותר מדי מתוך חשש?", ph: "בדיקות, ריצוי, שליטה, הכנות יתר..." },
+  { key: "belief",    icon: "🌰", label: "מה האמונה הראשית של החלק שלי?", ph: "האמונה העמוקה על עצמי...",
+    ex: ["אני חסר אונים", "חסר ערך", "לא נאהב", "חלש", "פגיע", "דחוי"] },
+  { key: "rules",     icon: "📜", label: "אילו חוקים יש לי — על עצמי, אחרים או העולם — בעקבות האמונה?", ph: "החוקים שאני חי לפיהם...",
+    ex: ["הגוף שלי עלול לחלות", "אנשים תמיד ידחו אותי", "אסור לי לטעות"] },
+  { key: "thoughts",  icon: "💭", label: "אילו מחשבות עוברות לי בראש בעקבות האמונה והחוקים?", ph: "המחשבות שחוזרות..." },
+  { key: "overdoing", icon: "🔁", label: "אילו דברים אני עושה יותר מדי בעקבותיה — עשיית יתר?", ph: "בדיקות, ריצוי, שליטה, פרפקציוניזם...",
+    ex: ["בדיקות חוזרות", "פרפקציוניזם", "בקשת הרגעה", "ריצוי"] },
+  { key: "avoidance", icon: "🚪", label: "ממה אני נמנע — בעקבות פחד או רגש אחר?", ph: "מה אני נמנע מלעשות, לומר או להרגיש...",
+    ex: ["להימנע ממפגשים", "לא לצאת מהבית", "דחיינות"] },
 ];
 
 function toolWeek2(c) {
@@ -1357,9 +1414,10 @@ function w2Map() {
   const d = S.getToolData(2, "selfMap") || {};
   return `
     <div class="tool-block">
-      <p class="hint">מיפוי אישי — לזהות את הדפוסים שהחלק המפוחד מפעיל בי, כדי שאוכל להנהיג אותם במקום להישלט על-ידם.</p>
+      <p class="hint">יורדים לשורש: מ<b>האמונה הראשית</b> של החלק → ה<b>חוקים</b> שנגזרים ממנה → ה<b>מחשבות</b> → ה<b>התנהגות</b>. הכול זורם למפת החלקים.</p>
       ${SELFMAP_FIELDS.map(f => `
         <label class="mini-label">${f.icon} ${f.label}</label>
+        ${f.ex ? `<div class="chip-row">${f.ex.map(x => `<button type="button" class="chip mini sm-ex" data-m="${f.key}" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>` : ""}
         <textarea class="ta selfmap-ta" data-m="${f.key}" placeholder="${f.ph}">${esc(d[f.key] || "")}</textarea>`).join("")}
       <button class="btn" id="saveSelfMap">שמירה + טעינת האווטר</button>
     </div>`;
@@ -1422,7 +1480,11 @@ function mountWeek2Handlers() {
   app.querySelectorAll("[data-w2tab]").forEach(b =>
     b.addEventListener("click", () => { stashWeek2Drafts(); week2Tab = b.dataset.w2tab; renderChapter(2); }));
 
-  // מיפוי אישי
+  // מיפוי אישי — דוגמאות ללחיצה
+  app.querySelectorAll(".sm-ex").forEach(b => b.addEventListener("click", () => {
+    const ta = app.querySelector(`.selfmap-ta[data-m="${b.dataset.m}"]`);
+    if (ta) ta.value = (ta.value.trim() ? ta.value.trim() + ", " : "") + b.dataset.x;
+  }));
   const sm = app.querySelector("#saveSelfMap");
   if (sm) sm.addEventListener("click", () => {
     const d = {}; app.querySelectorAll(".selfmap-ta").forEach(t => d[t.dataset.m] = t.value.trim());
@@ -2109,6 +2171,7 @@ function openExposurePrint(rows) {
 let week5Tab = "quick";
 const W5_TABS = [
   { id: "quick",   label: "בדיקה מהירה" },
+  { id: "beliefs", label: "החלפת אמונות" },
   { id: "learn",   label: "עיוותי חשיבה" },
   { id: "table",   label: "טבלה מלאה" },
   { id: "checker", label: "בדיקת מחשבה (AI)" },
@@ -2119,11 +2182,41 @@ function toolWeek5(c) {
     `<button class="subtool-tab ${week5Tab === t.id ? "on" : ""}" data-w5tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body = "";
   if (week5Tab === "quick") body = w5Quick();
+  if (week5Tab === "beliefs") body = w5Beliefs();
   if (week5Tab === "learn") body = w5Learn();
   if (week5Tab === "table") body = w5Table();
   if (week5Tab === "checker") body = w5Checker();
   return `<p class="week-distinction">🧠 בשבוע 3 תרגלנו לא להיצמד למחשבה. <b>כאן, כמנהיגים, בודקים אם היא מדויקת — עובדה או סיפור.</b></p>`
     + tabs + `<div id="w5body">${body}</div>`;
+}
+
+// --- כלי החלפת אמונות ומחשבות — מזין את ההורה המיטיב במפת החלקים ---
+function w5Beliefs() {
+  const d = S.getToolData(6, "beliefSwap") || {};
+  const f = (key, label, ph) => `<label class="mini-label">${label}</label>
+    <textarea class="ta bs-field" data-b="${key}" placeholder="${esc(ph)}">${esc(d[key] || "")}</textarea>`;
+  return `
+    <div class="tool-block">
+      <p class="hint">מאמונה או מחשבה של החלק — אל אמונה שמיטיבה איתי, דרך <b>חקירה</b> (לא דיכוי). מה שכאן מזין את ההורה המיטיב במפת החלקים.</p>
+
+      <div class="bs-now">
+        <div class="bs-h">🌰 מה האמונה או המחשבה שלי</div>
+        ${f("belief", "האמונה / המחשבה", "למשל: אנשים תמיד ידחו אותי")}
+        ${f("emotion", "ומה הרגש שעולה?", "בושה, חרדה, עצב...")}
+      </div>
+
+      <div class="bs-arrow">↓ איך אוכל להאמין או לחשוב אחרת?</div>
+
+      <div class="bs-tool">${f("real", "🔍 האם האמונה באמת אמיתית? מה הראיות בעד ונגד?", "מה מפריך אותה? מתי היא לא התקיימה?")}</div>
+      <div class="bs-tool">${f("reframe", "🔄 האם אפשר להסביר את זה אחרת?", "פרשנות אחרת, סבירה לא פחות...")}</div>
+      <div class="bs-tool">${f("keepBenefit", "🎁 איך אשמור על הרווח שבאמונה — ועדיין אפעל בצורה שיותר מיטיבה איתי?", "מה היא באה להגן עליו? איך אשיג זאת אחרת?")}</div>
+      <div class="bs-tool">${f("resources", "🌱 אילו משאבים חסרים לי כדי להאמין אחרת — או לפעול למרות החשש?", "חמלה עצמית, תמיכה, תרגול, ידע...")}</div>
+
+      <label class="mini-label" style="margin-top:12px">✨ האמונה החדשה שאני בוחר</label>
+      <textarea class="ta bs-field" data-b="newBelief" placeholder="הניסוח החדש, המיטיב, בלשון הווה...">${esc(d.newBelief || "")}</textarea>
+
+      <button class="btn" id="saveBeliefSwap">שמירה + טעינת האווטר</button>
+    </div>`;
 }
 
 // --- תת-כלי 0: בדיקה מהירה של מחשבה (30 שניות) — ברירת המחדל הפשוטה ---
@@ -2236,6 +2329,15 @@ function mountWeek5Handlers() {
   app.querySelectorAll("[data-w5tab]").forEach(b =>
     b.addEventListener("click", () => { stashWeek5Drafts(); week5Tab = b.dataset.w5tab; renderChapter(6); }));
 
+  // החלפת אמונות
+  const sbs = app.querySelector("#saveBeliefSwap");
+  if (sbs) sbs.addEventListener("click", () => {
+    const d = {}; app.querySelectorAll(".bs-field").forEach(t => d[t.dataset.b] = t.value.trim());
+    S.setToolData(6, "beliefSwap", d);
+    if (Object.values(d).some(Boolean)) S.logActivity("thought", "החלפת אמונה");
+    celebrate(); toast("נשמר ✓");
+  });
+
   // בדיקה מהירה (30 שניות)
   const sq = app.querySelector("#saveQuick");
   if (sq) sq.addEventListener("click", () => {
@@ -2293,6 +2395,10 @@ function mountWeek5Handlers() {
 function stashWeek5Drafts() {
   if (app.querySelectorAll("#thoughtRows .exp-row").length) S.setToolData(6, "thoughtTable", collectThoughtRows());
   if (app.querySelector("#q1")) S.setToolData(6, "quickCheck", { q1: qv("#q1"), q2: qv("#q2"), q3: qv("#q3"), q4: qv("#q4") });
+  if (app.querySelector(".bs-field")) {
+    const d = {}; app.querySelectorAll(".bs-field").forEach(t => d[t.dataset.b] = t.value.trim());
+    S.setToolData(6, "beliefSwap", d);
+  }
 }
 
 function openThoughtPrint(rows) {
@@ -3770,6 +3876,20 @@ function mountWeek1Handlers() {
   });
   const idn = app.querySelector("#idealName");
   if (idn) idn.addEventListener("change", () => S.setIdealName(idn.value));
+
+  // שלושת החלקים — דוגמאות מנהל/מכבה + שמירה
+  app.querySelectorAll(".tp-ex").forEach(b => b.addEventListener("click", () => {
+    const ta = app.querySelector(`.tp-field[data-tp="${b.dataset.tp}"]`);
+    if (ta) ta.value = (ta.value.trim() ? ta.value.trim() + ", " : "") + b.dataset.x;
+  }));
+  const stp = app.querySelector("#saveThreeParts");
+  if (stp) stp.addEventListener("click", () => {
+    const d = {};
+    app.querySelectorAll(".tp-field").forEach(t => d[t.dataset.tp] = t.value.trim());
+    S.setToolData(1, "threeParts", d);
+    if (Object.values(d).some(Boolean) || S.getState().partName) S.logActivity("exercise", "מיפוי שלושת החלקים");
+    toast("נשמר ✓");
+  });
 
   // כלי הגדרת המטרה (מוטמע בפרק 1)
   app.querySelectorAll("input[type=range].goal-input").forEach(r =>

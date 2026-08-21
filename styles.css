@@ -819,6 +819,27 @@ body{font-size:15.5px;line-height:1.5}
 .b-part{border:1px solid #dfe4e9;color:#3f4d5a}
 .b-parent{border:1px solid #dbe7dd;color:#33493c}
 [data-theme="dark"] .belief{background:#141a15}
+/* שלושת החלקים בנפש (פרק 1) */
+.parts-cards{display:flex;flex-direction:column;gap:9px;margin:8px 0 14px}
+.part-info{border-radius:13px;padding:11px 13px;border:1px solid var(--line)}
+.part-info .pi-h{font-weight:800;font-size:13.5px;margin-bottom:3px}
+.part-info p{margin:0;font-size:12.5px;line-height:1.5;color:var(--subtle)}
+.part-info.exile{background:#f6efe2;border-color:#ecdcc0}
+.part-info.manager{background:#eef1f4;border-color:#dfe4e9}
+.part-info.fire{background:#f7eeec;border-color:#eeddd7}
+[data-theme="dark"] .part-info.exile{background:#2a241a;border-color:#48412f}
+[data-theme="dark"] .part-info.manager{background:#1f242a;border-color:#333c45}
+[data-theme="dark"] .part-info.fire{background:#2a1f1c;border-color:#4a352f}
+
+/* כלי החלפת אמונות (שבוע 6) */
+.bs-now{background:#eef1f4;border:1px solid #dfe4e9;border-radius:13px;padding:12px 13px;margin-bottom:8px}
+.bs-now .bs-h{font-weight:800;font-size:13px;color:#5a6a78;margin-bottom:8px}
+.bs-arrow{text-align:center;color:var(--gold);font-weight:800;font-size:13px;margin:8px 0}
+.bs-tool{background:#eef3ec;border:1px solid #dbe7dd;border-radius:12px;padding:11px 12px;margin-bottom:9px}
+.bs-tool .mini-label{color:#33493c}
+[data-theme="dark"] .bs-now{background:#1f242a;border-color:#333c45}
+[data-theme="dark"] .bs-now .bs-h{color:#aebccb}
+[data-theme="dark"] .bs-tool{background:#20281f;border-color:#33402d}
 
 /* ============ כלי הגדרת מטרה ============ */
 .goal-note{line-height:1.6;margin-bottom:12px}
