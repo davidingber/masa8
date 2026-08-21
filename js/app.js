@@ -79,7 +79,7 @@ function render() {
   if (route === "coach") return renderCoach();
   if (route === "settings") return (S.getAdminPin() && !adminUnlocked) ? renderPinGate() : renderSettings();
   if (route === "achievements") return renderAchievements();
-  if (route === "goal") return renderGoalTool();
+  if (route === "goal") { week1Tab = "goal"; return renderChapter(1); }
 }
 
 // ============================================================
@@ -101,6 +101,44 @@ function goalField(f, plan) {
   if (f.type === "anchor") {
     return `<div class="goal-anchor"><p>${f.label}</p>
       <button class="btn ghost2" id="goalBreath">🌬️ נשימה מודרכת</button></div>`;
+  }
+  if (f.type === "emotion-start") {
+    const st = S.getState();
+    const emotions = ["חרדה", "פחד", "בושה", "כעס", "עצב", "אשמה", "בדידות"];
+    const emoOther = week1EmoOther || (!!st.emotion.name && !emotions.includes(st.emotion.name));
+    const lr = st.emotion.ratings.length ? st.emotion.ratings[st.emotion.ratings.length - 1].value : 5;
+    return `<div class="goal-field emotion-pick">
+      <label class="mini-label">${esc(f.label)} — ${G("נבחר", "נבחר")} פעם אחת ומלווה את כל התהליך</label>
+      <div class="chip-row">
+        ${emotions.map(e => `<button type="button" class="chip ${st.emotion.name === e ? "on" : ""}" data-emotion="${e}">${e}</button>`).join("")}
+        <button type="button" class="chip ${emoOther ? "on" : ""}" data-emotion="__other__">אחר…</button>
+      </div>
+      ${emoOther ? `<div class="other-emo-row">
+        <input class="inp" id="w1EmoOther" placeholder="${G("כתוב", "כתבי")} את הרגש שלך..." value="${esc(emotions.includes(st.emotion.name) ? "" : (st.emotion.name || ""))}">
+        <button type="button" class="btn ghost2" id="w1EmoSave">שמירת הרגש</button></div>` : ""}
+      <label class="mini-label" style="margin-top:12px">עוצמת הרגש עכשיו (0–10) — נקודת מוצא למדידה</label>
+      <div class="rating-row">
+        <input type="range" id="rate" min="0" max="10" value="${lr}" ${st.emotion.name ? "" : "disabled"}>
+        <span class="rate-val" id="rateVal">${lr}</span></div>
+      <button type="button" class="btn" id="logRate" ${st.emotion.name ? "" : "disabled"}>שמירת הדירוג</button>
+      ${st.emotion.ratings.length ? renderSparkline(st.emotion.ratings) : ""}</div>`;
+  }
+  if (f.type === "emotion-alt") {
+    const st = S.getState();
+    if (!st.emotion.name)
+      return `<div class="goal-field emotion-pick"><label class="mini-label">${esc(f.label)}</label>
+        <p class="subtle">${G("בחר", "בחרי")} קודם את הרגש המרכזי בשלב 1 — הרגש החלופי ייגזר ממנו.</p></div>`;
+    const suggested = EMOTION_ALTERNATIVES[st.emotion.name];
+    const altPool = [...new Set([suggested, ...ALT_EMOTION_POOL].filter(Boolean))];
+    return `<div class="goal-field emotion-pick">
+      <label class="mini-label">${esc(f.label)} — חלופה ל<b>${esc(st.emotion.name)}</b></label>
+      <p class="hint">${suggested
+        ? `במקום <b>${esc(st.emotion.name)}</b>, אפשר לכוון אל <b>${esc(suggested)}</b>. ${G("בחר", "בחרי")} את היעד שלך:`
+        : `${G("בחר", "בחרי")} את הרגש שאליו תרצה להגיע במסע:`}</p>
+      <div class="chip-row">
+        ${altPool.map(a => `<button type="button" class="chip alt ${st.emotion.target === a ? "on" : ""}" data-alt="${esc(a)}">${esc(a)}</button>`).join("")}
+      </div>
+      ${st.emotion.target ? `<p class="target-line">🎯 היעד הרגשי שלי: <b>${esc(st.emotion.target)}</b></p>` : ""}</div>`;
   }
   if (f.type === "text") {
     return `<div class="goal-field"><label class="mini-label">${f.label}</label>
@@ -163,6 +201,9 @@ function openGoalPrint(plan) {
   const body = GOAL_TOOL.sections.map(s => {
     const items = s.fields.filter(f => f.type !== "anchor").map(f => {
       let a = plan[f.key];
+      if (f.type === "emotion-start") a = st.emotion.name
+        ? st.emotion.name + (st.emotion.ratings.length ? ` (עוצמה ${st.emotion.ratings[st.emotion.ratings.length - 1].value}/10)` : "") : "";
+      else if (f.type === "emotion-alt") a = st.emotion.target || "";
       if (Array.isArray(a)) a = a.join(", ");
       if (f.type === "rating" && a) a = a + "/10";
       return `<div class="q"><div class="ql">${esc(f.label)}</div><div class="qa">${esc(a || "").replace(/\n/g, "<br>") || "&nbsp;"}</div></div>`;
@@ -1077,10 +1118,10 @@ function renderTool(c) {
 }
 
 // --- שבוע 1: כלי מורחב עם 3 חלקים ---
-let week1Tab = "emotion";
+let week1Tab = "goal";
 let week1EmoOther = false;
 const W1_TABS = [
-  { id: "emotion",    label: "רגש ודירוג" },
+  { id: "goal",       label: "הגדרת המטרה" },
   { id: "calm",       label: "סריקה ורגיעה" },
   { id: "dickens",    label: "תרגיל דיקנס" },
   { id: "activation", label: "יומן פעילות" },
@@ -1090,11 +1131,35 @@ function toolWeek1(c) {
   const tabs = `<div class="subtool-tabs">${W1_TABS.map(t =>
     `<button class="subtool-tab ${week1Tab === t.id ? "on" : ""}" data-w1tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body = "";
-  if (week1Tab === "emotion") body = w1Emotion();
+  if (week1Tab === "goal") body = w1Goal();
   if (week1Tab === "calm") body = w1Calm();
   if (week1Tab === "dickens") body = w1Dickens();
   if (week1Tab === "activation") body = w1Activation();
   return tabs + `<div id="w1body">${body}</div>`;
+}
+
+// כלי הגדרת המטרה (מודל דיסני) — מוטמע כפרק הראשון, סובב סביב רגש אחד
+function w1Goal() {
+  const plan = S.getGoalPlan();
+  const st = S.getState();
+  const thread = st.emotion.name
+    ? `<div class="emotion-thread">🧭 כל התהליך סובב סביב רגש אחד: <b>${esc(st.emotion.name)}</b>${st.emotion.target ? ` → <b>${esc(st.emotion.target)}</b>` : ""}</div>`
+    : "";
+  return `
+    <div class="tool-block goal-inline">
+      <p class="hint">${GOAL_TOOL.intro}</p>
+      ${thread}
+      ${GOAL_TOOL.sections.map((s, si) => `
+        <section class="goal-section">
+          <h4>${si + 1}. ${esc(s.title)}</h4>
+          ${s.note ? `<p class="subtle goal-note">${esc(s.note)}</p>` : ""}
+          ${s.fields.map(f => goalField(f, plan)).join("")}
+        </section>`).join("")}
+      <div class="activation-actions">
+        <button type="button" class="btn" id="saveGoal">שמירת המטרה</button>
+        <button type="button" class="btn ghost2" id="pdfGoal">⬇ הורדת המטרה כ-PDF</button>
+      </div>
+    </div>`;
 }
 
 // --- סריקת גוף + נשימה מונחית + מיינדפולנס ---
@@ -3710,6 +3775,20 @@ function mountWeek1Handlers() {
   if (rate) rate.addEventListener("input", () => app.querySelector("#rateVal").textContent = rate.value);
   const lr = app.querySelector("#logRate");
   if (lr) lr.addEventListener("click", () => { S.logEmotionRating(app.querySelector("#rate").value); renderChapter(1); });
+
+  // כלי הגדרת המטרה (מוטמע בפרק 1)
+  app.querySelectorAll("input[type=range].goal-input").forEach(r =>
+    r.addEventListener("input", () => { const sp = r.nextElementSibling; if (sp) sp.textContent = r.value; }));
+  const gBreath = app.querySelector("#goalBreath");
+  if (gBreath) gBreath.addEventListener("click", () => openBreathingPlayer({ patternId: "478" }));
+  const gSave = app.querySelector("#saveGoal");
+  if (gSave) gSave.addEventListener("click", () => {
+    const p = collectGoal(); S.setGoalPlan(p);
+    if (p.goal_precise) S.setGoal(p.goal_precise);
+    S.logActivity("exercise", "הגדרת מטרה"); celebrate(); toast("המטרה נשמרה ✓");
+  });
+  const gPdf = app.querySelector("#pdfGoal");
+  if (gPdf) gPdf.addEventListener("click", () => { const p = collectGoal(); S.setGoalPlan(p); openGoalPrint(p); });
 
   // חלק 2 — דיקנס
   const sd = app.querySelector("#saveDickens");

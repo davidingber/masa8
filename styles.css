@@ -762,6 +762,16 @@ body{font-size:15.5px;line-height:1.5}
 
 /* ============ כלי הגדרת מטרה ============ */
 .goal-note{line-height:1.6;margin-bottom:12px}
+/* חוט מאחד — הרגש שסביבו סובב כל התהליך */
+.emotion-thread{background:linear-gradient(160deg,#eef3ec,#e6efe4);border:1px solid var(--line);
+  border-radius:14px;padding:11px 14px;margin:2px 0 16px;font-size:14px;line-height:1.5;color:var(--teal)}
+.emotion-thread b{color:var(--ink)}
+[data-theme="dark"] .emotion-thread{background:#20281f;border-color:#33402d}
+/* מקטעי הכלי כשהם מוטמעים בתוך פרק */
+.goal-inline .goal-section{margin:0 0 22px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.goal-inline .goal-section:last-of-type{border-bottom:none}
+.goal-inline .goal-section h4{font-size:15.5px;margin:0 0 8px}
+.goal-field.emotion-pick{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px 13px}
 .goal-field{margin-bottom:12px}
 .goal-field .mini-label{display:block;font-weight:700;font-size:13.5px;margin-bottom:6px;line-height:1.5}
 .goal-field .ta{min-height:64px}
