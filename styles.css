@@ -65,9 +65,9 @@ body{min-height:100vh}
 /* אווטר */
 .avatar-card{text-align:center;background:linear-gradient(160deg,#ffffff,#f2f7f1);overflow:hidden}
 /* חריץ תמונה — כריכת הבית (img/hero.jpg). ללא תמונה: מוצג גרדיאנט מרווה */
-.avatar-cover{height:118px;margin:-16px -16px 10px;border-radius:19px 19px 0 0;
+.avatar-cover{aspect-ratio:3/2;margin:-16px -16px 10px;border-radius:19px 19px 0 0;
   background-image:url('img/hero.jpg'),linear-gradient(160deg,#8fb69c,#6e8c7d);
-  background-size:cover,cover;background-position:center,center;background-repeat:no-repeat}
+  background-size:contain,cover;background-position:center,center;background-repeat:no-repeat}
 .avatar-wrap{display:flex;justify-content:center}
 .avatar-svg{width:210px;height:250px}
 .charge-row{display:flex;align-items:center;gap:10px;margin:6px 8px 4px}
