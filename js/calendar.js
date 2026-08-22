@@ -127,7 +127,7 @@ export function buildWeeklyICS({ events, email, label = "פעילות מהנה" 
       `DTEND:${localStamp(date, Math.floor(endTotal / 60) % 24, endTotal % 60)}`,
       `RRULE:FREQ=WEEKLY;BYDAY=${DAY_CODE[ev.day] || "SU"};UNTIL=${untilFloating(date)}`,
       `SUMMARY:${ics(ev.activity)}`,
-      `DESCRIPTION:${ics(label + " — מסע 8 השבועות · יום " + ev.day)}`,
+      `DESCRIPTION:${ics(label + " — מסע 8 הזהויות · יום " + ev.day)}`,
     );
     if (email) {
       lines.push(`ORGANIZER;CN=${ics(email)}:mailto:${email}`);
@@ -217,7 +217,7 @@ export function googleEventUrl({ day, time, activity, label = "פעילות מה
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: activity,
-    details: label + " — מסע 8 השבועות · יום " + day,
+    details: label + " — מסע 8 הזהויות · יום " + day,
     dates: `${s}/${e}`,
     recur: `RRULE:FREQ=WEEKLY;BYDAY=${DAY_CODE[day] || "SU"};UNTIL=${untilUtc(date)}`,
     ctz: Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Jerusalem",

@@ -37,7 +37,7 @@ function checkReminder() {
   const todayKey = now.toISOString().slice(0, 10);
 
   if (now.getHours() === h && now.getMinutes() === m && r.lastFired !== todayKey) {
-    notify("מסע 8 השבועות 🌱", "הגיע הזמן לצעד הקטן היומי שלך. האווטר מחכה שתטעין אותו.");
+    notify("מסע 8 הזהויות 🌱", "הגיע הזמן לצעד הקטן היומי שלך. האווטר מחכה שתטעין אותו.");
     setReminders({ lastFired: todayKey });
   }
 }

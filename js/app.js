@@ -1,5 +1,5 @@
 // ============================================================
-//  מסע 8 השבועות — לוגיקת האפליקציה והמסכים
+//  מסע 8 הזהויות — לוגיקת האפליקציה והמסכים
 // ============================================================
 import { COURSE, ACTIVITY_TYPES, EMOTION_ALTERNATIVES, ALT_EMOTION_POOL,
          PLEASANT_ACTIVITIES, WEEK_DAYS, CYCLE_STAGES, NLP_REFRAME_STEPS,
@@ -402,7 +402,7 @@ function openGoalPrint(plan) {
     return `<h2>${esc(s.title)}</h2>${items}`;
   }).join("");
   const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
-    <title>הגדרת המטרה — מסע 8 השבועות</title>
+    <title>הגדרת המטרה — מסע 8 הזהויות</title>
     <style>
       body{font-family:'Segoe UI',Arial,sans-serif;color:#20353a;padding:30px;max-width:760px;margin:auto}
       h1{color:#0f766e;margin:0 0 2px} .sub{color:#6a8189;margin:0 0 16px;font-size:13px}
@@ -414,7 +414,7 @@ function openGoalPrint(plan) {
       @media print{.noprint{display:none}}
     </style></head><body>
     <h1>הגדרת המטרה</h1>
-    <p class="sub">מסע 8 השבועות · מודל דיסני</p>
+    <p class="sub">מסע 8 הזהויות · מודל דיסני</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     ${body}
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -513,7 +513,7 @@ function renderOnboarding() {
   const emoOther = onb.otherMode || (!!onb.emotion && !ONB_EMOTIONS.includes(onb.emotion));
   if (onbStep === 0) body = `
     ${onbArt(0)}
-    <h2>${onb.gender === "f" ? "ברוכה הבאה" : "ברוך הבא"} למסע 8 השבועות</h2>
+    <h2>${onb.gender === "f" ? "ברוכה הבאה" : "ברוך הבא"} למסע 8 הזהויות</h2>
     <p class="onb-promise">${JOURNEY_PROMISE}</p>
     <p class="onb-sub">נתחיל בהיכרות קצרה.</p>
     <label class="onb-label">איך קוראים לך?</label>
@@ -895,7 +895,6 @@ function trustBlock() {
         <b>⚠️ חשוב:</b> האפליקציה היא כלי עזר ואינה תחליף לטיפול מקצועי.
         במצוקה חריפה או מחשבות אובדניות — פנה מיד לעזרה: ער״ן <b>1201</b> · מוקד חירום <b>101</b>.
       </div>
-      <button class="btn ghost2" id="trustSOS">🤗 צריך רגע עכשיו?</button>
     </section>`;
 }
 
@@ -970,7 +969,7 @@ async function shareProgress() {
 
   ctx.direction = "rtl"; ctx.textAlign = "center";
   ctx.fillStyle = "#0f766e"; ctx.font = "700 48px " + F;
-  ctx.fillText("מסע 8 השבועות", W / 2, 176);
+  ctx.fillText("מסע 8 הזהויות", W / 2, 176);
   ctx.fillStyle = "#6a8189"; ctx.font = "400 30px " + F;
   ctx.fillText("מהישרדות פנימית להנהגה עצמית", W / 2, 224);
 
@@ -1012,7 +1011,7 @@ async function shareProgress() {
   canvas.toBlob(async (blob) => {
     if (!blob) return toast("לא הצלחתי ליצור את התמונה");
     const file = new File([blob], "masa8-progress.png", { type: "image/png" });
-    const data = { files: [file], title: "מסע 8 השבועות", text: "ההתקדמות שלי במסע 8 השבועות 💪" };
+    const data = { files: [file], title: "מסע 8 הזהויות", text: "ההתקדמות שלי במסע 8 הזהויות 💪" };
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try { await navigator.share(data); return; }
       catch (e) { if (e.name === "AbortError") return; }
@@ -1656,7 +1655,7 @@ function openCyclePrint(rows, empty) {
       @media print{.noprint{display:none}}
     </style></head><body>
     <h1>יומן מיפוי מעגל ההישרדות</h1>
-    <p class="sub">מסע 8 השבועות · שבוע 2 — טריגר → מחשבה → רגש → תחושה → תגובה</p>
+    <p class="sub">מסע 8 הזהויות · שבוע 2 — טריגר → מחשבה → רגש → תחושה → תגובה</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><thead><tr><th class="n">#</th>${head}</tr></thead><tbody>${body}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -1835,7 +1834,7 @@ function openReframePrint(answers) {
       @media print{.noprint{display:none}}
     </style></head><body>
     <h1>מסגור מחדש בשישה שלבים</h1>
-    <p class="sub">מסע 8 השבועות · שבוע 3 — עבודה עם החלקים הפנימיים</p>
+    <p class="sub">מסע 8 הזהויות · שבוע 3 — עבודה עם החלקים הפנימיים</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><tbody>${rows}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -2266,7 +2265,7 @@ function openExposurePrint(rows) {
       @media print{.noprint{display:none}}
     </style></head><body>
     <h1>חשיפות פנימיות</h1>
-    <p class="sub">מסע 8 השבועות · שבוע 7 — פעולה למרות פחד</p>
+    <p class="sub">מסע 8 הזהויות · שבוע 7 — פעולה למרות פחד</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><thead><tr><th>רמה</th><th>תחושה</th><th>תרגיל</th><th>משך</th><th>הנחיה / ויסות</th></tr></thead><tbody>${body}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -2550,7 +2549,7 @@ function openThoughtPrint(rows) {
       @media print{.noprint{display:none}}
     </style></head><body>
     <h1>טבלת החלפת מחשבות</h1>
-    <p class="sub">מסע 8 השבועות · שבוע 6 — הנהגת המחשבות</p>
+    <p class="sub">מסע 8 הזהויות · שבוע 6 — הנהגת המחשבות</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -3267,7 +3266,7 @@ function openExpJournalPrint() {
       .btn{background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:15px;cursor:pointer}
     </style></head><body>
     <h1>יומן חשיפות שבועי</h1>
-    <p class="sub">מסע 8 השבועות · שבוע 7 — פעולה למרות פחד</p>
+    <p class="sub">מסע 8 הזהויות · שבוע 7 — פעולה למרות פחד</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><thead><tr><th>יום</th><th>שעה</th><th>החשיפה שאתרגל</th><th>בוצע</th></tr></thead>
       <tbody>${rows}</tbody></table>
@@ -3546,7 +3545,7 @@ function openLadderPrint(L) {
       @media print{.noprint{display:none}}
     </style></head><body>
     <h1>סולם פחדים</h1>
-    <p class="sub">מסע 8 השבועות · שבוע 7 — פעולה למרות פחד${L.emotion ? " · רגש: " + esc(L.emotion) : ""}</p>
+    <p class="sub">מסע 8 הזהויות · שבוע 7 — פעולה למרות פחד${L.emotion ? " · רגש: " + esc(L.emotion) : ""}</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><thead><tr><th>#</th><th>הפעולה / הפחד</th><th>מה פחדתי שיקרה</th><th>מה קרה בפועל</th><th>מה למדתי</th><th>נשארתי</th><th>ויתרתי על הצלה</th></tr></thead><tbody>${body}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -3582,7 +3581,7 @@ const RENEWAL_GOALS = [
   { key: "activity", goal: "לצד הנסיגה אשמור על פעילות מיטיבה ככל האפשר", q: "מה יעזור לי?" },
 ];
 const VALUE_REMINDER = {
-  title: "הגשמת ערך — מסע 8 השבועות",
+  title: "הגשמת ערך — מסע 8 הזהויות",
   description: "פעולה קטנה שמגשימה ערך שחשוב לך. לא לחכות שהפחד ייעלם — לפעול לכיוון שחשוב לך.",
 };
 
@@ -3690,7 +3689,7 @@ function openIdentityPrint(d) {
     ["🧭 הערכים שמנחים אותי", d.values], ["💗 פעילות חומלת", d.compassion],
   ].filter(r => r[1]).map(r => `<div class="q"><div class="ql">${esc(r[0])}</div><div class="qa">${esc(r[1]).replace(/\n/g, "<br>")}</div></div>`).join("");
   const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
-    <title>הזהות החדשה שלי — מסע 8 השבועות</title>
+    <title>הזהות החדשה שלי — מסע 8 הזהויות</title>
     <style>body{font-family:'Segoe UI',Arial,sans-serif;color:#20353a;padding:30px;max-width:760px;margin:auto}
     h1{color:#45614f;margin:0 0 2px} .sub{color:#6a8189;margin:0 0 16px;font-size:13px}
     .name{font-size:20px;font-weight:800;color:#45614f;margin:10px 0 18px}
@@ -3698,7 +3697,7 @@ function openIdentityPrint(d) {
     .qa{border:1px solid #d8e6da;border-radius:8px;padding:9px 11px;min-height:30px;font-size:14px;background:#f7f9f4;line-height:1.6}
     .btn{background:#45614f;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:15px;cursor:pointer;margin-top:18px}
     @media print{.noprint{display:none}}</style></head><body>
-    <h1>הזהות החדשה שלי</h1><p class="sub">מסע 8 השבועות · ${esc(st.name) || ""} · ${today}</p>
+    <h1>הזהות החדשה שלי</h1><p class="sub">מסע 8 הזהויות · ${esc(st.name) || ""} · ${today}</p>
     ${d.name ? `<div class="name">🌟 ${esc(d.name)}</div>` : ""}
     ${rows}
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -4000,7 +3999,7 @@ function openSchedulePrint(plan) {
       @media print{.noprint{display:none}}
     </style></head><body>
     <h1>לוח הגשמת ערכים</h1>
-    <p class="sub">מסע 8 השבועות · שבוע 8 — פעולה מבוססת ערך</p>
+    <p class="sub">מסע 8 הזהויות · שבוע 8 — פעולה מבוססת ערך</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><thead><tr><th>יום</th><th>שעה</th><th>הפעולה להגשמת הערך</th><th>בוצע</th></tr></thead><tbody>${rows}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -4232,7 +4231,7 @@ function openPrintJournal() {
       .btn{background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:15px;cursor:pointer}
     </style></head><body>
     <h1>יומן פעילות שבועי</h1>
-    <p class="sub">מסע 8 השבועות · שבוע 1 — אקטיבציה מבוססת ערכים ועונג</p>
+    <p class="sub">מסע 8 הזהויות · שבוע 1 — אקטיבציה מבוססת ערכים ועונג</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     ${st.emotion.name ? `<div class="box"><h3>הרגש שאני עובד עליו</h3>
       ${esc(st.emotion.name)}${st.emotion.target ? " → יעד: " + esc(st.emotion.target) : ""}
@@ -4746,13 +4745,7 @@ let sosView = "menu";
 let sosPhraseIdx = 0;
 
 function mountSOS() {
-  if (sosFab) return;
-  sosFab = document.createElement("button");
-  sosFab.id = "sosFab"; sosFab.className = "sos-fab";
-  sosFab.innerHTML = "🤗 רגע קשה";
-  sosFab.title = "צריך רגע? לחץ כאן";
-  sosFab.addEventListener("click", openSOS);
-  document.body.appendChild(sosFab);
+  // כפתור "רגע קשה" הצף הוסר לפי בקשה — אין fab
 }
 function updateSOSVisibility() {
   if (sosFab) sosFab.style.display = S.isOnboarded() ? "" : "none";
