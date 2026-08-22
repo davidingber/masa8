@@ -831,6 +831,10 @@ body{font-size:15.5px;line-height:1.5}
 [data-theme="dark"] .part-info.manager{background:#1f242a;border-color:#333c45}
 [data-theme="dark"] .part-info.fire{background:#2a1f1c;border-color:#4a352f}
 
+/* עוגן רגשי — "איך הרגש עכשיו?" */
+.after-emo{background:#eef3ec;border:1px solid #dbe7dd;border-radius:12px;padding:11px 13px;margin:14px 0}
+[data-theme="dark"] .after-emo{background:#20281f;border-color:#33402d}
+
 /* כלי החלפת אמונות (שבוע 6) */
 .bs-now{background:#eef1f4;border:1px solid #dfe4e9;border-radius:13px;padding:12px 13px;margin-bottom:8px}
 .bs-now .bs-h{font-weight:800;font-size:13px;color:#5a6a78;margin-bottom:8px}

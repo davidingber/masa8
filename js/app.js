@@ -152,6 +152,27 @@ function partsDashCards(m, opts = {}) {
     </div>`}`;
 }
 
+// עוגן רגשי — "איך הרגש עכשיו?" מזין את מגמת הרגש בדשבורד (דיווח אחרי כלי)
+function afterEmoWidget() {
+  const st = S.getState();
+  if (!st.emotion.name) return "";
+  const last = st.emotion.ratings.length ? st.emotion.ratings[st.emotion.ratings.length - 1].value : 5;
+  return `<div class="after-emo">
+    <label class="mini-label">🌡️ ואיך <b>${esc(st.emotion.name)}</b> מרגיש עכשיו? (0–10)<span class="subtle"> — מעדכן את מגמת הרגש בדשבורד</span></label>
+    <div class="rating-row"><input type="range" id="afterEmoRange" min="0" max="10" value="${last}"><span class="rate-val" id="afterEmoVal">${last}</span></div>
+    <button type="button" class="btn ghost2" id="afterEmoSave">עדכון הרגש שלי</button>
+  </div>`;
+}
+function bindAfterEmo() {
+  const r = app.querySelector("#afterEmoRange");
+  if (r) r.addEventListener("input", () => { const v = app.querySelector("#afterEmoVal"); if (v) v.textContent = r.value; });
+  const s = app.querySelector("#afterEmoSave");
+  if (s) s.addEventListener("click", () => {
+    S.logEmotionRating(app.querySelector("#afterEmoRange").value);
+    toast("הרגש עודכן ✓ — נכנס למגמה בדשבורד");
+  });
+}
+
 function renderSelf() {
   const m = buildPartsMap(S);
   app.innerHTML = `
@@ -1884,6 +1905,7 @@ function w4Scan() {
         </div>
       </div>
 
+      ${afterEmoWidget()}
       <button class="btn" id="scanDone">סיימתי סריקה ונשימה ✓</button>
     </div>`;
 }
@@ -2037,6 +2059,7 @@ function runGuidedSequence(displayId, phases, onDone) {
 
 // מטפל משותף לסריקת הגוף + הנשימה המונחית (בשימוש בשבוע 1 ובשבוע 4)
 function mountScanBreathHandlers() {
+  bindAfterEmo();
   const bt = app.querySelector("#breathToggle");
   if (bt) bt.addEventListener("click", () => {
     const circle = app.querySelector("#breathCircle");
@@ -2348,6 +2371,7 @@ function mountWeek5Handlers() {
   app.querySelectorAll("[data-w5tab]").forEach(b =>
     b.addEventListener("click", () => { stashWeek5Drafts(); week5Tab = b.dataset.w5tab; renderChapter(6); }));
 
+  bindAfterEmo();
   // החלפת אמונות
   app.querySelectorAll(".bs-range").forEach(r =>
     r.addEventListener("input", () => { const s = r.nextElementSibling; if (s) s.textContent = r.value; }));
@@ -2356,7 +2380,9 @@ function mountWeek5Handlers() {
     const d = collectBeliefSwap();
     S.setToolData(6, "beliefSwap", d);
     if (Object.values(d).some(Boolean)) S.logActivity("thought", "החלפת אמונה");
-    celebrate(); toast("נשמר ✓");
+    // עוצמת ה"אחרי" נכנסת למגמת הרגש בדשבורד
+    if (d.intAfter != null && S.getState().emotion.name) S.logEmotionRating(d.intAfter);
+    celebrate(); toast("נשמר ✓ — העוצמה עודכנה במגמה");
   });
 
   // בדיקה מהירה (30 שניות)
@@ -2654,6 +2680,7 @@ function w6Guided() {
           <div class="release-stage" id="releaseStage"></div>
           <button class="btn ghost2" id="releaseBtn" style="margin-top:8px">🌬️ שחרור</button></div></div>
 
+      ${afterEmoWidget()}
       <button class="btn" id="saveFocus">שמירה + טעינת האווטר</button>
     </div>`;
 }
@@ -2731,6 +2758,7 @@ function mountWeek6Handlers() {
   app.querySelectorAll("[data-w6tab]").forEach(b =>
     b.addEventListener("click", () => { stopActiveTimer(); stashWeek6Drafts(); week6Tab = b.dataset.w6tab; renderChapter(5); }));
 
+  bindAfterEmo();
   // מסגור מחדש (עבר לפרק 5)
   app.querySelectorAll(".rf-input").forEach(inp =>
     inp.addEventListener("change", () => S.setToolData(3, "reframe", collectReframe())));
@@ -2918,6 +2946,7 @@ function w7After() {
         ${f("unexpected", "האם היו מחשבות בלתי צפויות — ומה עשית איתן?", "...")}
       </div>
       ${f("learned", "מה למדת?", "הלמידה החדשה מהחוויה הזאת...")}
+      ${afterEmoWidget()}
       <button class="btn" id="saveAfterForm">שמירה + טעינת האווטר</button>
     </div>`;
 }
@@ -3208,6 +3237,7 @@ async function sendExpMsg() {
 }
 
 function mountWeek7Handlers() {
+  bindAfterEmo();
   app.querySelectorAll("[data-w7part]").forEach(b =>
     b.addEventListener("click", () => {
       stashWeek7Drafts(); week7Part = b.dataset.w7part;
