@@ -1702,6 +1702,7 @@ function w3Defusion() {
         <h5>3️⃣ המחשבה על הלוח</h5>
         <p class="hint">דמיין את המחשבה כתובה על לוח רחוק. שחרר אותה — היא נופלת מטה בכוח הכבידה,
           מתרחקת ונעשית קטנה יותר ויותר, עד שנעלמת.</p>
+        ${priorChips("thought", "#boardThought", "מחשבות שכתבת:")}
         <input class="inp" id="boardThought" placeholder="כתוב את המחשבה...">
         <button class="btn ghost2" id="boardRelease">שחרר את המחשבה ⬇</button>
         <div class="anim-stage" id="boardStage"></div>
@@ -1711,6 +1712,7 @@ function w3Defusion() {
         <h5>4️⃣ עלים על נחל (מיינדפולנס)</h5>
         <p class="hint">צפה במחשבה כמו עלה שט על נחל — הוא מרחף על המים והולך ומתרחק.
           אל תילחם בו, רק צפה בו נעלם.</p>
+        ${priorChips("thought", "#streamThought", "מחשבות שכתבת:")}
         <input class="inp" id="streamThought" placeholder="כתוב את המחשבה...">
         <button class="btn ghost2" id="streamRelease">שלח לנחל 🍃</button>
         <div class="anim-stage stream" id="streamStage"></div>
@@ -2433,6 +2435,7 @@ function w5Checker() {
         <li>מבוססת עובדות — בלי הכללה, עיוות או השמטה</li>
       </ul>
       <label class="mini-label">המחשבה המטרידה</label>
+      ${priorChips("thought", "#tcOriginal", "המחשבות שכתבת — לחיצה לבחירה:")}
       <textarea class="ta" id="tcOriginal" placeholder="למשל: כולם רואים שאני לחוץ ושופטים אותי"></textarea>
       <label class="mini-label">המחשבה החלופית שלי (לא חובה)</label>
       <textarea class="ta" id="tcAlt" placeholder="המחשבה המדויקת יותר שניסחתי..."></textarea>
@@ -2981,6 +2984,7 @@ function w7Prep() {
       <p class="hint">טופס הכנה לחשיפה — ממלאים <b>לפני</b> החשיפה. תכנון טוב מפחית הפתעות ומחזק את ההנהגה העצמית.</p>
       ${priorChips("behavior", ".prepf[data-f=situation]", "הימנעויות ועשיית-יתר שכתבת — לחיצה לבחירת מוקד חשיפה:")}
       ${f("situation", "מצב שיש להיחשף אליו", "תאר את הסיטואציה שאליה תיחשף...")}
+      ${priorChips("thought", ".prepf[data-f=autoThoughts]", "המחשבות שכתבת:")}
       ${f("autoThoughts", "מחשבות אוטומטיות שעולות בראשך לגבי המצב", "מה המוח אומר על המצב...")}
       <label class="mini-label">רגשות שאתה מניח שתרגיש בזמן האירוע</label>
       <div class="chip-row">${emoChips}</div>
