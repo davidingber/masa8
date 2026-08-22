@@ -735,7 +735,6 @@ function renderHome() {
       <div>
         <div class="greeting" id="homeTitle">${hello}</div>
         <div class="subtle">${COURSE.subtitle}</div>
-        <div class="method-line">🧠 מבוסס CBT · ACT · מיינדפולנס · NLP</div>
       </div>
       <button class="icon-btn" id="themeToggle" title="מצב כהה / בהיר" aria-label="מצב כהה או בהיר">${S.getTheme() === "dark" ? "☀️" : "🌙"}</button>
     </header>
@@ -978,7 +977,7 @@ function editGoal() {
 function trustBlock() {
   return `
     <section class="card trust-card">
-      <div class="trust-methods">🧠 מבוסס CBT · ACT · מיינדפולנס</div>
+      <div class="trust-methods">🧠 מבוסס CBT · ACT · מיינדפולנס · NLP</div>
       <p class="trust-author">פותח על ידי <b>דוד אינגבר</b> — הורות עצמית מיטיבה להתמודדות עם חרדה.</p>
       <p class="trust-privacy">🔒 הנתונים שלך נשמרים במכשיר שלך בלבד ואינם נשלחים לאף אחד.</p>
       <div class="trust-safety">
