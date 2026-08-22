@@ -65,17 +65,31 @@ export function buildPartsMap(S) {
   // מחיר ההישארות (דיקנס — בתוך הגדרת המטרה)
   add(pain, "thought", "מחיר ההישארות", goal.stay5_feel, 1);
   add(pain, "thought", "מחיר ההישארות", goal.stay10_feel, 1);
-  // חשיפה — פחד ומחשבות לפני
-  const prep = td(7, "prepForm") || {};
-  (prep.emotions || []).forEach(e => add(pain, "emotion", "פחד בחשיפה", e, 7));
-  add(pain, "thought", "מחשבה בחשיפה", prep.autoThoughts, 7);
+  // חשיפה — שרשרת מאוחדת (הכנה → יומן → אחרי). כל פריט = פחד מהסולם.
+  const expItems = Array.isArray(td(7, "expItems")) ? td(7, "expItems") : [];
+  const exposures = [];
+  if (expItems.length) {
+    expItems.forEach(it => {
+      add(pain, "thought", "מחשבה בחשיפה", it.autoThoughts, 7);
+      (it.emotions || []).forEach(e => add(pain, "emotion", "פחד בחשיפה", e, 7));
+      add(resource, "thought", "מחשבה חלופית", it.altThoughts, 7);
+      add(resource, "thought", "מנטרה", it.rational, 7);
+      add(resource, "thought", "למידה מחשיפה", it.learned, 7);
+      const fear = (it.fear || "").trim();
+      if (fear) exposures.push({ fear, learned: (it.learned || "").trim(), done: !!it.done, day: it.day || "", time: it.time || "" });
+    });
+  } else {
+    // תאימות לאחור — טפסים בודדים ישנים
+    const prep = td(7, "prepForm") || {};
+    (prep.emotions || []).forEach(e => add(pain, "emotion", "פחד בחשיפה", e, 7));
+    add(pain, "thought", "מחשבה בחשיפה", prep.autoThoughts, 7);
+    add(resource, "thought", "מחשבה חלופית", prep.altThoughts, 7);
+    add(resource, "thought", "מנטרה", prep.rational, 7);
+    add(resource, "thought", "למידה מחשיפה", (td(7, "afterForm") || {}).learned, 7);
+  }
 
   // ===== צד המשאב (ההורה המיטיב) =====
-  if (st.emotion.target) add(resource, "emotion", "רגש חלופי", st.emotion.target, 1);
-  // מחשבות חדשות
-  add(resource, "thought", "מחשבה חלופית", prep.altThoughts, 7);
-  add(resource, "thought", "מנטרה", prep.rational, 7);
-  add(resource, "thought", "למידה מחשיפה", (td(7, "afterForm") || {}).learned, 7);
+  // (הרגש החלופי / חמלה עצמית מוצג ממורכז בתחתית הדשבורד — לא בעמודה)
   // מסגור מחדש — רק התוצאות המשמעותיות נכנסות (כוונה חיובית + דרך חלופית), לא כל שלב
   const rf = td(3, "reframe") || [];
   add(resource, "thought", "כוונה חיובית", rf[3], 3);
@@ -114,7 +128,8 @@ export function buildPartsMap(S) {
   return {
     partName: (st.partName || "").trim(),
     idealName: (st.idealName || "").trim(),
-    primary, pain, resource,
+    target: (st.emotion.target || "").trim(),
+    primary, pain, resource, exposures,
     counts: { pain: painCount, resource: resCount },
     balance,
   };

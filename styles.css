@@ -966,3 +966,43 @@ body{font-size:15.5px;line-height:1.5}
 .ha-mouth-sad,.ha-mouth-happy{fill:none;stroke:#7a5a48;stroke-width:3;stroke-linecap:round;transition:opacity .5s ease}
 .ha-mouth-happy{opacity:0}
 .heal-avatar-wrap .identity-close{margin-top:4px}
+
+/* ===== שבוע 7 — שרשרת חשיפות מאוחדת ===== */
+.method-line{font-size:11.5px;color:var(--teal);font-weight:700;margin-top:3px}
+.exp-picker{margin-bottom:10px}
+.exp-picker .prior-t{font-size:12.5px;color:var(--subtle);font-weight:700;margin-bottom:6px}
+.chip.prep-sel.on,.chip.after-sel.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.chip.prep-add{border-style:dashed;color:var(--teal)}
+.exp-focus{display:flex;align-items:center;gap:8px;background:var(--sage);border-radius:10px;
+  padding:9px 12px;font-size:14px;margin:6px 0 12px;font-weight:600}
+.exp-del-item{margin-inline-start:auto;background:none;border:none;color:var(--accent);cursor:pointer;font-size:14px}
+.exp-sched-list{display:flex;flex-direction:column;gap:9px}
+.exp-sched-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);
+  border-radius:12px;padding:10px 12px;background:#fbfdfc;flex-wrap:wrap}
+[data-theme="dark"] .exp-sched-row{background:#0f1e20}
+.exp-sched-fear{flex:1;min-width:120px;font-weight:700;font-size:14px}
+.exp-sched-when{display:flex;gap:8px;align-items:center}
+.exp-sched-when .exp-day-sel{width:auto;margin:0}
+.exp-sched-when .exp-time-sel{width:auto;margin:0}
+.after-done-row{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;
+  cursor:pointer;margin:8px 0;line-height:1.4}
+.after-done-row input{width:18px;height:18px;accent-color:var(--teal);flex-shrink:0}
+
+/* קטגוריית חשיפות בדשבורד */
+.exp-dash{border:1px solid #e6d6c1;background:#fdf8f1}
+[data-theme="dark"] .exp-dash{background:#241f18;border-color:#3d3426}
+.exp-dash-head{font-weight:800;font-size:14.5px;color:#b06a2c;margin-bottom:10px;text-align:center}
+[data-theme="dark"] .exp-dash-head{color:#e0a866}
+.exp-dash-list{display:flex;flex-direction:column;gap:8px}
+.exp-dash-item{border:1px solid #eaddcb;border-radius:11px;padding:9px 11px;background:#fffdfa}
+[data-theme="dark"] .exp-dash-item{background:#1c1812;border-color:#3d3426}
+.exp-dash-item.done{border-color:#bfe0cf;background:#f4fbf7}
+[data-theme="dark"] .exp-dash-item.done{background:#16241c;border-color:#2f4a39}
+.exp-dash-fear{font-weight:700;font-size:14px}
+.exp-dash-when{font-weight:600;color:var(--subtle);font-size:12.5px}
+.exp-dash-learned{font-size:12.5px;color:var(--subtle);margin-top:3px;line-height:1.5}
+
+/* עוגן היעד הרגשי — ממורכז בתחתית הדשבורד */
+.target-anchor{text-align:center;font-size:14px;color:#1f9d63;font-weight:700;
+  background:#f2fbf6;border:1px solid #c7ebd7;border-radius:14px;padding:10px 14px;margin:14px 0 4px}
+[data-theme="dark"] .target-anchor{background:#16241c;border-color:#2f4a39;color:#5cc98f}

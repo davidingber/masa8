@@ -163,7 +163,19 @@ function partsDashCards(m, opts = {}) {
         ${blk("התנהגות מיטיבה", m.resource.behavior.filter(it => it.label !== "הסרת העול"), "parent")}
         ${blk("הסרת העול", m.resource.behavior.filter(it => it.label === "הסרת העול"), "parent")}
       </div>
-    </div>`}`;
+    </div>
+    ${m.exposures && m.exposures.length ? `
+    <section class="card exp-dash">
+      <div class="exp-dash-head">🦁 חשיפות — להסתכל לפחד בעיניים מלאות חמלה</div>
+      <div class="exp-dash-list">
+        ${m.exposures.map(e => `
+          <div class="exp-dash-item ${e.done ? "done" : ""}">
+            <div class="exp-dash-fear">${e.done ? "✅" : "🎯"} ${esc(e.fear)}${e.day ? `<span class="exp-dash-when"> · ${esc(e.day)}${e.time ? " " + esc(e.time) : ""}</span>` : ""}</div>
+            ${e.learned ? `<div class="exp-dash-learned">💡 ${esc(e.learned)}</div>` : ""}
+          </div>`).join("")}
+      </div>
+    </section>` : ""}`}
+    ${m.target ? `<div class="target-anchor">🌱 היעד שלי: <b>${esc(m.target)}</b></div>` : ""}`;
 }
 
 // עוגן רגשי — "איך הרגש עכשיו?" מזין את מגמת הרגש בדשבורד (דיווח אחרי כלי)
@@ -723,6 +735,7 @@ function renderHome() {
       <div>
         <div class="greeting" id="homeTitle">${hello}</div>
         <div class="subtle">${COURSE.subtitle}</div>
+        <div class="method-line">🧠 מבוסס CBT · ACT · מיינדפולנס · NLP</div>
       </div>
       <button class="icon-btn" id="themeToggle" title="מצב כהה / בהיר" aria-label="מצב כהה או בהיר">${S.getTheme() === "dark" ? "☀️" : "🌙"}</button>
     </header>
@@ -3023,6 +3036,8 @@ function stashWeek6Drafts() {
 // ============================================================
 let week7Part = "a";
 let week7Tab = "rules";
+let week7PrepSel = 0;    // החשיפה שנבחרה בטאב "הכנה לחשיפה"
+let week7AfterSel = 0;   // החשיפה שנבחרה בטאב "אחרי חשיפה"
 const W7_PARTS = [
   { id: "a", label: "חלק א · הכנה", tabs: [
     { id: "rules",    label: "כללים והכנה" },
@@ -3031,12 +3046,19 @@ const W7_PARTS = [
     { id: "imaginal", label: "חשיפה בדמיון" },
   ]},
   { id: "b", label: "חלק ב · ביצוע ומעקב", tabs: [
-    { id: "internal", label: "חשיפות פנימיות" },
     { id: "journal",  label: "יומן חשיפות" },
+    { id: "internal", label: "חשיפות פנימיות" },
     { id: "after",    label: "אחרי חשיפה" },
     { id: "advisor",  label: "יועץ חשיפות" },
   ]},
 ];
+
+// ---- מודל חשיפה מאוחד: כל פריט = פחד מהסולם שעובר את כל שרשרת החשיפה ----
+// הכנה → שיבוץ ביומן → אחרי חשיפה — הכול מחובר לפריט אחד, ומסונכרן לדשבורד
+function getExpItems() { const x = S.getToolData(7, "expItems"); return Array.isArray(x) ? x : []; }
+function setExpItems(items) { S.setToolData(7, "expItems", items); }
+function expLabel(it, i) { return (it && it.fear ? String(it.fear).trim() : "") || ("חשיפה " + (i + 1)); }
+function newExpItem(fear) { return { fear: fear || "", emotions: [], done: false }; }
 // רגשות מוצעים בטופס ההכנה לחשיפה
 const PREP_EMOTIONS = ["פחד", "חרדה", "עצבנות", "כעס", "תסכול", "עצב", "מבוכה", "בושה", "שנאה"];
 
@@ -3062,17 +3084,47 @@ function toolWeek7(c) {
   return partToggle + tabs + `<div id="w7body">${body}</div>`;
 }
 
-// --- חלק א: טופס הכנה לחשיפה (דיגיטלי) ---
+// --- חלק א: טופס הכנה לחשיפה — נבחר פחד מהסולם, אפשר כמה הכנות ---
 function w7Prep() {
-  const d = S.getToolData(7, "prepForm") || {};
+  const items = getExpItems();
+  const ladder = S.getToolData(7, "ladder") || { rungs: [] };
+  const fears = (ladder.rungs || []).map(r => (r.desc || "").trim()).filter(Boolean);
+  const prepared = items.map(it => (it.fear || "").trim());
+  const toAdd = fears.filter(fr => !prepared.includes(fr));
+
+  // עדיין אין אף הכנה — בוחרים פחד מהסולם
+  if (!items.length) {
+    return `
+    <div class="tool-block">
+      <p class="hint">כאן ${G("מתכונן", "מתכוננת")} לחשיפה. ${G("בחר", "בחרי")} פחד מ<b>סולם הפחדים</b> להתכונן אליו — אפשר להכין <b>כמה חשיפות</b>, ולבחור על מה לעבוד.</p>
+      ${fears.length
+        ? `<div class="prior-block"><div class="prior-t">מסולם הפחדים — לחיצה פותחת הכנה לחשיפה:</div>
+            <div class="chip-row">${toAdd.map(fr => `<button type="button" class="chip prep-add" data-fear="${esc(fr)}">＋ ${esc(fr)}</button>`).join("")}</div></div>`
+        : `<p class="subtle">קודם ${G("מלא", "מלאי")} את <b>סולם הפחדים</b> (בטאב הקודם) — ומשם ${G("תבחר", "תבחרי")} על מה להתכונן.</p>`}
+    </div>`;
+  }
+
+  const sel = Math.min(Math.max(week7PrepSel, 0), items.length - 1);
+  const d = items[sel] || {};
   const emoChips = PREP_EMOTIONS.map(e =>
     `<button class="chip mini prep-emo ${(d.emotions || []).includes(e) ? "on" : ""}" data-e="${e}">${e}</button>`).join("");
   const f = (key, label, ph) => `<label class="mini-label">${label}</label>
     <textarea class="ta prepf" data-f="${key}" placeholder="${esc(ph)}">${esc(d[key] || "")}</textarea>`;
+
   return `
     <div class="tool-block">
-      <p class="hint">טופס הכנה לחשיפה — ממלאים <b>לפני</b> החשיפה. תכנון טוב מפחית הפתעות ומחזק את ההנהגה העצמית.</p>
-      ${priorChips("behavior", ".prepf[data-f=situation]", "הימנעויות ועשיית-יתר שכתבת — לחיצה לבחירת מוקד חשיפה:")}
+      <p class="hint">בוחרים חשיפה לעבוד עליה, וממלאים <b>לפני</b> החשיפה. תכנון טוב מפחית הפתעות ומחזק את ההנהגה העצמית.</p>
+      <div class="exp-picker">
+        <div class="prior-t">החשיפות שלי — לחיצה בוחרת על מה לעבוד:</div>
+        <div class="chip-row">
+          ${items.map((it, i) => `<button type="button" class="chip prep-sel ${i === sel ? "on" : ""}" data-i="${i}">${esc(expLabel(it, i))}${it.done ? " ✓" : ""}</button>`).join("")}
+          ${toAdd.map(fr => `<button type="button" class="chip prep-add" data-fear="${esc(fr)}">＋ ${esc(fr)}</button>`).join("")}
+        </div>
+      </div>
+
+      <div class="exp-focus">🎯 מתכוננים לחשיפה: <b>${esc(expLabel(d, sel))}</b>
+        <button type="button" class="exp-del-item" id="prepDelItem" data-i="${sel}" title="מחיקת החשיפה">✕</button></div>
+
       ${f("situation", "מצב שיש להיחשף אליו", "תאר את הסיטואציה שאליה תיחשף...")}
       ${priorChips("thought", ".prepf[data-f=autoThoughts]", "המחשבות שכתבת:")}
       ${f("autoThoughts", "מחשבות אוטומטיות שעולות בראשך לגבי המצב", "מה המוח אומר על המצב...")}
@@ -3093,21 +3145,38 @@ function w7Prep() {
       <button class="btn" id="savePrepForm">שמירה + טעינת האווטר</button>
     </div>`;
 }
-function collectPrepForm() {
-  const d = {};
-  app.querySelectorAll("#w7body .prepf").forEach(el => d[el.dataset.f] = el.value.trim());
-  d.emotions = [...app.querySelectorAll("#w7body .prep-emo.on")].map(b => b.dataset.e);
-  return d;
+// אוסף את שדות ההכנה של החשיפה הנבחרת, ומחזיר עותק מעודכן של רשימת החשיפות
+function collectPrepInto(items, sel) {
+  const it = { ...(items[sel] || newExpItem()) };
+  app.querySelectorAll("#w7body .prepf").forEach(el => it[el.dataset.f] = el.value.trim());
+  it.emotions = [...app.querySelectorAll("#w7body .prep-emo.on")].map(b => b.dataset.e);
+  const copy = items.slice(); copy[sel] = it; return copy;
 }
 
-// --- חלק ב: טופס אחרי חשיפה (דיגיטלי) ---
+// --- חלק ב: טופס אחרי חשיפה — בוחרים על איזו חשיפה מדובר ---
 function w7After() {
-  const d = S.getToolData(7, "afterForm") || {};
+  const items = getExpItems();
+  if (!items.length) {
+    return `
+    <div class="tool-block">
+      <p class="hint">כאן מתעדים <b>אחרי</b> החשיפה. ${G("הכן", "הכיני")} ותשבץ חשיפה קודם — וכאן ${G("תבחר", "תבחרי")}
+        על איזו חשיפה מדובר ${G("ותתעד", "ותתעדי")} מה קרה.</p>
+    </div>`;
+  }
+  const sel = Math.min(Math.max(week7AfterSel, 0), items.length - 1);
+  const d = items[sel] || {};
   const f = (key, label, ph) => `<label class="mini-label">${label}</label>
     <textarea class="ta afterf" data-f="${key}" placeholder="${esc(ph)}">${esc(d[key] || "")}</textarea>`;
   return `
     <div class="tool-block">
-      <p class="hint">טופס אחרי חשיפה — ממלאים <b>אחרי</b> החשיפה, כדי לעגן את הלמידה החדשה.</p>
+      <p class="hint">טופס אחרי חשיפה — ${G("בחר", "בחרי")} על איזו חשיפה מדובר, וממלאים כדי לעגן את הלמידה החדשה.</p>
+      <div class="exp-picker">
+        <div class="prior-t">על איזו חשיפה מדובר?</div>
+        <div class="chip-row">${items.map((it, i) => `<button type="button" class="chip after-sel ${i === sel ? "on" : ""}" data-i="${i}">${esc(expLabel(it, i))}${it.done ? " ✓" : ""}</button>`).join("")}</div>
+      </div>
+
+      <div class="exp-focus">🎯 חשיפה: <b>${esc(expLabel(d, sel))}</b>${d.day ? ` · ${esc(d.day)}${d.time ? " " + esc(d.time) : ""}` : ""}</div>
+
       ${f("goalsAchieved", "האם השגת את היעדים ההתנהגותיים שכתבת בהכנה לחשיפה?", "...")}
       <div class="prep-challenge">
         <div class="prep-ch-title">🔍 בדיקה של מחשבות אוטומטיות בפועל</div>
@@ -3116,14 +3185,17 @@ function w7After() {
         ${f("unexpected", "האם היו מחשבות בלתי צפויות — ומה עשית איתן?", "...")}
       </div>
       ${f("learned", "מה למדת?", "הלמידה החדשה מהחוויה הזאת...")}
+      <label class="after-done-row"><input type="checkbox" id="afterDone" ${d.done ? "checked" : ""}> ✅ סימנתי — עשיתי את החשיפה הזאת</label>
       ${afterEmoWidget()}
       <button class="btn" id="saveAfterForm">שמירה + טעינת האווטר</button>
     </div>`;
 }
-function collectAfterForm() {
-  const d = {};
-  app.querySelectorAll("#w7body .afterf").forEach(el => d[el.dataset.f] = el.value.trim());
-  return d;
+// אוסף את שדות "אחרי" של החשיפה הנבחרת אל תוך רשימת החשיפות
+function collectAfterInto(items, sel) {
+  const it = { ...(items[sel] || newExpItem()) };
+  app.querySelectorAll("#w7body .afterf").forEach(el => it[el.dataset.f] = el.value.trim());
+  it.done = !!app.querySelector("#afterDone")?.checked;
+  const copy = items.slice(); copy[sel] = it; return copy;
 }
 
 // --- כללים + הכנה ---
@@ -3240,29 +3312,36 @@ function collectLadder() {
   return { emotion, rungs };
 }
 
-// --- יומן חשיפות שבועי (יום · שעה · החשיפה) + תזכורת ליומן ---
+// --- יומן חשיפות — משבצים ליום ושעה את החשיפות שכבר הוכנו ---
 function w7Journal() {
   const st = S.getState();
-  const plan = S.getToolData(7, "exposurePlan") || {};
-  const table = WEEK_DAYS.map(day => {
-    const cell = plan[day];
-    const activity = cell ? (typeof cell === "string" ? cell : (cell.activity || "")) : "";
-    const time = cell && typeof cell === "object" ? (cell.time || "") : "";
+  const items = getExpItems();
+  if (!items.length) {
     return `
-    <div class="day-row exp-day-row" data-day="${day}">
-      <div class="day-name">${day}</div>
-      <input class="inp exp-day-time" type="time" value="${esc(time)}" aria-label="שעה ל${day}">
-      <input class="inp exp-day-input" value="${esc(activity)}" placeholder="החשיפה שאתרגל ביום זה...">
+    <div class="tool-block">
+      <p class="hint">כאן משבצים ליומן את החשיפות. ${G("הכן", "הכיני")} קודם חשיפה בטאב <b>"הכנה לחשיפה"</b> —
+        וכל חשיפה שהוכנה תופיע כאן לקביעת יום ושעה.</p>
     </div>`;
-  }).join("");
+  }
+  const rows = items.map((it, i) => `
+    <div class="exp-sched-row" data-i="${i}">
+      <div class="exp-sched-fear">🎯 ${esc(expLabel(it, i))}</div>
+      <div class="exp-sched-when">
+        <select class="inp exp-day-sel" aria-label="יום">
+          <option value="">יום…</option>
+          ${WEEK_DAYS.map(dd => `<option value="${dd}" ${it.day === dd ? "selected" : ""}>${dd}</option>`).join("")}
+        </select>
+        <input class="inp exp-time-sel" type="time" value="${esc(it.time || "")}" aria-label="שעה">
+      </div>
+    </div>`).join("");
 
   return `
     <div class="tool-block">
-      <p class="hint">שבץ את החשיפות שתתרגל השבוע — יום, שעה והחשיפה עצמה. תרגול קבוע וחוזר הוא מה שמלמד
-        את הגוף שהפחד עולה וחולף. אפשר לקחת דרגות מ<b>סולם הפחדים</b> או להתייעץ עם <b>יועץ החשיפות</b>.</p>
+      <p class="hint">שבץ את החשיפות שכבר הכנת — לכל אחת ${G("קבע", "קבעי")} בצד <b>יום ושעה</b>. תרגול קבוע וחוזר
+        הוא מה שמלמד את הגוף שהפחד עולה וחולף.</p>
 
-      <h4>יומן החשיפות השבועי שלי</h4>
-      <div class="week-table">${table}</div>
+      <h4>יומן החשיפות שלי</h4>
+      <div class="exp-sched-list">${rows}</div>
 
       <div class="activation-actions">
         <button class="btn" id="saveExpPlan">שמירה + טעינת האווטר</button>
@@ -3275,8 +3354,8 @@ function w7Journal() {
           שום דבר לא נשלח; אתה מאשר בעצמך את השמירה ביומן.</p>
 
         <div class="gcal-block">
-          <div class="mini-label">📅 הוספה ישירה ליומן Google — לחיצה לכל יום:</div>
-          ${expGcalLinks(plan)}
+          <div class="mini-label">📅 הוספה ישירה ליומן Google — לחיצה לכל חשיפה:</div>
+          ${expGcalLinks(items)}
         </div>
 
         <div class="ics-block">
@@ -3291,42 +3370,30 @@ function w7Journal() {
     </div>`;
 }
 
-// קישורי Google לכל יום עם חשיפה
-function expGcalLinks(plan) {
-  const items = WEEK_DAYS.filter(day => {
-    const c = plan[day];
-    return c && (typeof c === "string" ? c : c.activity);
-  });
-  if (!items.length) return `<p class="subtle">מלא ושמור חשיפות בטבלה כדי לקבל קישורים ליומן Google.</p>`;
-  return `<div class="chip-row">` + items.map(day => {
-    const c = plan[day];
-    const activity = typeof c === "string" ? c : c.activity;
-    const time = typeof c === "object" ? (c.time || "") : "";
-    return `<button class="chip gcal-link exp-gcal-link" data-gday="${day}">➕ ${day}${time ? " " + esc(time) : ""} · ${esc(activity)}</button>`;
-  }).join("") + `</div>`;
+// קישורי Google לכל חשיפה שנקבע לה יום
+function expGcalLinks(items) {
+  const scheduled = items.filter(it => it.day && (it.fear || "").trim());
+  if (!scheduled.length) return `<p class="subtle">${'קבע יום לחשיפה כדי לקבל קישור ליומן Google.'}</p>`;
+  return `<div class="chip-row">` + items.map((it, i) => it.day ? `<button class="chip gcal-link exp-gcal-link" data-gi="${i}">➕ ${esc(it.day)}${it.time ? " " + esc(it.time) : ""} · ${esc(expLabel(it, i))}</button>` : "").join("") + `</div>`;
 }
 
-function collectExpPlan() {
-  const plan = {};
-  app.querySelectorAll(".exp-day-row").forEach(row => {
-    const day = row.dataset.day;
-    const activity = row.querySelector(".exp-day-input")?.value.trim();
-    const time = row.querySelector(".exp-day-time")?.value || "";
-    if (activity) plan[day] = { time, activity };
+// אוסף את היום/שעה מהיומן חזרה לתוך רשימת החשיפות
+function collectExpSchedule(items) {
+  const copy = items.slice();
+  app.querySelectorAll(".exp-sched-row").forEach(row => {
+    const i = Number(row.dataset.i);
+    if (!copy[i]) return;
+    copy[i] = { ...copy[i], day: row.querySelector(".exp-day-sel")?.value || "", time: row.querySelector(".exp-time-sel")?.value || "" };
   });
-  return plan;
+  return copy;
 }
 
 function openExpJournalPrint() {
   const st = S.getState();
-  const plan = S.getToolData(7, "exposurePlan") || {};
+  const items = getExpItems();
   const today = new Date().toLocaleDateString("he-IL");
-  const rows = WEEK_DAYS.map(day => {
-    const cell = plan[day];
-    const activity = cell ? (typeof cell === "string" ? cell : (cell.activity || "")) : "";
-    const time = cell && typeof cell === "object" ? (cell.time || "") : "";
-    return `<tr><td class="d">${day}</td><td class="t">${esc(time)}</td><td>${esc(activity)}</td><td class="c"></td></tr>`;
-  }).join("");
+  const rows = items.map((it, i) =>
+    `<tr><td class="d">${esc(it.day || "")}</td><td class="t">${esc(it.time || "")}</td><td>${esc(expLabel(it, i))}</td><td class="c">${it.done ? "✓" : ""}</td></tr>`).join("");
 
   const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
     <title>יומן חשיפות שבועי — שבוע 7</title>
@@ -3411,18 +3478,37 @@ function mountWeek7Handlers() {
   app.querySelectorAll("[data-w7tab]").forEach(b =>
     b.addEventListener("click", () => { stashWeek7Drafts(); week7Tab = b.dataset.w7tab; renderChapter(7); }));
 
-  // טופס הכנה לחשיפה
+  // טופס הכנה לחשיפה — בחירת פחד מהסולם, כמה הכנות
   app.querySelectorAll(".prep-emo").forEach(b => b.addEventListener("click", () => b.classList.toggle("on")));
+  app.querySelectorAll(".prep-add").forEach(b => b.addEventListener("click", () => {
+    const items = getExpItems();
+    items.push(newExpItem(b.dataset.fear));
+    week7PrepSel = items.length - 1;
+    setExpItems(items); S.logActivity("exercise", "הכנה לחשיפה"); renderChapter(7);
+  }));
+  app.querySelectorAll(".prep-sel").forEach(b => b.addEventListener("click", () => {
+    setExpItems(collectPrepInto(getExpItems(), week7PrepSel));   // שמור לפני מעבר
+    week7PrepSel = Number(b.dataset.i); renderChapter(7);
+  }));
+  const pdi = app.querySelector("#prepDelItem");
+  if (pdi) pdi.addEventListener("click", () => {
+    const items = getExpItems(); items.splice(Number(pdi.dataset.i), 1);
+    week7PrepSel = 0; setExpItems(items); renderChapter(7);
+  });
   const spf = app.querySelector("#savePrepForm");
   if (spf) spf.addEventListener("click", () => {
-    S.setToolData(7, "prepForm", collectPrepForm());
+    setExpItems(collectPrepInto(getExpItems(), week7PrepSel));
     S.logActivity("exercise", "הכנה לחשיפה");
-    toast("נשמר ✓");
+    toast("נשמר ✓ — החשיפה תופיע ביומן ובאחרי חשיפה");
   });
-  // טופס אחרי חשיפה
+  // טופס אחרי חשיפה — בחירת החשיפה
+  app.querySelectorAll(".after-sel").forEach(b => b.addEventListener("click", () => {
+    setExpItems(collectAfterInto(getExpItems(), week7AfterSel));
+    week7AfterSel = Number(b.dataset.i); renderChapter(7);
+  }));
   const saf = app.querySelector("#saveAfterForm");
   if (saf) saf.addEventListener("click", () => {
-    S.setToolData(7, "afterForm", collectAfterForm());
+    setExpItems(collectAfterInto(getExpItems(), week7AfterSel));
     S.logActivity("exposure", "אחרי חשיפה — למידה");
     toast("נשמר ✓");
   });
@@ -3535,45 +3621,45 @@ function mountWeek7Handlers() {
   const pl = app.querySelector("#pdfLadder");
   if (pl) pl.addEventListener("click", () => { S.setToolData(7, "ladder", collectLadder()); openLadderPrint(collectLadder()); });
 
-  // יומן חשיפות
+  // יומן חשיפות — יום/שעה לכל חשיפה
+  app.querySelectorAll(".exp-day-sel, .exp-time-sel").forEach(inp =>
+    inp.addEventListener("change", () => setExpItems(collectExpSchedule(getExpItems()))));
   const sep = app.querySelector("#saveExpPlan");
   if (sep) sep.addEventListener("click", () => {
-    S.setToolData(7, "exposurePlan", collectExpPlan());
+    setExpItems(collectExpSchedule(getExpItems()));
     S.logActivity("exposure", "יומן חשיפות");
     toast("היומן נשמר ✓");
     renderChapter(7);
   });
   const pep = app.querySelector("#pdfExpPlan");
-  if (pep) pep.addEventListener("click", () => { S.setToolData(7, "exposurePlan", collectExpPlan()); openExpJournalPrint(); });
+  if (pep) pep.addEventListener("click", () => { setExpItems(collectExpSchedule(getExpItems())); openExpJournalPrint(); });
 
-  // הוספה ישירה ליומן Google לכל יום חשיפה
+  // הוספה ישירה ליומן Google לכל חשיפה
   app.querySelectorAll(".exp-gcal-link").forEach(b =>
     b.addEventListener("click", () => {
-      const day = b.dataset.gday;
-      const row = [...app.querySelectorAll(".exp-day-row")].find(r => r.dataset.day === day);
-      const activity = row?.querySelector(".exp-day-input")?.value.trim();
-      const time = row?.querySelector(".exp-day-time")?.value || "09:00";
-      if (!activity) return toast("אין חשיפה ליום זה");
-      S.setToolData(7, "exposurePlan", collectExpPlan());
-      window.open(googleEventUrl({ day, time: time || "09:00", activity, label: "חשיפה" }), "_blank", "noopener");
-      toast(`נפתח יומן Google ליום ${day} — אשר את השמירה ✓`);
+      const items = collectExpSchedule(getExpItems());
+      const it = items[Number(b.dataset.gi)];
+      if (!it || !it.day) return toast("קבע יום לחשיפה זו");
+      setExpItems(items);
+      window.open(googleEventUrl({ day: it.day, time: it.time || "09:00", activity: expLabel(it, Number(b.dataset.gi)), label: "חשיפה" }), "_blank", "noopener");
+      toast(`נפתח יומן Google ל${it.day} — אשר את השמירה ✓`);
     }));
 
-  // חיבור כל שבוע החשיפות ליומן דרך מייל
+  // חיבור כל החשיפות ליומן דרך מייל
   const validEmail7 = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
   const ecw = app.querySelector("#expCalWeek");
   if (ecw) ecw.addEventListener("click", () => {
     const email = (app.querySelector("#expCalEmail")?.value || "").trim();
     if (!validEmail7(email)) return toast("הזן כתובת מייל תקינה");
-    const plan = collectExpPlan();
-    const events = Object.entries(plan).map(([day, v]) => ({
-      day, time: v.time || "09:00", activity: v.activity,
+    const items = collectExpSchedule(getExpItems());
+    const events = items.filter(it => it.day).map((it, idx) => ({
+      day: it.day, time: it.time || "09:00", activity: expLabel(it, items.indexOf(it)),
     }));
-    if (!events.length) return toast("הוסף לפחות חשיפה אחת לטבלה");
-    S.setToolData(7, "exposurePlan", plan);
+    if (!events.length) return toast("קבע יום לפחות לחשיפה אחת");
+    setExpItems(items);
     S.setReminders({ email, enabled: true });
     downloadWeeklyICS({ events, email, label: "חשיפה" });
-    toast(`קובץ עם ${events.length} ימים ירד — פתח אותו כדי להוסיף ליומן ✓`);
+    toast(`קובץ עם ${events.length} חשיפות ירד — פתח אותו כדי להוסיף ליומן ✓`);
     renderChapter(7);
   });
 
@@ -3592,10 +3678,10 @@ function stashWeek7Drafts() {
     S.setToolData(7, "prep", data);
   }
   if (app.querySelectorAll("#rungs .rung").length) S.setToolData(7, "ladder", collectLadder());
-  if (app.querySelectorAll(".exp-day-row").length) S.setToolData(7, "exposurePlan", collectExpPlan());
+  if (app.querySelectorAll(".exp-sched-row").length) setExpItems(collectExpSchedule(getExpItems()));
   if (app.querySelectorAll(".exp-row").length) S.setToolData(4, "exposures", collectExposures());
-  if (app.querySelector("#w7body .prepf")) S.setToolData(7, "prepForm", collectPrepForm());
-  if (app.querySelector("#w7body .afterf")) S.setToolData(7, "afterForm", collectAfterForm());
+  if (app.querySelector("#w7body .prepf")) setExpItems(collectPrepInto(getExpItems(), week7PrepSel));
+  if (app.querySelector("#w7body .afterf")) setExpItems(collectAfterInto(getExpItems(), week7AfterSel));
 }
 
 function openLadderPrint(L) {
