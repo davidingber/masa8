@@ -93,7 +93,10 @@ export function buildPartsMap(S) {
   Object.values(td(1, "activityPlan") || {}).forEach(v => add(resource, "behavior", "פעילות מהנה", v && v.activity, 1));
   (td(8, "values") || []).forEach(v => add(resource, "behavior", "ערך מנחה", v, 8));
   add(resource, "behavior", "מה החלק צריך", (td(5, "focusing") || {}).needs, 5);
-  Object.values(td(5, "burden") || {}).forEach(v => add(resource, "behavior", "הסרת העול", v, 5));
+  Object.values(td(5, "burden") || {}).forEach(v => {
+    const t = (v || "").trim();
+    if (t) add(resource, "behavior", "הסרת העול", "להרפות מ" + t, 5);
+  });
   add(resource, "behavior", "משאב חסר", beliefTool.resources, 6);
   // האזנה למדיטציות — כמספר האזנות שנרשמו
   const medListens = (st.activities || []).filter(a => a.type === "meditation").length;
