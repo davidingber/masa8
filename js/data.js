@@ -321,6 +321,7 @@ export const GOAL_TOOL = {
           options: ["מפגשים חברתיים", "יציאה או התרחקות מהבית", "בדיקות רפואיות חוזרות", "זהירות יתר", "דחיינות", "בריחה ממצבים מעוררי חרדה"] },
         { key: "cur_avoid_detail", type: "area", label: "פירוט ההימנעות — ממה, ובאילו מצבים?", ph: "תאר בחופשיות..." },
         { key: "cur_distress_int", type: "rating", label: "עוצמת המצוקה הכוללת עכשיו (1–10)" },
+        { key: "dickens_stay", type: "dickens-stay", label: "מחיר ההישארות — אם לא אעשה שינוי" },
       ],
     },
     {

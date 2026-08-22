@@ -831,6 +831,18 @@ body{font-size:15.5px;line-height:1.5}
 [data-theme="dark"] .part-info.manager{background:#1f242a;border-color:#333c45}
 [data-theme="dark"] .part-info.fire{background:#2a1f1c;border-color:#4a352f}
 
+/* רצף — "מה שכבר כתבת" קופץ כאופציה */
+.prior-block{background:#f3ede1;border:1px dashed #e0d4bd;border-radius:11px;padding:9px 11px;margin:6px 0 8px}
+.prior-t{font-size:11px;font-weight:800;color:#8a6b46;margin-bottom:6px}
+[data-theme="dark"] .prior-block{background:#241f16;border-color:#48412f}
+[data-theme="dark"] .prior-t{color:#d8b98a}
+
+/* דיקנס — מחיר ההישארות (בתוך הגדרת המטרה) */
+.dickens-block{background:#f4f1ea;border:1px solid var(--line);border-radius:13px;padding:11px 12px;margin:8px 0 10px}
+.dickens-title{font-weight:800;font-size:13px;color:#8a6b46;margin-bottom:8px}
+[data-theme="dark"] .dickens-block{background:#241f16;border-color:#48412f}
+[data-theme="dark"] .dickens-title{color:#d8b98a}
+
 /* דוגמאות מקובצות לפי סוג חרדה */
 .ex-group{margin-bottom:8px}
 .ex-group-t{display:block;font-size:10px;font-weight:800;color:var(--gold);margin:4px 0 4px}

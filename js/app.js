@@ -173,6 +173,32 @@ function bindAfterEmo() {
   });
 }
 
+// רצף — מה שכבר נכתב קופץ כאופציה בכל מקום רלוונטי
+function priorTexts(cat) {
+  const m = buildPartsMap(S);
+  const src = cat === "thought" ? m.pain.thought
+    : cat === "avoid" ? m.pain.avoid
+    : cat === "over" ? m.pain.over
+    : cat === "emotion" ? m.pain.emotion
+    : cat === "behavior" ? [...m.pain.over, ...m.pain.avoid]
+    : [];
+  return [...new Set(src.map(it => it.text).filter(Boolean))];
+}
+function priorChips(cat, targetSel, title) {
+  const list = priorTexts(cat);
+  if (!list.length) return "";
+  return `<div class="prior-block"><div class="prior-t">${esc(title || "מה שכבר כתבת — לחיצה להוספה:")}</div>
+    <div class="chip-row">${list.map(t => `<button type="button" class="chip mini prior-chip" data-target="${esc(targetSel)}" data-x="${esc(t)}">${esc(t.length > 30 ? t.slice(0, 30) + "…" : t)}</button>`).join("")}</div></div>`;
+}
+function bindPriorChips() {
+  app.querySelectorAll(".prior-chip").forEach(b => b.addEventListener("click", () => {
+    const t = app.querySelector(b.dataset.target);
+    if (!t) return;
+    t.value = (t.value.trim() ? t.value.trim() + "\n" : "") + b.dataset.x;
+    t.focus();
+  }));
+}
+
 function renderSelf() {
   const m = buildPartsMap(S);
   app.innerHTML = `
@@ -237,6 +263,22 @@ function goalField(f, plan) {
       <p class="hint">הדמות המיטיבה שתלווה אותך ותנהיג בחמלה — ${G("תן", "תני")} לה שם (למשל: המבוגר החכם, ההורה הטוב, הגרסה הבוגרת שלי).</p>
       <input class="inp goal-ideal" id="idealName" value="${esc(st.idealName || "")}" placeholder="שם הדמות האידיאלית...">
       ${st.idealName ? `<p class="target-line">🌱 ההורה המיטיב שלי: <b>${esc(st.idealName)}</b></p>` : ""}</div>`;
+  }
+  if (f.type === "dickens-stay") {
+    const g = k => esc(plan[k] || "");
+    const block = (prefix, title) => `
+      <div class="dickens-block">
+        <div class="dickens-title">💭 ${title}</div>
+        <label class="mini-label">מה אני רואה?</label><textarea class="ta goal-input" data-k="${prefix}_see" data-t="area" placeholder="התמונה שאני רואה...">${g(prefix + "_see")}</textarea>
+        <label class="mini-label">מה אני שומע/ת?</label><textarea class="ta goal-input" data-k="${prefix}_hear" data-t="area" placeholder="מה נאמר, מה נשמע...">${g(prefix + "_hear")}</textarea>
+        <label class="mini-label">מה אני מרגיש/ה?</label><textarea class="ta goal-input" data-k="${prefix}_feel" data-t="area" placeholder="בגוף וברגש...">${g(prefix + "_feel")}</textarea>
+        <label class="mini-label">מה קורה עם הסובבים אליי?</label><textarea class="ta goal-input" data-k="${prefix}_around" data-t="area" placeholder="בני משפחה, יחסים, עבודה...">${g(prefix + "_around")}</textarea>
+      </div>`;
+    return `<div class="goal-field">
+      <label class="mini-label">${esc(f.label)}</label>
+      <p class="hint">אם לא אעשה את השינוי — לאן זה מוביל? ${G("דמיין", "דמייני")} בבירור.</p>
+      ${block("stay5", "בעוד 5 שנים")}
+      ${block("stay10", "בעוד עשור")}</div>`;
   }
   if (f.type === "emotion-start") {
     const st = S.getState();
@@ -342,6 +384,10 @@ function openGoalPrint(plan) {
       else if (f.type === "emotion-start") a = st.emotion.name
         ? st.emotion.name + (st.emotion.ratings.length ? ` (עוצמה ${st.emotion.ratings[st.emotion.ratings.length - 1].value}/10)` : "") : "";
       else if (f.type === "emotion-alt") a = st.emotion.target || "";
+      else if (f.type === "dickens-stay") a = [
+        plan.stay5_feel && ("בעוד 5 שנים: " + plan.stay5_feel),
+        plan.stay10_feel && ("בעוד עשור: " + plan.stay10_feel),
+      ].filter(Boolean).join("\n");
       if (Array.isArray(a)) a = a.join(", ");
       if (f.type === "rating" && a) a = a + "/10";
       return `<div class="q"><div class="ql">${esc(f.label)}</div><div class="qa">${esc(a || "").replace(/\n/g, "<br>") || "&nbsp;"}</div></div>`;
@@ -1133,7 +1179,6 @@ const W1_TABS = [
   { id: "parts",      label: "החלקים בנפש" },
   { id: "goal",       label: "הגדרת המטרה" },
   { id: "calm",       label: "סריקה ורגיעה" },
-  { id: "dickens",    label: "תרגיל דיקנס" },
   { id: "activation", label: "יומן פעילות" },
 ];
 
@@ -1144,7 +1189,6 @@ function toolWeek1(c) {
   if (week1Tab === "parts") body = w1Parts();
   if (week1Tab === "goal") body = w1Goal();
   if (week1Tab === "calm") body = w1Calm();
-  if (week1Tab === "dickens") body = w1Dickens();
   if (week1Tab === "activation") body = w1Activation();
   return tabs + `<div id="w1body">${body}</div>`;
 }
@@ -1642,6 +1686,7 @@ function w3Defusion() {
       <div class="def-tech">
         <h5>1️⃣ גוף שלישי</h5>
         <p class="hint">נסח את המחשבה בגוף שלישי — זה יוצר מרחק. למשל: "המוח שלי העלה מחשבה שאומרת ש…"</p>
+        ${priorChips("thought", "#thirdPerson", "המחשבות שכתבת — לחיצה להוספה, ואז להפוך לגוף שלישי:")}
         <textarea class="ta" id="thirdPerson" placeholder="המוח שלי העלה מחשבה שאומרת ש...">${esc(third)}</textarea>
         <button class="btn" id="saveThird">שמירה + טעינת האווטר</button>
       </div>
@@ -1718,6 +1763,7 @@ function playThoughtAnim(stageId, inputId, animClass, emptyMsg) {
 }
 
 function mountWeek3Handlers() {
+  bindPriorChips();
   app.querySelectorAll("[data-w3tab]").forEach(b =>
     b.addEventListener("click", () => { stashWeek3Drafts(); week3Tab = b.dataset.w3tab; renderChapter(3); }));
 
@@ -2254,6 +2300,7 @@ function w5Beliefs() {
 
       <div class="bs-now">
         <div class="bs-h">🌰 מה האמונה או המחשבה שלי</div>
+        ${priorChips("thought", ".bs-field[data-b=belief]", "המחשבות/אמונות שכתבת — לחיצה לעבודה עליהן:")}
         ${f("belief", "האמונה / המחשבה", "למשל: אנשים תמיד ידחו אותי")}
         ${f("emotion", "ומה הרגש שעולה?", "בושה, חרדה, עצב...")}
         <label class="mini-label">📊 עוצמת הרגש עכשיו (0–10)</label>
@@ -2399,6 +2446,7 @@ function mountWeek5Handlers() {
     b.addEventListener("click", () => { stashWeek5Drafts(); week5Tab = b.dataset.w5tab; renderChapter(6); }));
 
   bindAfterEmo();
+  bindPriorChips();
   // החלפת אמונות
   app.querySelectorAll(".bs-range").forEach(r =>
     r.addEventListener("input", () => { const s = r.nextElementSibling; if (s) s.textContent = r.value; }));
@@ -2931,6 +2979,7 @@ function w7Prep() {
   return `
     <div class="tool-block">
       <p class="hint">טופס הכנה לחשיפה — ממלאים <b>לפני</b> החשיפה. תכנון טוב מפחית הפתעות ומחזק את ההנהגה העצמית.</p>
+      ${priorChips("behavior", ".prepf[data-f=situation]", "הימנעויות ועשיית-יתר שכתבת — לחיצה לבחירת מוקד חשיפה:")}
       ${f("situation", "מצב שיש להיחשף אליו", "תאר את הסיטואציה שאליה תיחשף...")}
       ${f("autoThoughts", "מחשבות אוטומטיות שעולות בראשך לגבי המצב", "מה המוח אומר על המצב...")}
       <label class="mini-label">רגשות שאתה מניח שתרגיש בזמן האירוע</label>
@@ -3265,6 +3314,7 @@ async function sendExpMsg() {
 
 function mountWeek7Handlers() {
   bindAfterEmo();
+  bindPriorChips();
   app.querySelectorAll("[data-w7part]").forEach(b =>
     b.addEventListener("click", () => {
       stashWeek7Drafts(); week7Part = b.dataset.w7part;

@@ -62,6 +62,9 @@ export function buildPartsMap(S) {
   (goal.cur_avoid || []).forEach(a => add(pain, "avoid", "הימנעות", a, 1));
   add(pain, "avoid", "הימנעות", goal.cur_avoid_detail, 1);
   add(pain, "avoid", "הימנעות", selfMap.avoidance, 2);
+  // מחיר ההישארות (דיקנס — בתוך הגדרת המטרה)
+  add(pain, "thought", "מחיר ההישארות", goal.stay5_feel, 1);
+  add(pain, "thought", "מחיר ההישארות", goal.stay10_feel, 1);
   // חשיפה — פחד ומחשבות לפני
   const prep = td(7, "prepForm") || {};
   (prep.emotions || []).forEach(e => add(pain, "emotion", "פחד בחשיפה", e, 7));
