@@ -432,6 +432,12 @@ body{min-height:100vh}
   font-weight:800;display:grid;place-items:center;font-size:13px}
 .rung-desc{margin-bottom:0;flex:1;min-width:0}
 .rung-del{flex-shrink:0;background:none;border:none;color:var(--accent);cursor:pointer;font-size:14px}
+.rung-simple .rung-head{margin-bottom:0}
+.rung-move{display:flex;flex-direction:column;gap:1px;flex-shrink:0}
+.rung-move button{background:none;border:1px solid var(--line);border-radius:6px;color:var(--teal);cursor:pointer;
+  font-size:10px;line-height:1;padding:2px 5px}
+.rung-move button:disabled{opacity:.3;cursor:default}
+.rung-move button:not(:disabled):hover{background:var(--sage)}
 .rung-scores{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
 .rung-scores label{font-size:11.5px;color:var(--subtle);font-weight:700;display:flex;flex-direction:column;gap:3px}
 .rung-score{width:64px;border:1px solid var(--line);border-radius:8px;padding:6px;font:inherit;text-align:center}
@@ -856,6 +862,21 @@ body{font-size:15.5px;line-height:1.5}
 /* עוגן רגשי — "איך הרגש עכשיו?" */
 .after-emo{background:#eef3ec;border:1px solid #dbe7dd;border-radius:12px;padding:11px 13px;margin:14px 0}
 [data-theme="dark"] .after-emo{background:#20281f;border-color:#33402d}
+
+/* דירוג ממורכז (רגש חלופי / חמלה עצמית) */
+.mini-label.center{text-align:center}
+.rating-center{max-width:320px;margin:0 auto 10px}
+.center-btn{display:block;margin:0 auto}
+.alt-pos-rate{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);text-align:center}
+
+/* מה אני מרגיש/ה עכשיו — תחושות חיוביות אחרי רגיעה */
+.calm-sense{background:#eef3f2;border:1px solid #d7e6e2;border-radius:12px;padding:12px 13px;margin:14px 0;text-align:center}
+[data-theme="dark"] .calm-sense{background:#1c2622;border-color:#2f4139}
+.calm-sense .chip-row.center-row{justify-content:center}
+.cs-chip.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.cs-other-row{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:9px;max-width:340px;margin-inline:auto}
+.cs-other-row .cs-other-inp{flex:1}
+.cs-other-row .btn{white-space:nowrap;padding:8px 14px}
 
 /* כלי החלפת אמונות (שבוע 6) */
 .bs-now{background:#eef1f4;border:1px solid #dfe4e9;border-radius:13px;padding:12px 13px;margin-bottom:8px}

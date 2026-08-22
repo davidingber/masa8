@@ -26,6 +26,7 @@ const DEFAULT_STATE = {
   theme: "light",                     // "light" | "dark"
   badgesSeen: [],                     // מזהי מדליות שכבר נחגגו
   adminPin: "",                       // קוד מנחה לנעילת מסך הניהול (ריק = פתוח)
+  senseNow: [],                       // תחושות גוף חיוביות שנבחרו אחרי רגיעה — מוזן למשאב בדשבורד
   createdAt: null,
 };
 
@@ -151,6 +152,16 @@ export function setEmotion(name) {
 export function logPositiveRating(value) {
   state.emotion.posRatings = state.emotion.posRatings || [];
   state.emotion.posRatings.push({ date: new Date().toISOString(), value: Number(value) });
+  save();
+}
+
+// תחושה חיובית שנבחרה אחרי רגיעה/מדיטציה — נשמרת (בלי כפילות) ומוזנת לתחושות ההורה המיטיב
+export function toggleSenseNow(name) {
+  const t = (name || "").trim();
+  if (!t) return;
+  state.senseNow = state.senseNow || [];
+  const i = state.senseNow.indexOf(t);
+  if (i === -1) state.senseNow.push(t); else state.senseNow.splice(i, 1);
   save();
 }
 

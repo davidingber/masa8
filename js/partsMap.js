@@ -98,9 +98,11 @@ export function buildPartsMap(S) {
   add(resource, "behavior", "מה החלק צריך", (td(5, "focusing") || {}).needs, 5);
   Object.values(td(5, "burden") || {}).forEach(v => {
     const t = (v || "").trim();
-    if (t) add(resource, "behavior", "הסרת העול", "להרפות מ" + t, 5);
+    if (t) add(resource, "behavior", "הסרת העול", t, 5);   // הטקסט הגולמי — הקטגוריה "הסרת העול" מוצגת מעל
   });
   add(resource, "behavior", "משאב חסר", beliefTool.resources, 6);
+  // תחושות חיוביות שנבחרו אחרי רגיעה/מדיטציה
+  (st.senseNow || []).forEach(s => add(resource, "sensation", "תחושה עכשיו", s, 4));
   // האזנה למדיטציות — כמספר האזנות שנרשמו
   const medListens = (st.activities || []).filter(a => a.type === "meditation").length;
   if (medListens) resource.behavior.push({ label: "מדיטציות", text: `האזנת ${medListens} פעמים`, week: 4 });

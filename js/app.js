@@ -159,8 +159,9 @@ function partsDashCards(m, opts = {}) {
         ${m.resource.belief ? `<div class="dblk"><div class="dblk-lbl">אמונת יסוד חדשה</div><div class="belief b-parent">${esc(m.resource.belief)}</div></div>` : ""}
         ${blk("מחשבות חדשות", m.resource.thought, "parent")}
         ${blk("רגש", m.resource.emotion, "parent")}
-        ${blk("תחושה", m.resource.sensation, "parent")}
-        ${blk("התנהגות מיטיבה", m.resource.behavior, "parent")}
+        ${blk("תחושות", m.resource.sensation, "parent")}
+        ${blk("התנהגות מיטיבה", m.resource.behavior.filter(it => it.label !== "הסרת העול"), "parent")}
+        ${blk("הסרת העול", m.resource.behavior.filter(it => it.label === "הסרת העול"), "parent")}
       </div>
     </div>`}`;
 }
@@ -191,6 +192,47 @@ function bindAfterEmo() {
     S.logEmotionRating(app.querySelector("#afterEmoRange").value);
     const pp = app.querySelector("#afterPosRange"); if (pp) S.logPositiveRating(pp.value);
     toast("הרגש עודכן ✓ — נכנס למגמה בדשבורד");
+  });
+}
+
+// "מה אני מרגיש/ה עכשיו?" אחרי רגיעה/מדיטציה — תחושה חיובית שנכנסת לתחושות ההורה המיטיב בדשבורד
+const CALM_SENSES = ["רוגע", "שלווה", "שמחה", "קלילות", "נשימה"];
+function calmSenseWidget() {
+  const st = S.getState();
+  const chosen = st.senseNow || [];
+  const all = [...CALM_SENSES, ...chosen.filter(c => !CALM_SENSES.includes(c))];
+  return `<div class="calm-sense">
+    <label class="mini-label center">🌿 מה אני ${G("מרגיש", "מרגישה")} עכשיו? — ${G("בחר", "בחרי")} תחושה שעולה (נכנסת לתחושות בדשבורד)</label>
+    <div class="chip-row center-row">
+      ${all.map(s => `<button type="button" class="chip cs-chip ${chosen.includes(s) ? "on" : ""}" data-cs="${esc(s)}">${esc(s)}</button>`).join("")}
+    </div>
+    <div class="cs-other-row center-row">
+      <input class="inp cs-other-inp" id="csOther" placeholder="אחר — תחושה שעולה..." maxlength="30">
+      <button type="button" class="btn ghost2" id="csOtherAdd">הוספה</button>
+    </div>
+  </div>`;
+}
+function bindCalmSense() {
+  const box = app.querySelector(".calm-sense");
+  if (!box) return;
+  const addChip = (v, row) => {
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "chip cs-chip on"; btn.dataset.cs = v; btn.textContent = v + " ✕";
+    btn.addEventListener("click", () => { S.toggleSenseNow(v); btn.remove(); });
+    row.appendChild(btn);
+  };
+  box.querySelectorAll(".cs-chip").forEach(b => b.addEventListener("click", () => {
+    S.toggleSenseNow(b.dataset.cs);
+    const on = (S.getState().senseNow || []).includes(b.dataset.cs);
+    if (!on && !CALM_SENSES.includes(b.dataset.cs)) { b.remove(); return; }
+    b.classList.toggle("on", on);
+  }));
+  const add = box.querySelector("#csOtherAdd"), inp = box.querySelector("#csOther");
+  if (add && inp) add.addEventListener("click", () => {
+    const v = inp.value.trim(); if (!v) return;
+    if (!(S.getState().senseNow || []).includes(v)) S.toggleSenseNow(v);
+    addChip(v, box.querySelector(".chip-row.center-row"));
+    inp.value = ""; toast("נוסף לתחושות בדשבורד ✓");
   });
 }
 
@@ -345,7 +387,19 @@ function goalField(f, plan) {
       <div class="chip-row">
         ${altPool.map(a => `<button type="button" class="chip alt ${st.emotion.target === a ? "on" : ""}" data-alt="${esc(a)}">${esc(a)}</button>`).join("")}
       </div>
-      ${st.emotion.target ? `<p class="target-line">🎯 היעד הרגשי שלי: <b>${esc(st.emotion.target)}</b></p>` : ""}</div>`;
+      ${st.emotion.target ? (() => {
+        const pr = st.emotion.posRatings || [];
+        const lp = pr.length ? pr[pr.length - 1].value : 3;
+        return `<p class="target-line">🎯 היעד הרגשי שלי: <b>${esc(st.emotion.target)}</b></p>
+        <div class="alt-pos-rate">
+          <label class="mini-label center">וכמה <b>${esc(st.emotion.target)}</b> ${G("נוכח", "נוכחת")} עכשיו? (0–10) — נקודת מוצא שתעלה במסע</label>
+          <div class="rating-row rating-center">
+            <input type="range" id="altPosRange" min="0" max="10" value="${lp}">
+            <span class="rate-val" id="altPosVal">${lp}</span></div>
+          <button type="button" class="btn ghost2 center-btn" id="altPosSave">שמירת הדירוג</button>
+          ${pr.length ? renderSparkline(pr) : ""}
+        </div>`;
+      })() : ""}</div>`;
   }
   if (f.type === "text") {
     return `<div class="goal-field"><label class="mini-label">${f.label}</label>
@@ -2014,6 +2068,7 @@ function w4Scan() {
         </div>
       </div>
 
+      ${calmSenseWidget()}
       ${afterEmoWidget()}
       <button class="btn" id="scanDone">סיימתי סריקה ונשימה ✓</button>
     </div>`;
@@ -2169,6 +2224,7 @@ function runGuidedSequence(displayId, phases, onDone) {
 // מטפל משותף לסריקת הגוף + הנשימה המונחית (בשימוש בשבוע 1 ובשבוע 4)
 function mountScanBreathHandlers() {
   bindAfterEmo();
+  bindCalmSense();
   const bt = app.querySelector("#breathToggle");
   if (bt) bt.addEventListener("click", () => {
     const circle = app.querySelector("#breathCircle");
@@ -2970,8 +3026,8 @@ let week7Tab = "rules";
 const W7_PARTS = [
   { id: "a", label: "חלק א · הכנה", tabs: [
     { id: "rules",    label: "כללים והכנה" },
-    { id: "prep",     label: "הכנה לחשיפה" },
     { id: "ladder",   label: "סולם פחדים" },
+    { id: "prep",     label: "הכנה לחשיפה" },
     { id: "imaginal", label: "חשיפה בדמיון" },
   ]},
   { id: "b", label: "חלק ב · ביצוע ומעקב", tabs: [
@@ -3056,7 +3112,7 @@ function w7After() {
       <div class="prep-challenge">
         <div class="prep-ch-title">🔍 בדיקה של מחשבות אוטומטיות בפועל</div>
         ${f("predicted", "האם המחשבות שצפית מראש אכן היו?", "...")}
-        ${f("helped", "עד כמה ההבניה הקוגניטיבית סייעה לך להתגבר עליהן?", "...")}
+        ${f("helped", "עד כמה העבודה על המחשבות עזרה לך?", "...")}
         ${f("unexpected", "האם היו מחשבות בלתי צפויות — ומה עשית איתן?", "...")}
       </div>
       ${f("learned", "מה למדת?", "הלמידה החדשה מהחוויה הזאת...")}
@@ -3120,7 +3176,11 @@ function w7Imaginal() {
 
 // --- סולם פחדים ---
 function w7Ladder() {
-  const L = S.getToolData(7, "ladder") || { emotion: "", rungs: [emptyRung()] };
+  let L = S.getToolData(7, "ladder");
+  if (!L) {   // בפעם הראשונה — טוענים אוטומטית את הפחדים/הימנעויות שהלקוח כבר כתב
+    const priors = priorTexts("behavior");
+    L = { emotion: "", rungs: priors.length ? priors.map(desc => ({ ...emptyRung(), desc })) : [emptyRung()] };
+  }
   const emoChips = EXPOSURE_EMOTIONS.map(e =>
     `<button class="chip ${L.emotion === e ? "on" : ""}" data-emo="${e}">${e}</button>`).join("");
   return `
@@ -3129,10 +3189,10 @@ function w7Ladder() {
       <div class="chip-row">${emoChips}</div>
 
       <h5 style="margin-top:14px">סולם הפחדים — מהקל אל הכבד</h5>
-      <p class="hint">דרג את הפעולות שאתה נמנע מהן, מהקל אל הכבד. המטרה אינה שהפחד ייעלם, אלא <b>למידה חדשה</b>:
-        "הפחד יכול להיות פה — ואני עדיין מתמודד". עולים דרגה כשנשארת, ויתרת על התנהגות ההצלה, ולמדת משהו חדש.</p>
+      <p class="hint">${G("דרג", "דרגי")} את מה שמפחיד אותך <b>מהקל אל הכבד</b> — ${G("סדר", "סדרי")} עם החיצים ▲▼,
+        ${G("והתחל", "והתחילי")} מהדרגה <b>הקלה ביותר</b>. הוספנו לך אוטומטית את מה שכבר כתבת — אפשר לערוך, למחוק או להוסיף.</p>
       ${priorRungChips()}
-      <div id="rungs">${L.rungs.map((r, i) => rungCard(r, i)).join("")}</div>
+      <div id="rungs">${L.rungs.map((r, i) => rungCard(r, i, L.rungs.length)).join("")}</div>
       <button class="btn ghost2 add-case" id="addRung">＋ הוספת דרגה</button>
 
       <div class="example-load">
@@ -3150,32 +3210,20 @@ function w7Ladder() {
     </div>`;
 }
 
-function emptyRung() { return { desc: "", predict: "", actual: "", learning: "", stayed: false, droppedSafety: false }; }
+function emptyRung() { return { desc: "" }; }
 
-function rungReady(r) { return !!r.stayed && !!r.droppedSafety && !!(r.learning && String(r.learning).trim()); }
-
-function rungCard(r, i) {
-  const ready = rungReady(r);
+function rungCard(r, i, total) {
   return `
-    <div class="rung" data-i="${i}">
+    <div class="rung rung-simple" data-i="${i}">
       <div class="rung-head">
         <span class="rung-num">${i + 1}</span>
-        <input class="inp rung-desc" data-f="desc" value="${esc(r.desc || "")}" placeholder="מה אני נמנע/מפחד ממנו">
-        <button class="rung-del" data-del="${i}">✕</button>
+        <input class="inp rung-desc" data-f="desc" value="${esc(r.desc || "")}" placeholder="מה מפחיד אותי / ממה אני נמנע">
+        <div class="rung-move">
+          <button type="button" class="rung-up" data-up="${i}" ${i === 0 ? "disabled" : ""} aria-label="למעלה">▲</button>
+          <button type="button" class="rung-down" data-down="${i}" ${i === total - 1 ? "disabled" : ""} aria-label="למטה">▼</button>
+        </div>
+        <button class="rung-del" data-del="${i}" aria-label="מחיקה">✕</button>
       </div>
-      <div class="rung-q">
-        <label class="mini-label">לפני — מה אני מפחד שיקרה?</label>
-        <textarea class="ta rung-ta" data-f="predict" placeholder="התרחיש שהמוח מנבא...">${esc(r.predict || "")}</textarea>
-        <label class="mini-label">אחרי — מה קרה בפועל?</label>
-        <textarea class="ta rung-ta" data-f="actual" placeholder="מה באמת קרה כשנשארתי...">${esc(r.actual || "")}</textarea>
-        <label class="mini-label">למידה — מה המוח שלי צריך לקחת מהחוויה הזאת?</label>
-        <textarea class="ta rung-ta" data-f="learning" placeholder="למשל: 'הפחד היה פה — ואני עדיין התמודדתי'">${esc(r.learning || "")}</textarea>
-      </div>
-      <div class="rung-checks">
-        <label class="rung-check"><input type="checkbox" data-f="stayed" ${r.stayed ? "checked" : ""}> נשארתי עד שהתחושה ירדה בעצמה</label>
-        <label class="rung-check"><input type="checkbox" data-f="droppedSafety" ${r.droppedSafety ? "checked" : ""}> ויתרתי על התנהגות ההצלה הרגילה שלי</label>
-      </div>
-      <span class="rung-drop ${ready ? "ready" : ""}" data-i="${i}">${ready ? "למידה חדשה נרשמה ✓ אפשר לעלות דרגה" : "נשארתי · ויתרתי על הצלה · רשמתי מה למדתי"}</span>
     </div>`;
 }
 
@@ -3442,15 +3490,7 @@ function mountWeek7Handlers() {
     S.setToolData(7, "ladder", collectLadder());
   }));
   app.querySelectorAll("#rungs [data-f]").forEach(inp =>
-    inp.addEventListener(inp.type === "checkbox" ? "change" : "input", () => {
-      const rungEl = inp.closest(".rung");
-      const r = {}; rungEl.querySelectorAll("[data-f]").forEach(x => r[x.dataset.f] = x.type === "checkbox" ? x.checked : x.value.trim());
-      const badge = rungEl.querySelector(".rung-drop");
-      const ready = rungReady(r);
-      badge.textContent = ready ? "למידה חדשה נרשמה ✓ אפשר לעלות דרגה" : "נשארתי · ויתרתי על הצלה · רשמתי מה למדתי";
-      badge.classList.toggle("ready", ready);
-      S.setToolData(7, "ladder", collectLadder());
-    }));
+    inp.addEventListener("input", () => S.setToolData(7, "ladder", collectLadder())));
   const ar = app.querySelector("#addRung");
   if (ar) ar.addEventListener("click", () => {
     const L = collectLadder(); L.rungs.push(emptyRung()); S.setToolData(7, "ladder", L); renderChapter(7);
@@ -3459,9 +3499,18 @@ function mountWeek7Handlers() {
   app.querySelectorAll(".prior-rung").forEach(b => b.addEventListener("click", () => {
     const L = collectLadder();
     if (L.rungs.some(r => r.desc === b.dataset.x)) return toast("כבר בסולם");
-    const empty = L.rungs.find(r => !r.desc && !r.predict && !r.actual && !r.learning);
+    const empty = L.rungs.find(r => !r.desc);
     if (empty) empty.desc = b.dataset.x; else L.rungs.push({ ...emptyRung(), desc: b.dataset.x });
     S.setToolData(7, "ladder", L); renderChapter(7);
+  }));
+  // דירוג מהקל אל הכבד — חיצים
+  app.querySelectorAll(".rung-up").forEach(b => b.addEventListener("click", () => {
+    const L = collectLadder(), i = Number(b.dataset.up);
+    if (i > 0) { [L.rungs[i - 1], L.rungs[i]] = [L.rungs[i], L.rungs[i - 1]]; S.setToolData(7, "ladder", L); renderChapter(7); }
+  }));
+  app.querySelectorAll(".rung-down").forEach(b => b.addEventListener("click", () => {
+    const L = collectLadder(), i = Number(b.dataset.down);
+    if (i < L.rungs.length - 1) { [L.rungs[i + 1], L.rungs[i]] = [L.rungs[i], L.rungs[i + 1]]; S.setToolData(7, "ladder", L); renderChapter(7); }
   }));
   app.querySelectorAll(".rung-del").forEach(b =>
     b.addEventListener("click", () => {
@@ -3481,9 +3530,6 @@ function mountWeek7Handlers() {
   if (sl) sl.addEventListener("click", () => {
     const L = collectLadder(); S.setToolData(7, "ladder", L);
     if (L.rungs.some(r => r.desc)) S.logActivity("exposure", "סולם פחדים");
-    // מדדי הנהגה — נספרים לפי מה שבחרתי לעשות, לא לפי ירידת הפחד
-    if (L.rungs.some(r => r.droppedSafety)) S.logActivity("exposure", "ויתרתי על התנהגות ביטחון");
-    if (L.rungs.some(r => rungReady(r))) S.logActivity("exposure", "פעלתי למרות פחד");
     toast("הסולם נשמר ✓"); renderChapter(7);
   });
   const pl = app.querySelector("#pdfLadder");
@@ -3555,10 +3601,8 @@ function stashWeek7Drafts() {
 function openLadderPrint(L) {
   const st = S.getState();
   const today = new Date().toLocaleDateString("he-IL");
-  const body = L.rungs.map((r, i) => {
-    const chk = (v) => v ? "✓" : "";
-    return `<tr><td class="n">${i + 1}</td><td>${esc(r.desc || "")}</td><td>${esc(r.predict || "")}</td><td>${esc(r.actual || "")}</td><td>${esc(r.learning || "")}</td><td class="c">${chk(r.stayed)}</td><td class="c">${chk(r.droppedSafety)}</td></tr>`;
-  }).join("");
+  const body = L.rungs.filter(r => (r.desc || "").trim()).map((r, i) =>
+    `<tr><td class="n">${i + 1}</td><td>${esc(r.desc || "")}</td></tr>`).join("");
   const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
     <title>סולם פחדים — שבוע 7</title>
     <style>
@@ -3575,7 +3619,7 @@ function openLadderPrint(L) {
     <h1>סולם פחדים</h1>
     <p class="sub">מסע 8 הזהויות · שבוע 7 — פעולה למרות פחד${L.emotion ? " · רגש: " + esc(L.emotion) : ""}</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
-    <table><thead><tr><th>#</th><th>הפעולה / הפחד</th><th>מה פחדתי שיקרה</th><th>מה קרה בפועל</th><th>מה למדתי</th><th>נשארתי</th><th>ויתרתי על הצלה</th></tr></thead><tbody>${body}</tbody></table>
+    <table><thead><tr><th>#</th><th>הפעולה / הפחד — מהקל אל הכבד</th></tr></thead><tbody>${body}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
     <script>setTimeout(()=>window.print(),400)<\/script>
     </body></html>`;
@@ -4127,6 +4171,10 @@ function mountWeek1Handlers() {
   if (rate) rate.addEventListener("input", () => app.querySelector("#rateVal").textContent = rate.value);
   const lr = app.querySelector("#logRate");
   if (lr) lr.addEventListener("click", () => { S.logEmotionRating(app.querySelector("#rate").value); renderChapter(1); });
+  const apr = app.querySelector("#altPosRange");
+  if (apr) apr.addEventListener("input", () => app.querySelector("#altPosVal").textContent = apr.value);
+  const aps = app.querySelector("#altPosSave");
+  if (aps) aps.addEventListener("click", () => { S.logPositiveRating(app.querySelector("#altPosRange").value); toast("נשמר ✓ — נכנס למגמת הרגש החיובי בדשבורד"); renderChapter(1); });
 
   // שם החלק + שם הדמות האידיאלית (בכלי הגדרת המטרה)
   app.querySelectorAll("[data-part]").forEach(b =>
