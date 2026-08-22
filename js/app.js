@@ -198,6 +198,13 @@ function bindPriorChips() {
     t.focus();
   }));
 }
+// רצף לסולם החשיפות — הימנעויות/עשיית-יתר שכבר נכתבו נטענות כדרגות
+function priorRungChips() {
+  const list = priorTexts("behavior");
+  if (!list.length) return "";
+  return `<div class="prior-block"><div class="prior-t">הימנעויות ועשיית-יתר שכתבת — לחיצה מוסיפה דרגה לסולם:</div>
+    <div class="chip-row">${list.map(t => `<button type="button" class="chip mini prior-rung" data-x="${esc(t)}">${esc(t.length > 30 ? t.slice(0, 30) + "…" : t)}</button>`).join("")}</div></div>`;
+}
 
 function renderSelf() {
   const m = buildPartsMap(S);
@@ -3097,6 +3104,7 @@ function w7Ladder() {
       <h5 style="margin-top:14px">סולם הפחדים — מהקל אל הכבד</h5>
       <p class="hint">דרג את הפעולות שאתה נמנע מהן, מהקל אל הכבד. המטרה אינה שהפחד ייעלם, אלא <b>למידה חדשה</b>:
         "הפחד יכול להיות פה — ואני עדיין מתמודד". עולים דרגה כשנשארת, ויתרת על התנהגות ההצלה, ולמדת משהו חדש.</p>
+      ${priorRungChips()}
       <div id="rungs">${L.rungs.map((r, i) => rungCard(r, i)).join("")}</div>
       <button class="btn ghost2 add-case" id="addRung">＋ הוספת דרגה</button>
 
@@ -3420,6 +3428,14 @@ function mountWeek7Handlers() {
   if (ar) ar.addEventListener("click", () => {
     const L = collectLadder(); L.rungs.push(emptyRung()); S.setToolData(7, "ladder", L); renderChapter(7);
   });
+  // הימנעויות/עשיית-יתר שכבר נכתבו — לחיצה מוסיפה דרגה לסולם
+  app.querySelectorAll(".prior-rung").forEach(b => b.addEventListener("click", () => {
+    const L = collectLadder();
+    if (L.rungs.some(r => r.desc === b.dataset.x)) return toast("כבר בסולם");
+    const empty = L.rungs.find(r => !r.desc && !r.predict && !r.actual && !r.learning);
+    if (empty) empty.desc = b.dataset.x; else L.rungs.push({ ...emptyRung(), desc: b.dataset.x });
+    S.setToolData(7, "ladder", L); renderChapter(7);
+  }));
   app.querySelectorAll(".rung-del").forEach(b =>
     b.addEventListener("click", () => {
       const L = collectLadder(); L.rungs.splice(Number(b.dataset.del), 1);
