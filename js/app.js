@@ -2206,6 +2206,8 @@ function w5Beliefs() {
         <div class="bs-h">🌰 מה האמונה או המחשבה שלי</div>
         ${f("belief", "האמונה / המחשבה", "למשל: אנשים תמיד ידחו אותי")}
         ${f("emotion", "ומה הרגש שעולה?", "בושה, חרדה, עצב...")}
+        <label class="mini-label">📊 עוצמת הרגש עכשיו (0–10)</label>
+        <div class="rating-row"><input type="range" class="bs-range" data-b="intBefore" min="0" max="10" value="${d.intBefore ?? 5}"><span class="rate-val bs-rv">${d.intBefore ?? 5}</span></div>
       </div>
 
       <div class="bs-arrow">↓ איך אוכל להאמין או לחשוב אחרת?</div>
@@ -2218,8 +2220,22 @@ function w5Beliefs() {
       <label class="mini-label" style="margin-top:12px">✨ האמונה החדשה שאני בוחר</label>
       <textarea class="ta bs-field" data-b="newBelief" placeholder="הניסוח החדש, המיטיב, בלשון הווה...">${esc(d.newBelief || "")}</textarea>
 
+      <div class="bs-after">
+        <label class="mini-label">📉 לאיזו עוצמה הרגש ירד עכשיו? (0–10)</label>
+        <div class="rating-row"><input type="range" class="bs-range" data-b="intAfter" min="0" max="10" value="${d.intAfter ?? (d.intBefore ?? 5)}"><span class="rate-val bs-rv">${d.intAfter ?? (d.intBefore ?? 5)}</span></div>
+        <label class="mini-label">🌤️ ומה הרגש שעולה במקום?</label>
+        <textarea class="ta bs-field" data-b="emotionInstead" placeholder="הרגש שמתחיל להופיע — רוגע, ביטחון, הקלה...">${esc(d.emotionInstead || "")}</textarea>
+      </div>
+
       <button class="btn" id="saveBeliefSwap">שמירה + טעינת האווטר</button>
     </div>`;
+}
+
+function collectBeliefSwap() {
+  const d = {};
+  app.querySelectorAll(".bs-field").forEach(t => d[t.dataset.b] = t.value.trim());
+  app.querySelectorAll(".bs-range").forEach(r => d[r.dataset.b] = Number(r.value));
+  return d;
 }
 
 // --- תת-כלי 0: בדיקה מהירה של מחשבה (30 שניות) — ברירת המחדל הפשוטה ---
@@ -2333,9 +2349,11 @@ function mountWeek5Handlers() {
     b.addEventListener("click", () => { stashWeek5Drafts(); week5Tab = b.dataset.w5tab; renderChapter(6); }));
 
   // החלפת אמונות
+  app.querySelectorAll(".bs-range").forEach(r =>
+    r.addEventListener("input", () => { const s = r.nextElementSibling; if (s) s.textContent = r.value; }));
   const sbs = app.querySelector("#saveBeliefSwap");
   if (sbs) sbs.addEventListener("click", () => {
-    const d = {}; app.querySelectorAll(".bs-field").forEach(t => d[t.dataset.b] = t.value.trim());
+    const d = collectBeliefSwap();
     S.setToolData(6, "beliefSwap", d);
     if (Object.values(d).some(Boolean)) S.logActivity("thought", "החלפת אמונה");
     celebrate(); toast("נשמר ✓");
@@ -2398,10 +2416,7 @@ function mountWeek5Handlers() {
 function stashWeek5Drafts() {
   if (app.querySelectorAll("#thoughtRows .exp-row").length) S.setToolData(6, "thoughtTable", collectThoughtRows());
   if (app.querySelector("#q1")) S.setToolData(6, "quickCheck", { q1: qv("#q1"), q2: qv("#q2"), q3: qv("#q3"), q4: qv("#q4") });
-  if (app.querySelector(".bs-field")) {
-    const d = {}; app.querySelectorAll(".bs-field").forEach(t => d[t.dataset.b] = t.value.trim());
-    S.setToolData(6, "beliefSwap", d);
-  }
+  if (app.querySelector(".bs-field")) S.setToolData(6, "beliefSwap", collectBeliefSwap());
 }
 
 function openThoughtPrint(rows) {
@@ -2444,7 +2459,6 @@ const W6_TABS = [
   { id: "guided",   label: "מפגש החמלה" },
   { id: "burden",   label: "הסרת העול" },
   { id: "reframe",  label: "מסגור מחדש" },
-  { id: "meds",     label: "מדיטציות" },
 ];
 // הסרת העול — 4 עומסים שאני מניח מעליי
 const BURDEN_FIELDS = [
@@ -2467,7 +2481,6 @@ function toolWeek6(c) {
   if (week6Tab === "guided") body = w6Guided();
   if (week6Tab === "burden") body = w6Burden();
   if (week6Tab === "reframe") body = w3Reframe();
-  if (week6Tab === "meds") body = w6Meds();
   return tabs + `<div id="w6body">${body}</div>`;
 }
 
@@ -4481,7 +4494,21 @@ function renderLibrary() {
       <p class="subtle">תרגול נשימה עם אנימציה שמובילה אותך — שאיפה, החזקה, נשיפה. מרגיע את מערכת העצבים תוך דקות.</p>
       <button class="btn" id="openBreath">פתיחת נגן הנשימה ▶</button>
     </section>
-    ${!lib.length ? `<div class="card"><p class="subtle">עדיין אין נושאים. אפשר להוסיף במסך הניהול.</p></div>` : ""}
+
+    ${(() => {
+      const meds = S.getMeditations().filter(m => m.name);
+      return meds.length ? `<section class="card">
+        <h3>🎧 מדיטציות הקורס</h3>
+        ${meds.map(m => `<div class="med-item">
+          <div class="med-name">${m.icon || "🎧"} ${esc(m.name)}</div>
+          ${m.link || m.file ? `<div class="med-actions">
+            ${m.link ? `<a class="btn ghost2 med-log" data-medname="${esc(m.name)}" href="${esc(m.link)}" target="_blank" rel="noopener">▶ האזנה / צפייה</a>` : ""}
+            ${m.file ? `<a class="btn ghost2" href="${esc(m.file)}" target="_blank" rel="noopener">⬇ קובץ</a>` : ""}
+          </div>` : `<div class="tiny-note">טרם הוגדר קישור — ניתן להזין במסך הניהול.</div>`}
+        </div>`).join("")}
+      </section>` : "";
+    })()}
+    ${!lib.length ? "" : ""}
     ${lib.map(t => `
       <section class="card">
         <h3>${esc(t.topic)}</h3>

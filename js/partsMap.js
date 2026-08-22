@@ -81,6 +81,7 @@ export function buildPartsMap(S) {
   // כלי החלפת אמונות (שבוע 6)
   add(pain, "thought", "אמונה", beliefTool.belief, 6);
   add(pain, "emotion", "רגש", beliefTool.emotion, 6);
+  add(resource, "emotion", "רגש שעולה", beliefTool.emotionInstead, 6);
   add(resource, "thought", "אמונה חדשה", beliefTool.newBelief, 6);
   add(resource, "thought", "בדיקת מציאות", beliefTool.real, 6);
   add(resource, "thought", "הסבר אחר", beliefTool.reframe, 6);
