@@ -91,7 +91,7 @@ function render() {
 function partsDashCards(m, opts = {}) {
   const pct = Math.round(m.balance * 100);
   const resPct = pct, sufPct = 100 - pct;
-  const has = m.counts.pain + m.counts.resource > 0;
+  const has = m.counts.pain + m.counts.resource > 0 || !!m.partName || !!m.idealName || !!m.pain.belief || !!m.resource.belief;
   const clip = (t) => t.length > 40 ? t.slice(0, 40) + "…" : t;
   const dchip = (it, side) => `<span class="dchip d-${side}">${esc(clip(it.text))}</span>`;
 
@@ -1153,7 +1153,7 @@ function toolWeek1(c) {
 function w1Parts() {
   const st = S.getState();
   const d = S.getToolData(1, "threeParts") || {};
-  const exiles = ["פגוע", "דחוי", "מבוהל", "חסר אונים", "בודד", "חלש", "לא נאהב"];
+  const exiles = ["פגוע", "דחוי", "מבוהל", "חסר אונים", "חסר שליטה", "חסר שפיות", "חלש", "פגום", "מקולקל", "לא מספיק טוב", "בודד", "לא נאהב"];
   const other = w1PartOther || (!!st.partName && !exiles.includes(st.partName));
   return `
     <div class="tool-block">
@@ -1186,11 +1186,11 @@ function w1Parts() {
       ${st.partName ? `<p class="target-line">🧩 החלק הגולה שלי: <b>${esc(st.partName)}</b></p>` : ""}
 
       <h4 style="margin-top:18px">2. איפה החלק המנהל שלך בא לידי ביטוי?</h4>
-      <div class="chip-row">${["פרפקציוניזם", "ריצוי", "ביקורת עצמית", "שליטה", "דאגנות"].map(x => `<button type="button" class="chip mini tp-ex" data-tp="manager" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+      <div class="chip-row">${["פרפקציוניזם", "ריצוי", "ביקורת עצמית", "שליטה", "דאגנות", "בקרת גוף", "בדיקות חוזרות"].map(x => `<button type="button" class="chip mini tp-ex" data-tp="manager" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>
       <textarea class="ta tp-field" data-tp="manager" placeholder="למשל: אני בודק הכל שוב ושוב כדי שלא אטעה...">${esc(d.manager || "")}</textarea>
 
       <h4 style="margin-top:14px">3. איפה החלק המכבה שלך בא לידי ביטוי?</h4>
-      <div class="chip-row">${["עבודה מרובה", "אכילה", "מסכים", "התמכרות", "הסחות דעת"].map(x => `<button type="button" class="chip mini tp-ex" data-tp="fire" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+      <div class="chip-row">${["עבודה מרובה", "אכילה", "מסכים", "התמכרות", "הסחות דעת", "נטרול מחשבות"].map(x => `<button type="button" class="chip mini tp-ex" data-tp="fire" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>
       <textarea class="ta tp-field" data-tp="fire" placeholder="למשל: כשעולה מצוקה אני שוקע בעבודה או במסך...">${esc(d.fire || "")}</textarea>
 
       <button type="button" class="btn" id="saveThreeParts" style="margin-top:14px">שמירה</button>
@@ -1395,16 +1395,40 @@ const W2_TABS = [
   { id: "map",     label: "מיפוי אישי" },
 ];
 // מיפוי אישי — דפוסי החלק המפוחד
+// דוגמאות לפי סוג החרדה — לבחירה מהירה בכל שדה רלוונטי
+const ANXIETY_EXAMPLES = {
+  "התקפי חרדה": {
+    belief: ["אני חסר אונים", "חסר שליטה", "חסר שפיות"],
+    rules: ["אם אני לא בטוח — אני לא יוצא", "אם אני מרגיש סימן — זה נכון", "אם חשבתי שיקרה משהו — בטוח יקרה", "אסור לי לחוש תסמינים גופניים"],
+    avoid: ["מקומות סגורים או הומים", "מאמץ גופני", "להתרחק מהבית", "נהיגה"],
+    overdo: ["בדיקת דופק/נשימה", "בקשת הרגעה", "נשיאת תרופה/מים", "מיפוי יציאות חירום"],
+  },
+  "חרדת בריאות": {
+    belief: ["אני חלש", "פגום"],
+    rules: ["אני צריך/ה לסרוק את הגוף", "כל תסמין — סימן למסקנה", "אני חייב/ת לבדוק", "אסור לי להזניח תסמין"],
+    avoid: ["רופאים/בדיקות (או ההפך)", "מידע על מחלות", "פעילות שמעלה דופק"],
+    overdo: ["בדיקות גוף חוזרות", "חיפוש תסמינים בגוגל", "בקשת הרגעה רפואית"],
+  },
+  "מחשבות טורדניות": {
+    belief: ["חסר שליטה", "מקולקל", "פגום"],
+    rules: ["כל מחשבה שעוברת בי — אמת", "אני חייב/ת לבטל את המחשבה", "אם חשבתי — זה מה שאני רוצה", "אם חשבתי — זה יתקיים"],
+    avoid: ["מצבים שמעוררים את המחשבה", "מגע/חפצים מסוימים", "אנשים או מקומות"],
+    overdo: ["ריטואלים/בדיקות", "נטרול או ביטול מחשבה", "בקשת ביטחון"],
+  },
+  "חרדה חברתית": {
+    belief: ["פגום", "לא מספיק טוב/ה"],
+    rules: ["כולם רואים שאני בחרדה", "כולם יודעים שאני לא מספיק טוב", "אסור שיגלו חולשה", "אני צריך/ה להיראות חזק/ה", "אסור לי להתעמת", "אני חייב/ת לרצות"],
+    avoid: ["מפגשים/מסיבות", "לדבר בפומבי", "קשר עין", "להביע דעה"],
+    overdo: ["חזרה על משפטים בראש", "ניתוח אחרי אירוע", "ריצוי", "הימנעות מבליטה"],
+  },
+};
+
 const SELFMAP_FIELDS = [
-  { key: "belief",    icon: "🌰", label: "מה האמונה הראשית של החלק שלי?", ph: "האמונה העמוקה על עצמי...",
-    ex: ["אני חסר אונים", "חסר ערך", "לא נאהב", "חלש", "פגיע", "דחוי"] },
-  { key: "rules",     icon: "📜", label: "אילו חוקים יש לי — על עצמי, אחרים או העולם — בעקבות האמונה?", ph: "החוקים שאני חי לפיהם...",
-    ex: ["הגוף שלי עלול לחלות", "אנשים תמיד ידחו אותי", "אסור לי לטעות"] },
+  { key: "belief",    icon: "🌰", label: "מה האמונה הראשית של החלק שלי?", ph: "האמונה העמוקה על עצמי...", exByType: "belief" },
+  { key: "rules",     icon: "📜", label: "אילו חוקים יש לי — על עצמי, אחרים או העולם — בעקבות האמונה?", ph: "החוקים שאני חי לפיהם...", exByType: "rules" },
   { key: "thoughts",  icon: "💭", label: "אילו מחשבות עוברות לי בראש בעקבות האמונה והחוקים?", ph: "המחשבות שחוזרות..." },
-  { key: "overdoing", icon: "🔁", label: "אילו דברים אני עושה יותר מדי בעקבותיה — עשיית יתר?", ph: "בדיקות, ריצוי, שליטה, פרפקציוניזם...",
-    ex: ["בדיקות חוזרות", "פרפקציוניזם", "בקשת הרגעה", "ריצוי"] },
-  { key: "avoidance", icon: "🚪", label: "ממה אני נמנע — בעקבות פחד או רגש אחר?", ph: "מה אני נמנע מלעשות, לומר או להרגיש...",
-    ex: ["להימנע ממפגשים", "לא לצאת מהבית", "דחיינות"] },
+  { key: "overdoing", icon: "🔁", label: "אילו דברים אני עושה יותר מדי בעקבותיה — עשיית יתר?", ph: "בדיקות, ריצוי, שליטה, פרפקציוניזם...", exByType: "overdo" },
+  { key: "avoidance", icon: "🚪", label: "ממה אני נמנע — בעקבות פחד או רגש אחר?", ph: "מה אני נמנע מלעשות, לומר או להרגיש...", exByType: "avoid" },
 ];
 
 function toolWeek2(c) {
@@ -1446,7 +1470,10 @@ function w2Map() {
       <p class="hint">יורדים לשורש: מ<b>האמונה הראשית</b> של החלק → ה<b>חוקים</b> שנגזרים ממנה → ה<b>מחשבות</b> → ה<b>התנהגות</b>. הכול זורם למפת החלקים.</p>
       ${SELFMAP_FIELDS.map(f => `
         <label class="mini-label">${f.icon} ${f.label}</label>
-        ${f.ex ? `<div class="chip-row">${f.ex.map(x => `<button type="button" class="chip mini sm-ex" data-m="${f.key}" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>` : ""}
+        ${f.exByType ? Object.entries(ANXIETY_EXAMPLES).map(([type, ex]) => (ex[f.exByType] && ex[f.exByType].length) ? `
+          <div class="ex-group"><span class="ex-group-t">${esc(type)}</span>
+            <div class="chip-row">${ex[f.exByType].map(x => `<button type="button" class="chip mini sm-ex" data-m="${f.key}" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>` : "").join("")
+        : (f.ex ? `<div class="chip-row">${f.ex.map(x => `<button type="button" class="chip mini sm-ex" data-m="${f.key}" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>` : "")}
         <textarea class="ta selfmap-ta" data-m="${f.key}" placeholder="${f.ph}">${esc(d[f.key] || "")}</textarea>`).join("")}
       <button class="btn" id="saveSelfMap">שמירה + טעינת האווטר</button>
     </div>`;

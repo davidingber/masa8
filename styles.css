@@ -831,6 +831,10 @@ body{font-size:15.5px;line-height:1.5}
 [data-theme="dark"] .part-info.manager{background:#1f242a;border-color:#333c45}
 [data-theme="dark"] .part-info.fire{background:#2a1f1c;border-color:#4a352f}
 
+/* דוגמאות מקובצות לפי סוג חרדה */
+.ex-group{margin-bottom:8px}
+.ex-group-t{display:block;font-size:10px;font-weight:800;color:var(--gold);margin:4px 0 4px}
+
 /* עוגן רגשי — "איך הרגש עכשיו?" */
 .after-emo{background:#eef3ec;border:1px solid #dbe7dd;border-radius:12px;padding:11px 13px;margin:14px 0}
 [data-theme="dark"] .after-emo{background:#20281f;border-color:#33402d}
