@@ -29,8 +29,8 @@ export function buildPartsMap(S) {
   // ===== אמונות יסוד =====
   const selfMap = td(2, "selfMap") || {};
   pain.belief = (selfMap.belief || "").trim();
-  const beliefTool = td(6, "beliefSwap") || {};      // כלי החלפת אמונות (שבוע 6)
-  resource.belief = (st.idealBelief || beliefTool.newBelief || "").trim();
+  const beliefTool = td(6, "beliefSwap") || {};      // כלי החלפת אמונות (שבוע 6) — מזין מחשבות, לא אמונת יסוד
+  resource.belief = (selfMap.newBelief || st.idealBelief || "").trim();
 
   // ===== רגש ראשוני + מגמה =====
   const ratings = st.emotion.ratings || [];
@@ -76,7 +76,10 @@ export function buildPartsMap(S) {
   add(resource, "thought", "מחשבה חלופית", prep.altThoughts, 7);
   add(resource, "thought", "מנטרה", prep.rational, 7);
   add(resource, "thought", "למידה מחשיפה", (td(7, "afterForm") || {}).learned, 7);
-  (td(3, "reframe") || []).forEach(t => add(resource, "thought", "מסגור מחדש", t, 3));
+  // מסגור מחדש — רק התוצאות המשמעותיות נכנסות (כוונה חיובית + דרך חלופית), לא כל שלב
+  const rf = td(3, "reframe") || [];
+  add(resource, "thought", "כוונה חיובית", rf[3], 3);
+  add(resource, "behavior", "דרך חלופית", rf[4], 3);
   add(resource, "thought", "אי-הזדהות", td(3, "thirdPerson"), 3);
   add(resource, "thought", "חזון הזהות", (td(1, "dickens") || {}).identity, 1);
   add(resource, "thought", "חזון", goal.dream_feel, 1);

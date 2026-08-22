@@ -100,13 +100,25 @@ function partsDashCards(m, opts = {}) {
     <div class="dblk"><div class="dblk-lbl">${title}${answered ? ` <span class="dblk-ans">✓ יש מענה</span>` : ""}</div>
       <div class="dmini">${items.map(it => dchip(it, side)).join("")}</div></div>` : "";
 
-  // מגמת הרגש
+  // מגמת הרגש השלילי (יורד)
   const p = m.primary;
   const emoTrend = p ? (
     (p.first != null && p.last != null && p.first !== p.last)
       ? `<div class="emo-trend"><span class="old">${p.first}</span><span class="ar">→</span><span>${p.last}</span> <span>${esc(p.name)} ${p.last < p.first ? "↓" : ""}</span></div>`
       : `<div class="emo-trend"><span>${esc(p.name)}${p.last != null ? ` · ${p.last}/10` : ""}</span></div>`
   ) : "";
+  // מגמת הרגש החיובי (עולה) — למעלה, עם קישור לפרקים
+  const stE = S.getState().emotion;
+  const posR = stE.posRatings || [];
+  const posFirst = posR[0]?.value, posLast = posR.length ? posR[posR.length - 1].value : null;
+  const posInner = stE.target
+    ? ((posFirst != null && posLast != null && posFirst !== posLast)
+        ? `<span class="old">${posFirst}</span><span class="ar">→</span><span>${posLast}</span> <span>${esc(stE.target)} ${posLast > posFirst ? "↑" : ""}</span>`
+        : `<span>${esc(stE.target)}${posLast != null ? ` · ${posLast}/10` : ""}</span>`)
+    : "";
+  const posTrend = stE.target
+    ? `<button type="button" class="emo-trend emo-pos emo-link" id="posEmoChapters">${posInner} <span class="emo-go">↗ לפרקים</span></button>`
+    : "";
 
   const partHdr = m.partName ? `החלק · ${esc(m.partName)}` : "החלק";
   const idealHdr = m.idealName ? esc(m.idealName) : "ההורה המיטיב";
@@ -116,6 +128,7 @@ function partsDashCards(m, opts = {}) {
       ${opts.streak > 0 ? `<div class="streak-chip" title="ימים רצופים של עבודה">🔥 ${opts.streak} ${opts.streak === 1 ? "יום" : "ימים"} ברצף</div>` : ""}
       <div class="avatar-wrap">${renderAvatarPhoto(pct)}</div>
       <div class="hero-cap subtle">פורחת ככל שההורה המיטיב מוזן</div>
+      ${posTrend}
       ${emoTrend}
       ${p ? `<div class="emo-sub subtle">יורד בסביבה בטוחה ובחמלה 🛡️</div>` : ""}
       <div class="self-balance">
@@ -156,19 +169,27 @@ function partsDashCards(m, opts = {}) {
 function afterEmoWidget() {
   const st = S.getState();
   if (!st.emotion.name) return "";
-  const last = st.emotion.ratings.length ? st.emotion.ratings[st.emotion.ratings.length - 1].value : 5;
+  const lastN = st.emotion.ratings.length ? st.emotion.ratings[st.emotion.ratings.length - 1].value : 5;
+  const posR = st.emotion.posRatings || [];
+  const lastP = posR.length ? posR[posR.length - 1].value : 5;
   return `<div class="after-emo">
     <label class="mini-label">🌡️ ואיך <b>${esc(st.emotion.name)}</b> מרגיש עכשיו? (0–10)<span class="subtle"> — מעדכן את מגמת הרגש בדשבורד</span></label>
-    <div class="rating-row"><input type="range" id="afterEmoRange" min="0" max="10" value="${last}"><span class="rate-val" id="afterEmoVal">${last}</span></div>
+    <div class="rating-row"><input type="range" id="afterEmoRange" min="0" max="10" value="${lastN}"><span class="rate-val" id="afterEmoVal">${lastN}</span></div>
+    ${st.emotion.target ? `
+      <label class="mini-label" style="margin-top:8px">🌱 וכמה <b>${esc(st.emotion.target)}</b> נוכח עכשיו? (0–10)</label>
+      <div class="rating-row"><input type="range" id="afterPosRange" min="0" max="10" value="${lastP}"><span class="rate-val" id="afterPosVal">${lastP}</span></div>` : ""}
     <button type="button" class="btn ghost2" id="afterEmoSave">עדכון הרגש שלי</button>
   </div>`;
 }
 function bindAfterEmo() {
   const r = app.querySelector("#afterEmoRange");
   if (r) r.addEventListener("input", () => { const v = app.querySelector("#afterEmoVal"); if (v) v.textContent = r.value; });
+  const pr = app.querySelector("#afterPosRange");
+  if (pr) pr.addEventListener("input", () => { const v = app.querySelector("#afterPosVal"); if (v) v.textContent = pr.value; });
   const s = app.querySelector("#afterEmoSave");
   if (s) s.addEventListener("click", () => {
     S.logEmotionRating(app.querySelector("#afterEmoRange").value);
+    const pp = app.querySelector("#afterPosRange"); if (pp) S.logPositiveRating(pp.value);
     toast("הרגש עודכן ✓ — נכנס למגמה בדשבורד");
   });
 }
@@ -217,6 +238,7 @@ function renderSelf() {
     <div class="chapter-footer"><button class="btn ghost2 back-all" id="backHome">↩ חזרה לבית</button></div>`;
   app.querySelector("#back").addEventListener("click", () => go("home"));
   app.querySelector("#backHome").addEventListener("click", () => go("home"));
+  app.querySelector("#posEmoChapters")?.addEventListener("click", () => go("chapters"));
 }
 
 // ============================================================
@@ -663,6 +685,7 @@ function renderHome() {
   // מאזינים — מסך בית ממוקד
   app.querySelector("#themeToggle").addEventListener("click", toggleTheme);
   app.querySelector("#achvLink").addEventListener("click", () => go("achievements"));
+  app.querySelector("#posEmoChapters")?.addEventListener("click", () => go("chapters"));
   app.querySelector("#trustSOS")?.addEventListener("click", openSOS);
   bindLongPress(app.querySelector("#homeTitle"), openAdmin);
   mountInstallBanner();
@@ -1449,24 +1472,28 @@ const W2_TABS = [
 const ANXIETY_EXAMPLES = {
   "התקפי חרדה": {
     belief: ["אני חסר אונים", "חסר שליטה", "חסר שפיות"],
+    altBelief: ["אני מסוגל/ת", "אני בטוח/ה"],
     rules: ["אם אני לא בטוח — אני לא יוצא", "אם אני מרגיש סימן — זה נכון", "אם חשבתי שיקרה משהו — בטוח יקרה", "אסור לי לחוש תסמינים גופניים"],
     avoid: ["מקומות סגורים או הומים", "מאמץ גופני", "להתרחק מהבית", "נהיגה"],
     overdo: ["בדיקת דופק/נשימה", "בקשת הרגעה", "נשיאת תרופה/מים", "מיפוי יציאות חירום"],
   },
   "חרדת בריאות": {
     belief: ["אני חלש", "פגום"],
+    altBelief: ["הגוף שלי חיוני", "הגוף שלי שלם", "הגוף שלי מבריא"],
     rules: ["אני צריך/ה לסרוק את הגוף", "כל תסמין — סימן למסקנה", "אני חייב/ת לבדוק", "אסור לי להזניח תסמין"],
     avoid: ["רופאים/בדיקות (או ההפך)", "מידע על מחלות", "פעילות שמעלה דופק"],
     overdo: ["בדיקות גוף חוזרות", "חיפוש תסמינים בגוגל", "בקשת הרגעה רפואית"],
   },
   "מחשבות טורדניות": {
     belief: ["חסר שליטה", "מקולקל", "פגום"],
+    altBelief: ["אני אנושי", "אני בחמלה"],
     rules: ["כל מחשבה שעוברת בי — אמת", "אני חייב/ת לבטל את המחשבה", "אם חשבתי — זה מה שאני רוצה", "אם חשבתי — זה יתקיים"],
     avoid: ["מצבים שמעוררים את המחשבה", "מגע/חפצים מסוימים", "אנשים או מקומות"],
     overdo: ["ריטואלים/בדיקות", "נטרול או ביטול מחשבה", "בקשת ביטחון"],
   },
   "חרדה חברתית": {
     belief: ["פגום", "לא מספיק טוב/ה"],
+    altBelief: ["אני בחמלה", "אני שלמ/ה"],
     rules: ["כולם רואים שאני בחרדה", "כולם יודעים שאני לא מספיק טוב", "אסור שיגלו חולשה", "אני צריך/ה להיראות חזק/ה", "אסור לי להתעמת", "אני חייב/ת לרצות"],
     avoid: ["מפגשים/מסיבות", "לדבר בפומבי", "קשר עין", "להביע דעה"],
     overdo: ["חזרה על משפטים בראש", "ניתוח אחרי אירוע", "ריצוי", "הימנעות מבליטה"],
@@ -1479,6 +1506,7 @@ const SELFMAP_FIELDS = [
   { key: "thoughts",  icon: "💭", label: "אילו מחשבות עוברות לי בראש בעקבות האמונה והחוקים?", ph: "המחשבות שחוזרות..." },
   { key: "overdoing", icon: "🔁", label: "אילו דברים אני עושה יותר מדי בעקבותיה — עשיית יתר?", ph: "בדיקות, ריצוי, שליטה, פרפקציוניזם...", exByType: "overdo" },
   { key: "avoidance", icon: "🚪", label: "ממה אני נמנע — בעקבות פחד או רגש אחר?", ph: "מה אני נמנע מלעשות, לומר או להרגיש...", exByType: "avoid" },
+  { key: "newBelief",  icon: "🌟", label: "אמונת יסוד חלופית — לאן אני רוצה להגיע?", ph: "האמונה החדשה, המיטיבה, על עצמי ועל העולם...", exByType: "altBelief" },
 ];
 
 function toolWeek2(c) {
@@ -3765,22 +3793,41 @@ function w8Realize() {
     </div>`;
 }
 
+// דרכים והערכים שנבחרו — מקור להזנה אוטומטית ליומן השבועי
+function w8Suggestions() {
+  const values = (S.getToolData(8, "values") || []).filter(Boolean);
+  const top3 = values.slice(0, 3);
+  const realize = S.getToolData(8, "realize") || {};
+  const sugg = [];
+  top3.forEach(v => {
+    const ways = (realize[v] || []).map(w => (w || "").trim()).filter(Boolean);
+    if (ways.length) ways.forEach(w => sugg.push({ value: v, text: w }));
+    else sugg.push({ value: v, text: v });   // אין דרך עדיין — הערך עצמו כתזכורת
+  });
+  return sugg;
+}
+
 // --- לוח שבועי (יום + שעה + פעולה) + שיתוף ליומן ---
 function w8Schedule() {
   const st = S.getState();
   const plan = S.getToolData(8, "schedule") || {};
-  const table = WEEK_DAYS.map(day => {
+  const sugg = w8Suggestions();
+  const planEmpty = !WEEK_DAYS.some(d => plan[d] && plan[d].action);   // מזינים אוטומטית רק ליומן ריק
+  const table = WEEK_DAYS.map((day, i) => {
     const cell = plan[day] || {};
+    const auto = (planEmpty && sugg[i]) ? sugg[i].text : "";
     return `
       <div class="day-row" data-day="${day}">
         <div class="day-name">${day}</div>
         <input class="inp day-time" type="time" value="${esc(cell.time || "")}" aria-label="שעה ל${day}">
-        <input class="inp day-input" value="${esc(cell.action || "")}" placeholder="איך אגשים את הערך...">
+        <input class="inp day-input" value="${esc(cell.action || auto)}" placeholder="איך אגשים את הערך...">
       </div>`;
   }).join("");
   return `
     <div class="tool-block">
       <p class="hint">שבץ ביומן השבועי פעולות שמגשימות את הערכים — יום, שעה, והפעולה.</p>
+      ${sugg.length ? `<div class="prior-block"><div class="prior-t">${planEmpty ? "מילאנו לך את היומן מהערכים והדרכים שבחרת — אפשר להחליף, לערוך או להוסיף:" : "מהערכים והדרכים שבחרת — לחיצה משבצת בשורה הריקה הבאה:"}</div>
+        <div class="chip-row">${sugg.map(s => `<button type="button" class="chip w8-sugg" data-sugg="${esc(s.text)}">${esc(s.value)} · ${esc(s.text)}</button>`).join("")}</div></div>` : ""}
       <div id="w8sched" class="week-table">${table}</div>
       <div class="activation-actions">
         <button class="btn" id="saveSched">שמירה + טעינת האווטר</button>
@@ -3929,6 +3976,14 @@ function mountWeek8Handlers() {
   // לוח שבועי
   app.querySelectorAll("#w8sched .day-input, #w8sched .day-time").forEach(inp =>
     inp.addEventListener("change", () => S.setToolData(8, "schedule", collectSchedule())));
+  // שיבוץ ערך/דרך לשורה הריקה הבאה
+  app.querySelectorAll(".w8-sugg").forEach(b => b.addEventListener("click", () => {
+    const inputs = [...app.querySelectorAll("#w8sched .day-input")];
+    const empty = inputs.find(i => !i.value.trim());
+    if (!empty) return toast("כל הימים מלאים — ערוך שורה קיימת");
+    empty.value = b.dataset.sugg;
+    S.setToolData(8, "schedule", collectSchedule());
+  }));
   const ssc = app.querySelector("#saveSched");
   if (ssc) ssc.addEventListener("click", () => {
     S.setToolData(8, "schedule", collectSchedule());

@@ -142,8 +142,15 @@ export function setGoalPlan(plan) { state.goalPlan = plan; save(); }
 
 export function setEmotion(name) {
   if (state.emotion.name !== name) {
-    state.emotion = { name, ratings: [] };
+    state.emotion = { name, ratings: [], posRatings: [], target: state.emotion.target };
   }
+  save();
+}
+
+// דירוג הרגש החיובי (החלופי) — עולה ככל שעובדים
+export function logPositiveRating(value) {
+  state.emotion.posRatings = state.emotion.posRatings || [];
+  state.emotion.posRatings.push({ date: new Date().toISOString(), value: Number(value) });
   save();
 }
 
