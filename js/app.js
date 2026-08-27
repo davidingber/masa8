@@ -72,6 +72,7 @@ function renderNav() {
 // ============================================================
 function render() {
   updateSOSVisibility();
+  if (CLOUD_ENABLED && !cloudStatus().connected) { navEl.innerHTML = ""; return renderGate(); }
   if (!S.isOnboarded()) { navEl.innerHTML = ""; return renderOnboarding(); }
   renderNav();
   if (route === "home") return renderHome();
@@ -83,6 +84,34 @@ function render() {
   if (route === "achievements") return renderAchievements();
   if (route === "goal") { week1Tab = "goal"; return renderChapter(1); }
   if (route === "self") return renderSelf();
+}
+
+// ---- שער כניסה: רק משתמשים מאושרים (התחברות עם גוגל) ----
+function renderGate() {
+  app.innerHTML = `
+    <div class="onboarding">
+      <div class="card onb-card" style="text-align:center">
+        <div style="font-size:2.6rem;margin-bottom:6px">🧭</div>
+        <h2>מסע 8 הזהויות</h2>
+        <p class="onb-promise">האזור הזה פתוח למשתתפי התוכנית בלבד.</p>
+        <p class="onb-sub">התחברות עם חשבון הגוגל שאושר לך — כדי להיכנס. ההתקדמות תישמר ותסתנכרן אוטומטית בין המכשירים שלך.</p>
+        <button class="btn" id="gateSignin" style="margin-top:8px">🔗 התחברות עם גוגל</button>
+        <p class="hint" id="gateMsg" style="margin-top:12px;color:var(--rose)"></p>
+        <p class="onb-safety" style="margin-top:16px">כלי עזר ותמיכה — לא תחליף לטיפול מקצועי. במצוקה חריפה: ער״ן 1201 · חירום 101.</p>
+      </div>
+    </div>`;
+  const btn = app.querySelector("#gateSignin");
+  const msg = app.querySelector("#gateMsg");
+  btn.addEventListener("click", async () => {
+    btn.disabled = true; btn.textContent = "מתחבר..."; msg.textContent = "";
+    try {
+      await cloudConnect();
+      render(); // מחובר → האפליקציה נפתחת (או מסך הקליטה)
+    } catch (e) {
+      btn.disabled = false; btn.textContent = "🔗 התחברות עם גוגל";
+      msg.textContent = "לא הצלחנו לאמת את הכניסה. אם אתה אמור להיות ברשימת המאושרים — פנה לדוד. (יש לאשר את בקשת ההרשאה של גוגל)";
+    }
+  });
 }
 
 // ============================================================
