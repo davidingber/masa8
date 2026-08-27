@@ -16,6 +16,7 @@ import { buildPartsMap } from "./partsMap.js";
 import { askAI } from "./ai.js";
 import { requestPermission, startReminderLoop } from "./reminders.js";
 import { downloadWeeklyICS, googleEventUrl, downloadDailyICS, googleDailyUrl } from "./calendar.js";
+import { CLOUD_ENABLED, initCloud, cloudConnect, cloudDisconnect, cloudStatus } from "./cloudsync.js";
 
 const app = document.getElementById("view");
 const navEl = document.getElementById("nav");
@@ -4644,6 +4645,18 @@ function renderSettings() {
       </div>
     </section>
 
+    ${CLOUD_ENABLED ? `
+    <section class="card">
+      <h3>☁️ סנכרון לגוגל דרייב</h3>
+      ${cloudStatus().connected ? `
+        <p class="subtle">מחובר ✓ — ההתקדמות מסתנכרנת אוטומטית לדרייב הפרטי שלך. אפשר להיכנס מכל מכשיר עם אותו חשבון גוגל ולראות את אותם נתונים.${cloudStatus().lastSync ? `<br><span style="opacity:.7">סונכרן לאחרונה: ${esc(new Date(cloudStatus().lastSync).toLocaleString("he-IL"))}</span>` : ""}</p>
+        <div class="med-actions"><button class="btn ghost2" id="cloudDisconnect">ניתוק מהדרייב</button></div>
+      ` : `
+        <p class="subtle">חבר את ההתקדמות לגוגל דרייב הפרטי שלך — כך היא נשמרת בענן ומסתנכרנת בין כל המכשירים שלך. הנתונים נשמרים בחשבון שלך בלבד.</p>
+        <div class="med-actions"><button class="btn" id="cloudConnect">🔗 התחברות עם גוגל</button></div>
+      `}
+    </section>` : ""}
+
     <section class="card">
       <h3>💾 גיבוי ושחזור</h3>
       <p class="subtle">ההתקדמות נשמרת רק במכשיר הזה. הורד קובץ גיבוי מדי פעם — כדי לא לאבד
@@ -4662,6 +4675,24 @@ function renderSettings() {
   `;
 
   app.querySelector("#backHome").addEventListener("click", () => go("home"));
+  const ccBtn = app.querySelector("#cloudConnect");
+  if (ccBtn) ccBtn.addEventListener("click", async () => {
+    ccBtn.disabled = true; ccBtn.textContent = "מתחבר...";
+    try {
+      const r = await cloudConnect();
+      toast(r && r.action === "loaded" ? "נטען מהענן ✓" : "מחובר לדרייב ✓ — מסתנכרן");
+      renderSettings();
+    } catch (e) {
+      toast("החיבור לגוגל לא הושלם. אפשר לנסות שוב.");
+      ccBtn.disabled = false; ccBtn.textContent = "🔗 התחברות עם גוגל";
+    }
+  });
+  const cdBtn = app.querySelector("#cloudDisconnect");
+  if (cdBtn) cdBtn.addEventListener("click", () => {
+    if (confirm("לנתק את הסנכרון? הנתונים יישארו במכשיר ובדרייב, אבל לא יסתנכרנו יותר עד חיבור מחדש.")) {
+      cloudDisconnect(); renderSettings(); toast("נותק מהדרייב");
+    }
+  });
   app.querySelector("#savePin").addEventListener("click", () => {
     S.setAdminPin(app.querySelector("#setPin").value);
     adminUnlocked = true;
@@ -5074,3 +5105,4 @@ startReminderLoop();
 startTimeTracker();
 render();
 loadPublishedContent();
+initCloud();
