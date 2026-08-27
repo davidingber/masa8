@@ -16,7 +16,7 @@ import { buildPartsMap } from "./partsMap.js";
 import { askAI } from "./ai.js";
 import { requestPermission, startReminderLoop } from "./reminders.js";
 import { downloadWeeklyICS, googleEventUrl, downloadDailyICS, googleDailyUrl } from "./calendar.js";
-import { CLOUD_ENABLED, initCloud, cloudConnect, cloudDisconnect, cloudStatus } from "./cloudsync.js";
+import { CLOUD_ENABLED, initCloud, cloudConnect, cloudDisconnect, cloudStatus, REQUEST_FORM_URL } from "./cloudsync.js";
 
 const app = document.getElementById("view");
 const navEl = document.getElementById("nav");
@@ -109,7 +109,14 @@ function renderGate() {
       render(); // מחובר → האפליקציה נפתחת (או מסך הקליטה)
     } catch (e) {
       btn.disabled = false; btn.textContent = "🔗 התחברות עם גוגל";
-      msg.textContent = "לא הצלחנו לאמת את הכניסה. אם אתה אמור להיות ברשימת המאושרים — פנה לדוד. (יש לאשר את בקשת ההרשאה של גוגל)";
+      if (e && e.code === "not_allowed") {
+        msg.innerHTML = `החשבון <b>${esc(e.email || "")}</b> אינו ברשימת המאושרים.` +
+          (REQUEST_FORM_URL ? ` <a href="${esc(REQUEST_FORM_URL)}" target="_blank" rel="noopener">בקשת גישה ←</a>` : " פנה לדוד לקבלת גישה.");
+      } else if (e && e.code === "allowlist_unreachable") {
+        msg.textContent = "לא הצלחנו לבדוק את ההרשאה כרגע. נסה/י שוב בעוד רגע.";
+      } else {
+        msg.textContent = "לא הצלחנו לאמת את הכניסה. יש לאשר את בקשת ההרשאה של גוגל, או לפנות לדוד אם אתה אמור להיות מאושר.";
+      }
     }
   });
 }

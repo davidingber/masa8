@@ -8,7 +8,18 @@ import * as S from "./state.js";
 
 // מזהה הלקוח מ-Google Cloud (לא סוד — מיועד לדפדפן)
 const CLIENT_ID = "816880058586-v7t2us1vbjq9g8rm1tfb8du2vok5408n.apps.googleusercontent.com";
-const SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+
+// רשימת מאושרים: קישור CSV מגיליון גוגל שפורסם לאינטרנט.
+// ריק = אין בדיקת רשימה (כניסה מותרת לכל מי שמשלים התחברות — למשל לפי Test users).
+// כשמוגדר: רק מיילים שמופיעים בגיליון יורשו להיכנס.
+const ALLOWLIST_CSV_URL = "";
+// טופס "בקשת גישה" (Google Form) — מוצג למי שאינו ברשימה. ריק = לא מוצג.
+export const REQUEST_FORM_URL = "";
+
+// כשיש בדיקת רשימה צריך גם את המייל של המשתמש (openid+email)
+const SCOPE = ALLOWLIST_CSV_URL
+  ? "https://www.googleapis.com/auth/drive.appdata openid email"
+  : "https://www.googleapis.com/auth/drive.appdata";
 const FILE_NAME = "masa8_state.json";
 
 const FLAG_ON = "masa8_cloud_on";     // "1" אם המשתמש חיבר סנכרון
@@ -99,6 +110,25 @@ async function driveDownload(id) {
     { headers: { Authorization: "Bearer " + accessToken } });
   if (!res.ok) throw new Error("download " + res.status);
   return res.text();
+}
+
+// ---- זהות + רשימת מאושרים ----
+async function getUserEmail() {
+  const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo",
+    { headers: { Authorization: "Bearer " + accessToken } });
+  if (!res.ok) throw new Error("userinfo " + res.status);
+  const d = await res.json();
+  return (d.email || "").trim().toLowerCase();
+}
+async function checkAllowed(email) {
+  const res = await fetch(ALLOWLIST_CSV_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error("allowlist " + res.status);
+  const text = await res.text();
+  const emails = text
+    .split(/[\r\n,;\t]+/)
+    .map(s => s.trim().toLowerCase().replace(/^"+|"+$/g, ""))
+    .filter(s => s.includes("@"));
+  return emails.includes(email);
 }
 async function driveCreate(text) {
   const boundary = "masa8sync" + Date.now();
@@ -192,6 +222,18 @@ async function startupSync() {
 export async function cloudConnect() {
   await loadGis();
   await requestToken(); // מפעיל מסך הסכמה בפעם הראשונה (בתגובה ללחיצת המשתמש)
+  // בדיקת רשימת מאושרים (אם הוגדרה) — לפני שמחברים
+  if (ALLOWLIST_CSV_URL) {
+    const email = await getUserEmail();
+    let allowed = false;
+    try { allowed = await checkAllowed(email); }
+    catch (e) { const err = new Error("allowlist_unreachable"); err.code = "allowlist_unreachable"; throw err; }
+    if (!allowed) {
+      const err = new Error("not_allowed");
+      err.code = "not_allowed"; err.email = email;
+      throw err;
+    }
+  }
   const f = await driveFind();
   if (f) {
     if (hasLocalData()) {
