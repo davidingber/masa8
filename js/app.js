@@ -395,7 +395,7 @@ function goalField(f, plan) {
       <label class="mini-label">${esc(f.label)} — חלופה ל<b>${esc(st.emotion.name)}</b></label>
       <p class="hint">${suggested
         ? `במקום <b>${esc(st.emotion.name)}</b>, אפשר לכוון אל <b>${esc(suggested)}</b>. ${G("בחר", "בחרי")} את היעד שלך:`
-        : `${G("בחר", "בחרי")} את הרגש שאליו תרצה להגיע במסע:`}</p>
+        : `${G("בחר", "בחרי")} את הרגש שאליו רוצים להגיע במסע:`}</p>
       <div class="chip-row">
         ${altPool.map(a => `<button type="button" class="chip alt ${st.emotion.target === a ? "on" : ""}" data-alt="${esc(a)}">${esc(a)}</button>`).join("")}
       </div>
@@ -619,19 +619,19 @@ function renderOnboarding() {
     <div class="chip-row">${ONB_EMOTIONS.map(e =>
       `<button class="chip ${onb.emotion === e ? "on" : ""}" data-onbemo="${e}">${e}</button>`).join("")}
       <button class="chip ${emoOther ? "on" : ""}" data-onbemo="__other__">אחר…</button></div>
-    ${emoOther ? `<input class="inp" id="onbEmotionOther" placeholder="כתוב את הרגש שלך..." value="${esc(ONB_EMOTIONS.includes(onb.emotion) ? "" : (onb.emotion || ""))}">` : ""}
+    ${emoOther ? `<input class="inp" id="onbEmotionOther" placeholder="הרגש שלך..." value="${esc(ONB_EMOTIONS.includes(onb.emotion) ? "" : (onb.emotion || ""))}">` : ""}
     <label class="onb-label">כמה חזק הוא עכשיו? (0–10)</label>
     <div class="rating-row"><input type="range" id="onbRate" min="0" max="10" value="${onb.rating}">
       <span class="rate-val" id="onbRateV">${onb.rating}</span></div>`;
   if (onbStep === 2) body = `
     ${onbArt(2)}
-    <h2>מה תרצה שיהיה שונה?</h2>
+    <h2>מה חשוב לך שישתנה?</h2>
     <p class="onb-sub">מטרה אחת קטנה למסע. אפשר גם לדלג ולחזור לזה מאוחר יותר.</p>
     <textarea class="ta" id="onbGoal" placeholder="למשל: לנסוע באוטובוס בלי חרדה, לישון טוב יותר...">${esc(onb.goal)}</textarea>`;
   if (onbStep === 3) body = `
     ${onbArt(3)}
     <h2>הניצחון הראשון שלך</h2>
-    <p class="onb-sub">בוא נטען את האווטר בפעם הראשונה. קח נשימה אחת עמוקה ואיטית —
+    <p class="onb-sub">נטען יחד את האווטר בפעם הראשונה. נשימה אחת עמוקה ואיטית —
       שאיפה דרך האף, נשיפה ארוכה דרך הפה.</p>
     <button class="btn onb-breath ${onb.breathDone ? "done" : ""}" id="onbBreath">
       ${onb.breathDone ? "✓ נשמתי" : "נשמתי נשימה עמוקה"}</button>`;
@@ -681,8 +681,8 @@ function renderOnboarding() {
 function onbNext() {
   captureOnb();
   if (onbStep === 0 && !onb.name.trim()) return toast("איך לקרוא לך? 🙂");
-  if (onbStep === 1 && !onb.emotion) return toast("בחר רגש אחד");
-  if (onbStep === 3 && !onb.breathDone) return toast("קח נשימה אחת עמוקה 🌬️");
+  if (onbStep === 1 && !onb.emotion) return toast("צריך לבחור רגש אחד");
+  if (onbStep === 3 && !onb.breathDone) return toast("נשימה אחת עמוקה 🌬️");
   if (onbStep < ONB_TOTAL - 1) { onbStep++; renderOnboarding(); }
   else finishOnboarding();
 }
@@ -842,7 +842,7 @@ function renderAchievements() {
         <div class="charge-bar"><div class="charge-fill" style="width:${Math.round(done / BADGES.length * 100)}%"></div></div>
         <div class="charge-num">${Math.round(done / BADGES.length * 100)}%</div>
       </div>
-      <p class="subtle" style="text-align:center;margin-top:8px">כל פעם שאתה בוחר להנהיג במקום להישלט על-ידי ההגנה — המנהיג הפנימי מתחזק 🌱</p>
+      <p class="subtle" style="text-align:center;margin-top:8px">כל פעם שבוחרים להנהיג במקום להישלט על-ידי ההגנה — המנהיג הפנימי מתחזק 🌱</p>
     </section>
 
     <div class="badge-grid">
@@ -891,7 +891,7 @@ function renderBreathingPlayer() {
       ${BREATH_PATTERNS.map(x => `<button class="chip ${x.id === breathState.patternId ? "on" : ""}" data-bp="${x.id}">${x.name}</button>`).join("")}
     </div>
     <div class="breath-stage">
-      <div class="breath-circle" id="breathCircle"><span id="breathPhase">מוכן?</span></div>
+      <div class="breath-circle" id="breathCircle"><span id="breathPhase">מוכנים?</span></div>
     </div>
     <div class="breath-count">סבבים: <b id="breathCycles">${breathState.cycles}</b></div>
     ${breathState.audioSrc ? `<audio id="breathAudio" src="${esc(breathState.audioSrc)}" controls loop style="width:100%;max-width:320px"></audio>` : ""}
@@ -961,7 +961,7 @@ function stopBreathing() {
   const circle = document.getElementById("breathCircle");
   const phaseEl = document.getElementById("breathPhase");
   if (circle) { circle.className = "breath-circle"; circle.style.transitionDuration = "0.6s"; }
-  if (phaseEl) phaseEl.textContent = breathState.cycles ? "יפה 🌿" : "מוכן?";
+  if (phaseEl) phaseEl.textContent = breathState.cycles ? "יפה 🌿" : "מוכנים?";
   const tg = document.getElementById("breathToggle"); if (tg) tg.textContent = "התחלה ▶";
   // רישום פעולה אם היו לפחות 2 סבבים
   if (breathState.cycles >= 2 && !breathState.logged) { breathState.logged = true; S.logActivity("meditation", "נשימה מודרכת"); }
@@ -1401,13 +1401,13 @@ function w1Emotion() {
       <h4 style="margin-top:18px">3. הרגש החלופי — לאן אני רוצה להגיע?</h4>
       ${st.emotion.name ? `
         <p class="hint">${suggested
-          ? `במקום <b>${esc(st.emotion.name)}</b>, אפשר לכוון אל <b>${esc(suggested)}</b>. בחר את היעד שלך:`
-          : "בחר את הרגש שאליו תרצה להגיע במסע:"}</p>
+          ? `במקום <b>${esc(st.emotion.name)}</b>, אפשר לכוון אל <b>${esc(suggested)}</b>. מה היעד שלי?`
+          : "לבחור את הרגש שאליו רוצים להגיע במסע:"}</p>
         <div class="chip-row">
           ${altPool.map(a => `<button class="chip alt ${st.emotion.target === a ? "on" : ""}" data-alt="${esc(a)}">${esc(a)}</button>`).join("")}
         </div>
         ${st.emotion.target ? `<p class="target-line">🎯 היעד הרגשי שלי: <b>${esc(st.emotion.target)}</b></p>` : ""}
-      ` : `<p class="subtle">בחר קודם רגש מרכזי למעלה.</p>`}
+      ` : `<p class="subtle">לבחור קודם רגש מרכזי למעלה.</p>`}
     </div>`;
 }
 
@@ -1416,28 +1416,28 @@ function w1Dickens() {
   const d = S.getToolData(1, "dickens") || {};
   return `
     <div class="tool-block">
-      <p class="hint">תרגיל דיקנס בוחן את <b>מחיר ההישארות</b> מול <b>מחיר השינוי</b>. קח רגע, עצום עיניים, ותכתוב בכנות.</p>
+      <p class="hint">תרגיל דיקנס בוחן את <b>מחיר ההישארות</b> מול <b>מחיר השינוי</b>. לקחת רגע, לעצום עיניים, ולכתוב בכנות.</p>
 
       <div class="dickens-section stay">
         <h4>💭 אם לא אעשה את השינוי — בעוד 5 שנים</h4>
         <label class="mini-label">איך אני נראה?</label>
-        <textarea class="ta d-field" data-d="stay5look" placeholder="תאר את עצמך בעוד 5 שנים ללא השינוי...">${esc(d.stay5look || "")}</textarea>
-        <label class="mini-label">מה אני מרגיש?</label>
+        <textarea class="ta d-field" data-d="stay5look" placeholder="לתאר את עצמי בעוד 5 שנים ללא השינוי...">${esc(d.stay5look || "")}</textarea>
+        <label class="mini-label">מה אני מרגיש/ה?</label>
         <textarea class="ta d-field" data-d="stay5feel" placeholder="הרגשות שיתלוו לכך...">${esc(d.stay5feel || "")}</textarea>
       </div>
 
       <div class="dickens-section stay">
         <h4>💭 אם לא אעשה את השינוי — בעוד עשור</h4>
         <label class="mini-label">איך אני נראה?</label>
-        <textarea class="ta d-field" data-d="stay10look" placeholder="תאר את עצמך בעוד עשור ללא השינוי...">${esc(d.stay10look || "")}</textarea>
-        <label class="mini-label">מה אני מרגיש?</label>
+        <textarea class="ta d-field" data-d="stay10look" placeholder="לתאר את עצמי בעוד עשור ללא השינוי...">${esc(d.stay10look || "")}</textarea>
+        <label class="mini-label">מה אני מרגיש/ה?</label>
         <textarea class="ta d-field" data-d="stay10feel" placeholder="הרגשות שיתלוו לכך...">${esc(d.stay10feel || "")}</textarea>
       </div>
 
       <div class="dickens-section change">
         <h4>🌱 אבל אם כן אעשה את השינוי — מי אני רוצה להיות</h4>
-        <p class="hint">כתוב <b>בלשון הווה</b>, כאילו זה קורה עכשיו: איך אתה מרגיש, איך היציבה שלך, מה זה מאפשר לך לעשות, איזה אדם אתה.</p>
-        <textarea class="ta d-field big" data-d="identity" placeholder="אני אדם ש... אני מרגיש... היציבה שלי... זה מאפשר לי...">${esc(d.identity || "")}</textarea>
+        <p class="hint">לכתוב <b>בלשון הווה</b>, כאילו זה קורה עכשיו: איך זה מרגיש, איך היציבה שלי, מה זה מאפשר לי לעשות, איזה אדם אני.</p>
+        <textarea class="ta d-field big" data-d="identity" placeholder="אני אדם ש... אני מרגיש/ה... היציבה שלי... זה מאפשר לי...">${esc(d.identity || "")}</textarea>
         <p class="tiny-note">✨ הכיוון הזה יחזור ויועמק בשבוע 8.</p>
       </div>
 
@@ -1471,7 +1471,7 @@ function w1Activation() {
 
   return `
     <div class="tool-block">
-      <p class="hint">בחר פעילויות מהנות (או שהיו מהנות) ושבץ אותן בימות השבוע. לחיצה על פעילות משבצת אותה ביום הפנוי הבא.</p>
+      <p class="hint">לבחור פעילויות מהנות (או שהיו מהנות) ולשבץ אותן בימות השבוע. לחיצה על פעילות משבצת אותה ביום הפנוי הבא.</p>
 
       <h4>מאגר פעילויות מהנות</h4>
       <div class="palette">${palette}</div>
@@ -1487,7 +1487,7 @@ function w1Activation() {
       <div class="cal-connect">
         <h4>🔔 הוספת הפעילויות ליומן — לחודש</h4>
         <p class="hint">כל פעילות תתווסף כאירוע חוזר שבועי <b>למשך חודש</b>, עם היום, השעה והפעילות.
-          שום דבר לא נשלח; אתה מאשר בעצמך את השמירה ביומן.</p>
+          שום דבר לא נשלח; השמירה ביומן נעשית על ידך בלבד.</p>
 
         <div class="gcal-block">
           <div class="mini-label">📅 הוספה ישירה ליומן Google — לחיצה לכל יום:</div>
@@ -1539,7 +1539,7 @@ const ANXIETY_EXAMPLES = {
   "התקפי חרדה": {
     belief: ["אני חסר אונים", "חסר שליטה", "חסר שפיות"],
     altBelief: ["אני מסוגל/ת", "אני בטוח/ה"],
-    rules: ["אם אני לא בטוח — אני לא יוצא", "אם אני מרגיש סימן — זה נכון", "אם חשבתי שיקרה משהו — בטוח יקרה", "אסור לי לחוש תסמינים גופניים"],
+    rules: ["אם אני לא בטוח/ה — אני לא יוצא/ת", "אם אני מרגיש/ה סימן — זה נכון", "אם חשבתי שיקרה משהו — בטוח יקרה", "אסור לי לחוש תסמינים גופניים"],
     avoid: ["מקומות סגורים או הומים", "מאמץ גופני", "להתרחק מהבית", "נהיגה"],
     overdo: ["בדיקת דופק/נשימה", "בקשת הרגעה", "נשיאת תרופה/מים", "מיפוי יציאות חירום"],
   },
@@ -1793,17 +1793,17 @@ function w3Defusion() {
 
       <div class="def-tech">
         <h5>2️⃣ לשיר את המחשבה</h5>
-        <p class="hint">קח את המחשבה ושיר אותה בלחן מוכר (יום הולדת שמח, מנגינת ילדים).
+        <p class="hint">לקחת את המחשבה ולשיר אותה בלחן מוכר (יום הולדת שמח, מנגינת ילדים).
           כששרים אותה — היא מאבדת מהעוצמה והרצינות.</p>
         <button class="btn ghost2" id="sangIt">שרתי אותה 🎵</button>
       </div>
 
       <div class="def-tech">
         <h5>3️⃣ המחשבה על הלוח</h5>
-        <p class="hint">דמיין את המחשבה כתובה על לוח רחוק. שחרר אותה — היא נופלת מטה בכוח הכבידה,
+        <p class="hint">לדמיין את המחשבה כתובה על לוח רחוק. לשחרר אותה — היא נופלת מטה בכוח הכבידה,
           מתרחקת ונעשית קטנה יותר ויותר, עד שנעלמת.</p>
         ${priorChips("thought", "#boardThought", "מחשבות שכתבת:")}
-        <input class="inp" id="boardThought" placeholder="כתוב את המחשבה...">
+        <input class="inp" id="boardThought" placeholder="המחשבה...">
         <button class="btn ghost2" id="boardRelease">שחרר את המחשבה ⬇</button>
         <div class="anim-stage" id="boardStage"></div>
       </div>
@@ -1813,7 +1813,7 @@ function w3Defusion() {
         <p class="hint">צפה במחשבה כמו עלה שט על נחל — הוא מרחף על המים והולך ומתרחק.
           אל תילחם בו, רק צפה בו נעלם.</p>
         ${priorChips("thought", "#streamThought", "מחשבות שכתבת:")}
-        <input class="inp" id="streamThought" placeholder="כתוב את המחשבה...">
+        <input class="inp" id="streamThought" placeholder="המחשבה...">
         <button class="btn ghost2" id="streamRelease">שלח לנחל 🍃</button>
         <div class="anim-stage stream" id="streamStage"></div>
       </div>
@@ -1880,9 +1880,9 @@ function mountWeek3Handlers() {
   const sang = app.querySelector("#sangIt");
   if (sang) sang.addEventListener("click", () => { S.logActivity("thought", "לשיר את המחשבה"); toast("יפה! 🎵 טענת את האווטר"); });
   const br = app.querySelector("#boardRelease");
-  if (br) br.addEventListener("click", () => playThoughtAnim("boardStage", "boardThought", "fall", "כתוב קודם את המחשבה"));
+  if (br) br.addEventListener("click", () => playThoughtAnim("boardStage", "boardThought", "fall", "לכתוב קודם את המחשבה"));
   const sr = app.querySelector("#streamRelease");
-  if (sr) sr.addEventListener("click", () => playThoughtAnim("streamStage", "streamThought", "drift", "כתוב קודם את המחשבה"));
+  if (sr) sr.addEventListener("click", () => playThoughtAnim("streamStage", "streamThought", "drift", "לכתוב קודם את המחשבה"));
 
   // מסגור מחדש
   app.querySelectorAll(".rf-input").forEach(inp =>
@@ -2006,7 +2006,7 @@ function w4Sensations() {
     `<button class="chip mini sr-chip ${(d.release || []).includes(r) ? "on" : ""}" data-r="${r}">${r}</button>`).join("");
   return `
     <div class="tool-block">
-      <p class="hint">תהליך עדין להכיר תחושה גופנית וללוות אותה עד שחרור. קח את הזמן, בלי למהר.</p>
+      <p class="hint">תהליך עדין להכיר תחושה גופנית וללוות אותה עד שחרור. לקחת את הזמן, בלי למהר.</p>
 
       <div class="focus-step"><span class="fs-num">1</span>
         <div><b>איפה התחושה בגוף?</b>
@@ -2031,14 +2031,14 @@ function w4Sensations() {
         <div><b>אפשר לתחושה להיות.</b> אל תילחם בה — פשוט תן לה מקום כמה נשימות.</div></div>
 
       <div class="focus-step"><span class="fs-num">6</span>
-        <div><b>האם אני מסכים לשחרר את התחושה?</b>
+        <div><b>האם אני מסכים/ה לשחרר את התחושה?</b>
           <div class="chip-row" style="margin-top:6px">
             <button class="chip ${d.agree === "yes" ? "on" : ""}" data-sagree="yes">כן</button>
             <button class="chip ${d.agree === "no" ? "on" : ""}" data-sagree="no">עדיין לא</button>
           </div></div></div>
 
       <div class="focus-step"><span class="fs-num">7</span>
-        <div><b>אם כן — אפשר לתחושה להשתחרר.</b> בחר כיצד:
+        <div><b>אם כן — אפשר לתחושה להשתחרר.</b> לבחור כיצד:
           <div class="chip-row" style="margin-top:6px">${relChips}</div>
           <div class="release-stage" id="sReleaseStage"></div>
           <button class="btn ghost2" id="sReleaseBtn" style="margin-top:8px">🌬️ שחרור</button></div></div>
@@ -2053,7 +2053,7 @@ function w4Regulation() {
   return `
     <div class="tool-block med-block">
       <p class="hint">כלים לוויסות עצמי — מיינדפולנס, אימון אוטוגני, הרפיית ג'ייקובסון וכניסה לטראנס.
-        בחר כלי אחד שמתאים לך עכשיו ותרגל אותו.</p>
+        לבחור כלי אחד שמתאים לך עכשיו ולתרגל אותו.</p>
       ${meds.length ? meds.map(medCard).join("") : `<p class="tiny-note">טרם הוגדרו כלים — ניתן להוסיף במסך הניהול.</p>`}
     </div>`;
 }
@@ -2063,12 +2063,12 @@ function w4Scan() {
   const breathing = S.getMeditations().find(m => m.id === "autogenic") || {};
   return `
     <div class="tool-block">
-      <p class="hint">סרוק את הגוף מהראש עד קצות האצבעות. קח כמה נשימות אל <b>הבטן התחתונה</b>,
+      <p class="hint">לסרוק את הגוף מהראש עד קצות האצבעות. לקחת כמה נשימות אל <b>הבטן התחתונה</b>,
         עם נשיפות ארוכות ועדינות — <b>כפולות באורכן מהשאיפה</b>.</p>
 
       <div class="breath-pacer">
         <div class="breath-circle" id="breathCircle"><span id="breathLabel">התחל</span></div>
-        <button class="btn ghost2" id="breathToggle">התחל נשימה מונחית</button>
+        <button class="btn ghost2" id="breathToggle">נשימה מונחית ▶</button>
         <p class="tiny-note">שאיפה 4 שניות · נשיפה 8 שניות</p>
       </div>
 
@@ -2093,36 +2093,36 @@ function w4Exposure() {
   return `
     <div class="tool-block">
       <div class="def-tech">
-        <h5>👁️ שלב 1 — שים לב לתחושה בגוף</h5>
-        <p class="hint">לפני הכול — עצור ושים לב: איזו תחושה גופנית נוכחת עכשיו, והיכן היא יושבת?</p>
+        <h5>👁️ שלב 1 — לשים לב לתחושה בגוף</h5>
+        <p class="hint">לפני הכול — לעצור ולשים לב: איזו תחושה גופנית נוכחת עכשיו, והיכן היא יושבת?</p>
         <div class="chip-row">${chips}</div>
-        <p class="hint edge-note">💡 חשוב: התמקד רק ב<b>קצה של התחושה</b> — רק באזור שבו היא מתחילה, בגבול שלה —
+        <p class="hint edge-note">💡 חשוב: להתמקד רק ב<b>קצה של התחושה</b> — רק באזור שבו היא מתחילה, בגבול שלה —
           <b>בלי לקפוץ ישר אל תוך מרכז התחושה.</b></p>
       </div>
 
       <div class="def-tech">
         <h5>🔁 שלב 2 — מעברים בין ביטחון לתחושה</h5>
-        <p class="hint">התחל מ<b>תחושת ביטחון ורוגע</b> בגוף (מהמקום הבטוח או מהנשימה). כשאתה מעוגן —
-          עבור בעדינות אל <b>הקצה</b> של תחושת הכיווץ / אי-הנוחות, שהה בו כמה שניות, <b>והסכם לה להיות</b> —
-          ואז חזור לתחושת הביטחון. עשה כמה מעברים כאלה, הלוך ושוב, בלי למהר.</p>
+        <p class="hint">להתחיל מ<b>תחושת ביטחון ורוגע</b> בגוף (מהמקום הבטוח או מהנשימה). כשמעוגנים —
+          לעבור בעדינות אל <b>הקצה</b> של תחושת הכיווץ / אי-הנוחות, לשהות בו כמה שניות, <b>ולהסכים לה להיות</b> —
+          ואז לחזור לתחושת הביטחון. לעשות כמה מעברים כאלה, הלוך ושוב, בלי למהר.</p>
       </div>
 
       <div class="def-tech">
         <h5>✋ תרגיל תומך 1 — ליטוף היד (3 מחזורים)</h5>
         <p class="hint">לטף את היד באופן מונוטוני מהכתף ועד גב היד, בקצב איטי, כ-2 דקות.
-          ואז שים לב ל<b>קצה</b> של התחושה הלא נעימה כמה שניות — <b>והסכם לה להיות</b> — ואז חזור ללטף. שלושה מחזורים.</p>
-        <div class="timer-display" id="handTimer"><div class="timer-idle">מוכן להתחיל</div></div>
-        <button class="btn ghost2" id="handStart">התחל תרגיל מונחה</button>
-        <button class="btn ghost2 hidden" id="handStop">עצור</button>
+          ואז לשים לב ל<b>קצה</b> של התחושה הלא נעימה כמה שניות — <b>ולהסכים לה להיות</b> — ואז לחזור ללטף. שלושה מחזורים.</p>
+        <div class="timer-display" id="handTimer"><div class="timer-idle">מוכנים להתחיל</div></div>
+        <button class="btn ghost2" id="handStart">תרגיל מונחה ▶</button>
+        <button class="btn ghost2 hidden" id="handStop">עצירה</button>
       </div>
 
       <div class="def-tech">
         <h5>❤️ תרגיל תומך 2 — יד על הלב</h5>
         <p class="hint">הנח יד על הלב. שאף 5 שניות אל הלב, היזכר במשהו משמח, ונשוף 5 שניות.
-          אז שים לב ל<b>קצה</b> של התחושה הלא נעימה כמה שניות — וחזור. כמה סבבים.</p>
-        <div class="timer-display" id="heartTimer"><div class="timer-idle">מוכן להתחיל</div></div>
-        <button class="btn ghost2" id="heartStart">התחל תרגיל מונחה</button>
-        <button class="btn ghost2 hidden" id="heartStop">עצור</button>
+          אז לשים לב ל<b>קצה</b> של התחושה הלא נעימה כמה שניות — ולחזור. כמה סבבים.</p>
+        <div class="timer-display" id="heartTimer"><div class="timer-idle">מוכנים להתחיל</div></div>
+        <button class="btn ghost2" id="heartStart">תרגיל מונחה ▶</button>
+        <button class="btn ghost2 hidden" id="heartStop">עצירה</button>
       </div>
 
       <div class="def-tech">
@@ -2242,9 +2242,9 @@ function mountScanBreathHandlers() {
     const circle = app.querySelector("#breathCircle");
     const label = app.querySelector("#breathLabel");
     if (circle.classList.contains("breathing")) {
-      circle.classList.remove("breathing"); label.textContent = "התחל"; bt.textContent = "התחל נשימה מונחית";
+      circle.classList.remove("breathing"); label.textContent = "מוכנים?"; bt.textContent = "נשימה מונחית ▶";
     } else {
-      circle.classList.add("breathing"); label.textContent = "נשמו…"; bt.textContent = "עצור";
+      circle.classList.add("breathing"); label.textContent = "נושמים…"; bt.textContent = "עצירה";
     }
   });
   const sd = app.querySelector("#scanDone");
@@ -2298,7 +2298,7 @@ function mountWeek4Handlers() {
   const handPhases = [];
   for (let cyc = 1; cyc <= 3; cyc++) {
     handPhases.push({ label: `מחזור ${cyc} — ליטוף מונוטוני`, seconds: 120, cue: "מהכתף → גב היד, קצב איטי" });
-    handPhases.push({ label: `מחזור ${cyc} — שים לב לתחושה`, seconds: 10, cue: "הסכם לה להיות. רק להרגיש" });
+    handPhases.push({ label: `מחזור ${cyc} — לשים לב לתחושה`, seconds: 10, cue: "להסכים לה להיות. רק להרגיש" });
   }
   const hs = app.querySelector("#handStart");
   if (hs) hs.addEventListener("click", () => {
@@ -2312,7 +2312,7 @@ function mountWeek4Handlers() {
   for (let r = 1; r <= 4; r++) {
     heartPhases.push({ label: `סבב ${r} — שאיפה אל הלב`, seconds: 5, cue: "היזכר במשהו משמח" });
     heartPhases.push({ label: `סבב ${r} — נשיפה`, seconds: 5, cue: "אוויר יוצא לאט" });
-    heartPhases.push({ label: `סבב ${r} — שים לב לתחושה`, seconds: 5, cue: "תן לה להיות" });
+    heartPhases.push({ label: `סבב ${r} — לשים לב לתחושה`, seconds: 5, cue: "לתת לה להיות" });
   }
   const es = app.querySelector("#heartStart");
   if (es) es.addEventListener("click", () => {
@@ -2418,7 +2418,7 @@ function w5Beliefs() {
       <div class="bs-tool">${f("keepBenefit", "🎁 איך אשמור על הרווח שבאמונה — ועדיין אפעל בצורה שיותר מיטיבה איתי?", "מה היא באה להגן עליו? איך אשיג זאת אחרת?")}</div>
       <div class="bs-tool">${f("resources", "🌱 אילו משאבים חסרים לי כדי להאמין אחרת — או לפעול למרות החשש?", "חמלה עצמית, תמיכה, תרגול, ידע...")}</div>
 
-      <label class="mini-label" style="margin-top:12px">✨ האמונה החדשה שאני בוחר</label>
+      <label class="mini-label" style="margin-top:12px">✨ האמונה החדשה שאני בוחר/ת</label>
       <textarea class="ta bs-field" data-b="newBelief" placeholder="הניסוח החדש, המיטיב, בלשון הווה...">${esc(d.newBelief || "")}</textarea>
 
       <div class="bs-after">
@@ -2528,10 +2528,10 @@ function collectThoughtRows() {
 function w5Checker() {
   return `
     <div class="tool-block">
-      <p class="hint">כתוב את המחשבה המטרידה, ואם תרצה גם מחשבה חלופית שניסחת — וה-AI יבדוק אותה
+      <p class="hint">לכתוב את המחשבה המטרידה, ואם רוצים גם מחשבה חלופית שניסחת — וה-AI יבדוק אותה
         לפי ארבעה כללים:</p>
       <ul class="rules-list">
-        <li>מְתקפת את מה שאתה מרגיש</li>
+        <li>מְתקפת את מה שאני מרגיש/ה</li>
         <li>עונה בחמלה לכאב</li>
         <li>ממוקדת פתרון ריאלי</li>
         <li>מבוססת עובדות — בלי הכללה, עיוות או השמטה</li>
@@ -2541,7 +2541,7 @@ function w5Checker() {
       <textarea class="ta" id="tcOriginal" placeholder="למשל: כולם רואים שאני לחוץ ושופטים אותי"></textarea>
       <label class="mini-label">המחשבה החלופית שלי (לא חובה)</label>
       <textarea class="ta" id="tcAlt" placeholder="המחשבה המדויקת יותר שניסחתי..."></textarea>
-      <button class="btn" id="tcCheck">🔍 בדוק מחשבה חלופית</button>
+      <button class="btn" id="tcCheck">🔍 בדיקת מחשבה חלופית</button>
       <div class="tc-result" id="tcResult"></div>
     </div>`;
 }
@@ -2608,7 +2608,7 @@ function mountWeek5Handlers() {
   if (tc) tc.addEventListener("click", async () => {
     const orig = app.querySelector("#tcOriginal").value.trim();
     const alt = app.querySelector("#tcAlt").value.trim();
-    if (!orig && !alt) return toast("כתוב לפחות מחשבה אחת");
+    if (!orig && !alt) return toast("צריך לכתוב לפחות מחשבה אחת");
     const result = app.querySelector("#tcResult");
     result.innerHTML = `<div class="tc-loading">בודק…</div>`;
     const sys = S.getState().aiPrompts["thought-checker"].prompt;
@@ -2675,7 +2675,7 @@ const BURDEN_FIELDS = [
 ];
 const WORRY_REMINDER = {
   title: "דייט עם הדאגה — 5 דקות",
-  description: "שב 5 דקות עם הדאגה: פשוט לכתוב כל מה שעולה, או לתרגל את מפגש החמלה. אני כאן — מה אתה מנסה להגיד לי?",
+  description: "לשבת 5 דקות עם הדאגה: פשוט לכתוב כל מה שעולה, או לתרגל את מפגש החמלה. אני כאן — מה יש לך להגיד לי?",
 };
 const FOCUS_SENSATIONS = ["כיווץ", "רעד", "עומס", "כבדות", "משהו שרוצה להתפרץ"];
 
@@ -2697,13 +2697,13 @@ function w6Identity() {
       <p class="hint">תרגיל דמיון מודרך — פורקים שכבה אחר שכבה של מה שמכביד, עד שנזכרים במי שאנחנו באמת, בלי הבעיה.</p>
       <div class="identity-guide">
         <h4>🌬️ להפשיט את הכאב</h4>
-        <p>שימו לב לרגש שאתם עובדים עליו — <b>איפה הוא נוכח בגוף?</b> וכעת דמיינו, כאילו אתם כותבים את הרגש הזה על דף,
+        <p>לשים לב לרגש שעובדים עליו — <b>איפה הוא נוכח בגוף?</b> וכעת לדמיין, כאילו כותבים את הרגש הזה על דף,
           מקפלים אותו, ומניחים אותו בצד לכמה שניות.</p>
-        <p>עכשיו בדקו: האם אתם מרגישים טוב בלי הבעיה? אם עדיין לא — <b>מה עוד נשאר?</b> שימו לב לרגש נוסף.
+        <p>עכשיו לבדוק: האם מרגישים טוב בלי הבעיה? אם עדיין לא — <b>מה עוד נשאר?</b> לשים לב לרגש נוסף.
           דמיינו שאתם מוציאים אותו, כותבים גם אותו על דף, מקפלים ומניחים בקערה דמיונית, רק לכמה רגעים.</p>
-        <p>ושוב בדקו: האם אתם מרגישים נפלא בלי הבעיה? אם עדיין לא — שימו לב לעוד רגש, אולי לתחושה כללית של סטרס.
+        <p>ושוב לבדוק: האם מרגישים נפלא בלי הבעיה? אם עדיין לא — לשים לב לעוד רגש, אולי לתחושה כללית של סטרס.
           דמיינו שאתם מוציאים אותה מהגוף, רושמים על הדף, מקפלים ומניחים בקערה.</p>
-        <p>וכך גם עם כעס, עצב או אכזבה — שכבה אחר שכבה — עד שאתם מרגישים <b>שאתם מרגישים מצוין בלי הבעיה.</b></p>
+        <p>וכך גם עם כעס, עצב או אכזבה — שכבה אחר שכבה — עד <b>שמרגישים מצוין בלי הבעיה.</b></p>
       </div>
 
       <div class="bowl-ritual">
@@ -2746,7 +2746,7 @@ const BOWL_AFFIRM = [
   "הנחתם את זה בצד. יפה.",
   "שימו לב — נהיה קליל יותר?",
   "עוד משהו שמכביד? כתבו והשליכו.",
-  "אתם לא הבעיה. אתם מי שנשאר. 🌱",
+  "הבעיה אינה מי שאני — ואני עדיין כאן. 🌱",
 ];
 // אווטר שמתיישר, מאיר ומתמלא רוגע ככל שמשליכים כאב לקערה (0 = כפוף/עצוב, 4 = זקוף/שמח)
 function w6HealAvatar(count) {
@@ -2772,7 +2772,7 @@ function w6Burden() {
   const d = S.getToolData(5, "burden") || {};
   return `
     <div class="tool-block">
-      <p class="hint">כהורה מיטיב לעצמי — אני בוחר להניח מעליי את מה שאני נושא ולא באמת שלי.
+      <p class="hint">כהורה מיטיב לעצמי — אני מניח/ה מעליי את מה שאני נושא/ת ולא באמת שלי.
         לכל שורה: מה בדיוק אני מוריד מעליי כרגע?</p>
       ${BURDEN_FIELDS.map(f => `
         <div class="burden-item">
@@ -2788,11 +2788,11 @@ function w6Write() {
   const st = S.getState();
   return `
     <div class="tool-block">
-      <p class="hint">שבו 5 דקות עם הדאגה — פשוט לכתוב כל מה שעולה, בלי לסנן. כמו הורה טוב שמקשיב לדאגה.</p>
-      <div class="timer-display" id="writeTimer"><div class="timer-idle">5:00 — לחץ להתחלה</div></div>
+      <p class="hint">לשבת 5 דקות עם הדאגה — פשוט לכתוב כל מה שעולה, בלי לסנן. כמו הורה טוב שמקשיב לדאגה.</p>
+      <div class="timer-display" id="writeTimer"><div class="timer-idle">5:00 — ללחוץ להתחלה</div></div>
       <div class="activation-actions">
-        <button class="btn ghost2" id="writeStart">▶ התחל טיימר 5 דקות</button>
-        <button class="btn ghost2 hidden" id="writeStop">עצור</button>
+        <button class="btn ghost2" id="writeStart">▶ טיימר 5 דקות</button>
+        <button class="btn ghost2 hidden" id="writeStop">עצירה</button>
       </div>
       <textarea class="ta big" id="freeWrite" placeholder="אני כאן, מה אתם מנסים להגיד לי?..."></textarea>
       <button class="btn" id="saveWrite">שמירה + טעינת האווטר</button>
@@ -2824,10 +2824,10 @@ function w6Guided() {
     `<button class="chip mini focus-sens ${(d.sens || []).includes(s) ? "on" : ""}" data-sens="${s}">${s}</button>`).join("");
   return `
     <div class="tool-block">
-      <p class="hint">תהליך עדין של הקשבה לתחושה. קח את הזמן, נשום, ולווה כל שלב ברוגע.</p>
+      <p class="hint">תהליך עדין של הקשבה לתחושה. לקחת את הזמן, לנשום, וללוות כל שלב ברוגע.</p>
 
       <div class="focus-step"><span class="fs-num">1</span>
-        <div><b>התמקד בתחושה</b> — היכן היא יושבת בגוף? איזה סוג תחושה?
+        <div><b>להתמקד בתחושה</b> — היכן היא יושבת בגוף? איזה סוג תחושה?
           <div class="chip-row" style="margin-top:6px">${sensChips}</div></div></div>
 
       <div class="focus-step"><span class="fs-num">2</span>
@@ -2835,28 +2835,28 @@ function w6Guided() {
           <input class="inp" id="fWord" value="${esc(d.word || "")}" placeholder="תוסיף מילה או תמונה שעולה מתוך התחושה..."></div></div>
 
       <div class="focus-step"><span class="fs-num">3</span>
-        <div><b>בחן:</b> האם זו באמת המילה שמרגישה נכון מתוך התחושה? לשהות איתה כמה רגעים.
+        <div><b>לבחון:</b> האם זו באמת המילה שמרגישה נכון מתוך התחושה? לשהות איתה כמה רגעים.
           אפשר גם לשנות את המילה או התמונה שמייצגת או מתארת את התחושה.</div></div>
 
       <div class="focus-step"><span class="fs-num">4</span>
-        <div><b>שים לב</b> למה שעולה מתוך התחושה כשאתה נשאר איתה.</div></div>
+        <div><b>לשים לב</b> למה שעולה מתוך התחושה כשנשארים איתה.</div></div>
 
       <div class="focus-step"><span class="fs-num">5</span>
         <div><b>למה התחושה זקוקה</b> כדי להרגיש טוב?
           <textarea class="ta" id="fNeeds" placeholder="למה התחושה זקוקה?...">${esc(d.needs || "")}</textarea></div></div>
 
       <div class="focus-step"><span class="fs-num">6</span>
-        <div><b>דמיין</b> איך אתה מעניק לתחושה את מה שהיא צריכה — אולי הגנה, אולי נראות.</div></div>
+        <div><b>לדמיין</b> איך מעניקים לתחושה את מה שהיא צריכה — אולי הגנה, אולי נראות.</div></div>
 
       <div class="focus-step"><span class="fs-num">7</span>
-        <div><b>האם אתה מסכים</b> לאפשר לתחושה להשתחרר עכשיו?
+        <div><b>האם אפשר</b> לתת לתחושה להשתחרר עכשיו?
           <div class="chip-row" style="margin-top:6px">
             <button class="chip ${d.agree === "yes" ? "on" : ""}" data-agree="yes">כן</button>
             <button class="chip ${d.agree === "no" ? "on" : ""}" data-agree="no">עדיין לא</button>
           </div></div></div>
 
       <div class="focus-step"><span class="fs-num">8</span>
-        <div><b>אם כן</b> — קח נשימה, אולי אנחת רווחה, אולי אפשר רעד, או פשוט דמיין איך התחושה הולכת ומשתחררת.
+        <div><b>אם כן</b> — לקחת נשימה, אולי אנחת רווחה, אולי לאפשר רעד, או פשוט לדמיין איך התחושה הולכת ומשתחררת.
           <div class="release-stage" id="releaseStage"></div>
           <button class="btn ghost2" id="releaseBtn" style="margin-top:8px">🌬️ שחרור</button></div></div>
 
@@ -2887,7 +2887,7 @@ function mountWeek6Handlers() {
   const si = app.querySelector("#saveIdentity");
   if (si) si.addEventListener("click", () => {
     S.logActivity("exercise", "מי אני בלי הבעיה");
-    celebrate(); toast("יפה — נזכרת במי שאתה 🌱");
+    celebrate(); toast("יפה — חזרה למי שאני 🌱");
   });
 
   // הסרת העול
@@ -2955,7 +2955,7 @@ function mountWeek6Handlers() {
   const ws = app.querySelector("#writeStart");
   if (ws) ws.addEventListener("click", () => {
     app.querySelector("#writeStop").classList.remove("hidden");
-    runGuidedSequence("writeTimer", [{ label: "כתיבה חופשית", seconds: 300, cue: "פשוט תכתוב כל מה שעולה" }],
+    runGuidedSequence("writeTimer", [{ label: "כתיבה חופשית", seconds: 300, cue: "פשוט לכתוב כל מה שעולה" }],
       () => toast("5 דקות הושלמו 🌱"));
   });
   const wst = app.querySelector("#writeStop");
@@ -2963,7 +2963,7 @@ function mountWeek6Handlers() {
   const sw = app.querySelector("#saveWrite");
   if (sw) sw.addEventListener("click", () => {
     const v = app.querySelector("#freeWrite").value.trim();
-    if (!v) return toast("כתוב משהו קודם");
+    if (!v) return toast("צריך לכתוב משהו קודם");
     S.saveToolEntry(5, "freewrite", { text: v });
     S.logActivity("exercise", "דייט עם הדאגה — כתיבה");
     toast("נשמר ✓"); app.querySelector("#freeWrite").value = "";
@@ -3124,10 +3124,10 @@ function w7Prep() {
       <div class="exp-focus">🎯 מתכוננים לחשיפה: <b>${esc(expLabel(d, sel))}</b>
         <button type="button" class="exp-del-item" id="prepDelItem" data-i="${sel}" title="מחיקת החשיפה">✕</button></div>
 
-      ${f("situation", "מצב שיש להיחשף אליו", "תאר את הסיטואציה שאליה תיחשף...")}
+      ${f("situation", "מצב שיש להיחשף אליו", "לתאר את הסיטואציה שנחשפים אליה...")}
       ${priorChips("thought", ".prepf[data-f=autoThoughts]", "המחשבות שכתבת:")}
       ${f("autoThoughts", "מחשבות אוטומטיות שעולות בראשך לגבי המצב", "מה המוח אומר על המצב...")}
-      <label class="mini-label">רגשות שאתה מניח שתרגיש בזמן האירוע</label>
+      <label class="mini-label">רגשות שאני מניח/ה שיעלו בזמן האירוע</label>
       <div class="chip-row">${emoChips}</div>
       <input class="inp prepf" data-f="emotionOther" value="${esc(d.emotionOther || "")}" placeholder="אחר (פרט)...">
       ${f("distortions", "טעויות / עיוותי חשיבה", "איזה עיוות חשיבה מופיע כאן...")}
@@ -3213,7 +3213,7 @@ function w7Rules() {
       <label class="mini-label">יכולת ויסות עצמי שמעניקה לי ביטחון</label>
       <textarea class="ta prep-field" data-p="tool" placeholder="למשל: נשימת בטן, המקום הבטוח, משפט מרגיע...">${esc(p.tool || "")}</textarea>
       <label class="mini-label">המקום הבטוח שלי בדמיון</label>
-      <textarea class="ta prep-field" data-p="safePlace" placeholder="חוף הים, גינה ירוקה... תאר אותו בפירוט">${esc(p.safePlace || "")}</textarea>
+      <textarea class="ta prep-field" data-p="safePlace" placeholder="חוף הים, גינה ירוקה... לתאר אותו בפירוט">${esc(p.safePlace || "")}</textarea>
       <button class="btn" id="savePrep">שמירה + טעינת האווטר</button>
     </div>
 
@@ -3350,7 +3350,7 @@ function w7Journal() {
       <div class="cal-connect">
         <h4>🔔 הוספת החשיפות ליומן — לחודש</h4>
         <p class="hint">כל חשיפה תתווסף כאירוע חוזר שבועי <b>למשך חודש</b>, עם היום, השעה והחשיפה.
-          שום דבר לא נשלח; אתה מאשר בעצמך את השמירה ביומן.</p>
+          שום דבר לא נשלח; השמירה ביומן נעשית על ידך בלבד.</p>
 
         <div class="gcal-block">
           <div class="mini-label">📅 הוספה ישירה ליומן Google — לחיצה לכל חשיפה:</div>
@@ -3428,14 +3428,14 @@ function w7Advisor() {
   const chat = expAdvisorThread.length
     ? expAdvisorThread.map(m => chatBubble(m)).join("")
     : `<div class="chat-empty">${prompt?.icon || "🪜"} התייעץ על סוגי החשיפות שמתאימים לך.<br>
-       <span class="subtle">ספר ממה אתה נמנע ואיזה רגש עולה — ואבנה איתך חשיפה בטוחה והדרגתית.</span></div>`;
+       <span class="subtle">לספר ממה נמנעים ואיזה רגש עולה — ואבנה איתך חשיפה בטוחה והדרגתית.</span></div>`;
   return `
     <div class="tool-block">
       <p class="hint">יועץ החשיפות עוזר לך לבחור <b>איזה סוג חשיפה</b> מתאים לך (במציאות · בדמיון · פנימית)
-        ואילו חשיפות מעשיות אפשר לשבץ ביומן. ${S.getState().apiKey ? "" : "<b>שים לב:</b> ללא מפתח Claude API פעיל (בניהול) התשובות הן במצב הדגמה."}</p>
+        ואילו חשיפות מעשיות אפשר לשבץ ביומן. ${S.getState().apiKey ? "" : "<b>לתשומת לב:</b> ללא מפתח Claude API פעיל (בניהול) התשובות הן במצב הדגמה."}</p>
       <div class="chat" id="expChat">${chat}</div>
       <div class="chat-input">
-        <textarea id="expMsg" class="ta" rows="2" placeholder="כתוב כאן... (למשל: אני נמנע מלנסוע ברכבת בגלל פחד מהתקף)"></textarea>
+        <textarea id="expMsg" class="ta" rows="2" placeholder="כאן אפשר לכתוב... (למשל: אני נמנע/ת מלנסוע ברכבת בגלל פחד מהתקף)"></textarea>
         <button class="btn send" id="expSend">שלח</button>
       </div>
     </div>`;
@@ -3775,7 +3775,7 @@ function w8Relapse() {
           </div></div>`).join("")}
 
       <h5 style="margin-top:14px">🚩 אלו 3 טריגרים מסמנים לי שאני בנסיגה?</h5>
-      <p class="hint">לחץ על דוגמה כדי למלא, או כתוב משלך:</p>
+      <p class="hint">ללחוץ על דוגמה כדי למלא, או לכתוב משלך:</p>
       <div class="chip-row" style="margin-bottom:10px">${chips}</div>
       <input class="inp relapse-t" data-i="0" value="${esc(t[0] || "")}" placeholder="טריגר 1">
       <input class="inp relapse-t" data-i="1" value="${esc(t[1] || "")}" placeholder="טריגר 2">
@@ -3881,7 +3881,7 @@ function w8Values() {
   return `
     <div class="tool-block">
       <div class="heart-note">❤️ המטרה — לבחור ערכים <b>מהלב</b>. הרשימות הן רק השראה אם נתקעת.</div>
-      <p class="hint">בחר עד 10 ערכים שחשובים לך, ואז דרג אותם עם החיצים — מה הכי חשוב למעלה.
+      <p class="hint">לבחור עד 10 ערכים שחשובים לך, ואז לדרג אותם עם החיצים — מה הכי חשוב למעלה.
         שלושת הראשונים יעברו להגשמה.</p>
 
       <div class="val-palette"><div class="pal-cat">השראה (לחיצה מוסיפה):</div>
@@ -3905,7 +3905,7 @@ function w8Realize() {
   const top3 = values.slice(0, 3);
   const realize = S.getToolData(8, "realize") || {};
   if (!top3.length) {
-    return `<div class="tool-block"><p class="subtle">בחר ודרג ערכים בטאב "בחירת ערכים" — ושלושת הראשונים יופיעו כאן.</p></div>`;
+    return `<div class="tool-block"><p class="subtle">לבחור ולדרג ערכים בטאב "בחירת ערכים" — ושלושת הראשונים יופיעו כאן.</p></div>`;
   }
   return `
     <div class="tool-block">
@@ -4247,7 +4247,7 @@ function mountWeek1Handlers() {
   const w1es = app.querySelector("#w1EmoSave");
   if (w1es) w1es.addEventListener("click", () => {
     const v = app.querySelector("#w1EmoOther").value.trim();
-    if (!v) return toast("כתוב את הרגש");
+    if (!v) return toast("צריך לכתוב את הרגש");
     week1EmoOther = false; S.setEmotion(v); renderChapter(1);
   });
   app.querySelectorAll("[data-alt]").forEach(b =>
@@ -4270,7 +4270,7 @@ function mountWeek1Handlers() {
   const partSave = app.querySelector("#partSave");
   if (partSave) partSave.addEventListener("click", () => {
     const v = app.querySelector("#partOther").value.trim();
-    if (!v) return toast("כתוב שם לחלק");
+    if (!v) return toast("צריך לכתוב שם לחלק");
     w1PartOther = false; S.setPartName(v); renderChapter(1);
   });
   const idn = app.querySelector("#idealName");
@@ -4421,7 +4421,7 @@ function openPrintJournal() {
     <h1>יומן פעילות שבועי</h1>
     <p class="sub">מסע 8 הזהויות · שבוע 1 — אקטיבציה מבוססת ערכים ועונג</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
-    ${st.emotion.name ? `<div class="box"><h3>הרגש שאני עובד עליו</h3>
+    ${st.emotion.name ? `<div class="box"><h3>הרגש שבחרתי לעבוד עליו</h3>
       ${esc(st.emotion.name)}${st.emotion.target ? " → יעד: " + esc(st.emotion.target) : ""}
       ${lastRating(st) != null ? " · עוצמה נוכחית: " + lastRating(st) + "/10" : ""}</div>` : ""}
     ${d.identity ? `<div class="box"><h3>מי אני רוצה להיות</h3>${esc(d.identity).replace(/\n/g, "<br>")}</div>` : ""}
@@ -4457,7 +4457,7 @@ const HIDDEN_COACH_TOOLS = ["emotion-helper", "thought-checker"];
 // "מראה טיפולית" — 4 פעולות סגורות של השיטה, במקום צ'אט פתוח בלבד
 const COACH_ACTIONS = [
   { icon: "🔁", label: "לזהות את המעגל", seed: "עזור לי לזהות את המעגל שהחלק המפוחד מפעיל בי עכשיו — הטריגר, המחשבה, התחושה, התגובה ופעולת ההצלה. שאל אותי שאלה אחת בכל פעם." },
-  { icon: "🍃", label: "הפרדה ממחשבה", seed: "עזור לי לעשות הפרדה (אי-הזדהות) מהמחשבה שמטרידה אותי עכשיו, כך שאני אשים לב שאני חושב אותה במקום להיות בתוכה." },
+  { icon: "🍃", label: "הפרדה ממחשבה", seed: "עזור לי לעשות הפרדה (אי-הזדהות) מהמחשבה שמטרידה אותי עכשיו, כך שאשים לב שאני חושב/ת אותה במקום להיות בתוכה." },
   { icon: "🏠", label: "תגובת הורה מיטיב", seed: "עזור לי לנסח תגובה של הורה פנימי מיטיב לחלק שמפחד בי עכשיו — באימות, בחמלה ובקול יציב." },
   { icon: "🧭", label: "פעולה מבוססת ערך", seed: "עזור לי לבחור פעולה קטנה אחת מבוססת ערך לצעד הבא שלי, גם אם הפחד עדיין נוכח." },
 ];
@@ -4472,7 +4472,7 @@ function renderCoach() {
       <div class="subtle">${st.apiKey ? "מחובר ל-Claude" : "מצב הדגמה — ללא מפתח API"}</div></div></header>
 
     <section class="card coach-actions-card">
-      <div class="coach-actions-title">מה אתה צריך עכשיו?</div>
+      <div class="coach-actions-title">מה נחוץ לי עכשיו?</div>
       <div class="coach-actions">
         ${COACH_ACTIONS.map((a, i) => `<button class="coach-action" data-seed="${i}">
           <span class="ca-ico">${a.icon}</span><span>${a.label}</span></button>`).join("")}
@@ -4481,11 +4481,11 @@ function renderCoach() {
 
     <div class="chat" id="chat">
       ${thread.length ? thread.map(m => chatBubble(m)).join("")
-        : `<div class="chat-empty">🪞 בחר למעלה מה אתה צריך עכשיו — או כתוב בעצמך למטה.</div>`}
+        : `<div class="chat-empty">🪞 לבחור למעלה מה נחוץ עכשיו — או לכתוב בעצמך למטה.</div>`}
     </div>
 
     <div class="chat-input">
-      <textarea id="msg" class="ta" rows="2" placeholder="כתוב כאן..."></textarea>
+      <textarea id="msg" class="ta" rows="2" placeholder="כאן אפשר לכתוב..."></textarea>
       <button class="btn send" id="send">שלח</button>
     </div>
   `;
@@ -4551,9 +4551,9 @@ function renderSettings() {
 
     <section class="card">
       <h3>📢 הפצת תוכן לכל הלקוחות</h3>
-      <p class="subtle">מדיטציות, ספריית מדיטציות וסרטוני פרקים שאתה מוסיף נשמרים כרגע במכשיר שלך בלבד.
-        כדי שיופיעו <b>אצל כל הלקוחות</b>: לחץ “ייצוא”, ואז העלה את הקובץ <b dir="ltr">content.json</b>
-        לתיקיית הריפו (כמו שאתה מעלה קבצים אחרים). תוך דקה זה יופיע לכולם.</p>
+      <p class="subtle">מדיטציות, ספריית מדיטציות וסרטוני פרקים שמוסיפים נשמרים כרגע במכשיר שלך בלבד.
+        כדי שיופיעו <b>אצל כל הלקוחות</b>: ללחוץ “ייצוא”, ואז להעלות את הקובץ <b dir="ltr">content.json</b>
+        לתיקיית הריפו (כמו שמעלים קבצים אחרים). תוך דקה זה יופיע לכולם.</p>
       <button class="btn" id="publishContent">⬇ ייצוא content.json</button>
     </section>
 
@@ -4586,7 +4586,7 @@ function renderSettings() {
 
     <section class="card">
       <h3>🧠 הוראות לכלי ה-AI</h3>
-      <p class="subtle">כאן אתה מזין מראש איך כל כלי יתנהג. זו ה"אישיות" של המאמן.</p>
+      <p class="subtle">כאן מזינים מראש איך כל כלי יתנהג. זו ה"אישיות" של המאמן.</p>
       ${Object.entries(st.aiPrompts).filter(([id]) => !HIDDEN_COACH_TOOLS.includes(id)).map(([id, t]) => `
         <div class="prompt-edit">
           <label class="field">${t.icon} ${t.name}
@@ -4682,7 +4682,7 @@ function renderSettings() {
     const a = document.createElement("a"); a.href = url; a.download = "content.json";
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast("content.json ירד — העלה אותו לריפו ✓");
+    toast("content.json ירד — להעלות אותו לריפו ✓");
   });
   app.querySelector("#setName").addEventListener("change", e => S.setName(e.target.value.trim()));
   app.querySelectorAll("[data-setgender]").forEach(b => b.addEventListener("click", () => {
@@ -4990,13 +4990,13 @@ function renderSOS() {
       <div class="sos-emoji">🏝️</div>
       <h2>המקום הבטוח שלי</h2>
       ${safe ? `<p class="sos-safe">${esc(safe).replace(/\n/g, "<br>")}</p>`
-        : `<p class="sos-sub">עצום עיניים ודמיין מקום שבו אתה מרגיש בטוח ורגוע — חוף, יער, חדר ילדות.
-           ראה את הצבעים, שמע את הצלילים, הרגש את החום. אתה יכול לחזור לשם בכל רגע.</p>`}
+        : `<p class="sos-sub">לעצום עיניים ולדמיין מקום שבו מרגישים בטוח ורגוע — חוף, יער, חדר ילדות.
+           לראות את הצבעים, לשמוע את הצלילים, לחוש את החום. אפשר לחזור לשם בכל רגע.</p>`}
       <button class="btn sos-back" data-sos="menu">חזרה</button>`;
   } else if (sosView === "phrase") {
     body = `
       <div class="sos-emoji">💗</div>
-      <h2>קח נשימה, ותקרא לאט</h2>
+      <h2>לקחת נשימה, ולקרוא לאט</h2>
       <p class="sos-phrase">${esc(CALMING_PHRASES[sosPhraseIdx % CALMING_PHRASES.length])}</p>
       <div class="sos-actions">
         <button class="btn ghost2" id="sosMore">משפט נוסף</button>
@@ -5037,7 +5037,7 @@ function installBanner() {
     </div>`;
   if (isIOS()) return `
     <div class="install-banner" id="installBanner">
-      <span>📲 להתקנה: הקש על <b>שיתוף</b> ⬆ ואז <b>“הוסף למסך הבית”</b>.</span>
+      <span>📲 להתקנה: להקיש על <b>שיתוף</b> ⬆ ואז <b>“הוסף למסך הבית”</b>.</span>
       <div class="install-actions"><button class="btn ghost2" id="installX">הבנתי</button></div>
     </div>`;
   return "";
