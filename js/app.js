@@ -139,7 +139,7 @@ function partsDashCards(m, opts = {}) {
     </section>
 
     ${!has ? `<section class="card"><p class="subtle" style="text-align:center;line-height:1.7">
-        כאן נבנית הדמות שלך לאורך המסע. ${m.partName ? "" : `${G("בחר", "בחרי")} קודם את שם החלק בפרק 1. `}ככל ${G("שתכתוב", "שתכתבי")} בשבועות — אמונה, מחשבות, רגש, פעילות, חשיפות — הכול יופיע כאן.</p></section>` : `
+        כאן נבנית הדמות שלך לאורך המסע. ${m.partName ? "" : `לבחור קודם את שם החלק בפרק 1. `}ככל שכותבים בשבועות — אמונה, מחשבות, רגש, פעילות, חשיפות — הכול יופיע כאן.</p></section>` : `
 
     <div class="dash-cols">
       <div class="dash-side d-partside">
@@ -214,7 +214,7 @@ function calmSenseWidget() {
   const chosen = st.senseNow || [];
   const all = [...CALM_SENSES, ...chosen.filter(c => !CALM_SENSES.includes(c))];
   return `<div class="calm-sense">
-    <label class="mini-label center">🌿 מה אני ${G("מרגיש", "מרגישה")} עכשיו? — ${G("בחר", "בחרי")} תחושה שעולה (נכנסת לתחושות בדשבורד)</label>
+    <label class="mini-label center">🌿 מה אני מרגיש/ה עכשיו? — לבחור תחושה שעולה (נכנסת לתחושות בדשבורד)</label>
     <div class="chip-row center-row">
       ${all.map(s => `<button type="button" class="chip cs-chip ${chosen.includes(s) ? "on" : ""}" data-cs="${esc(s)}">${esc(s)}</button>`).join("")}
     </div>
@@ -321,21 +321,21 @@ function goalField(f, plan) {
       <label class="mini-label">${esc(f.label)}</label>
       ${st.partName
         ? `<p class="target-line">🧩 <b>${esc(st.partName)}</b> <span class="subtle">— נבחר בלשונית "החלקים בנפש"</span></p>`
-        : `<p class="subtle">${G("בחר", "בחרי")} קודם את שם החלק בלשונית "החלקים בנפש".</p>`}</div>`;
+        : `<p class="subtle">לבחור קודם את שם החלק בלשונית "החלקים בנפש".</p>`}</div>`;
   }
   if (f.type === "part-pick") {
     const st = S.getState();
     const parts = ["הפגיע", "החרד", "המפוחד", "חסר האונים", "הדחוי", "הביקורתי"];
     const other = w1PartOther || (!!st.partName && !parts.includes(st.partName));
     return `<div class="goal-field emotion-pick">
-      <label class="mini-label">${esc(f.label)} — ${G("בחר", "בחרי")} שם, או ${G("כתוב", "כתבי")} משלך</label>
+      <label class="mini-label">${esc(f.label)} — לבחור שם, או לכתוב משלך</label>
       <p class="hint">זה החלק הפגיע שבתוכך שנלמד להנהיג בחמלה. תן לו שם שמדבר אליך.</p>
       <div class="chip-row">
         ${parts.map(p => `<button type="button" class="chip ${st.partName === p ? "on" : ""}" data-part="${esc(p)}">${esc(p)}</button>`).join("")}
         <button type="button" class="chip ${other ? "on" : ""}" data-part="__other__">אחר…</button>
       </div>
       ${other ? `<div class="other-emo-row">
-        <input class="inp" id="partOther" placeholder="${G("כתוב", "כתבי")} שם לחלק..." value="${esc(parts.includes(st.partName) ? "" : (st.partName || ""))}">
+        <input class="inp" id="partOther" placeholder="לכתוב שם לחלק..." value="${esc(parts.includes(st.partName) ? "" : (st.partName || ""))}">
         <button type="button" class="btn ghost2" id="partSave">שמירה</button></div>` : ""}
       ${st.partName ? `<p class="target-line">🧩 החלק שלי: <b>${esc(st.partName)}</b></p>` : ""}</div>`;
   }
@@ -343,7 +343,7 @@ function goalField(f, plan) {
     const st = S.getState();
     return `<div class="goal-field emotion-pick">
       <label class="mini-label">${esc(f.label)}</label>
-      <p class="hint">הדמות המיטיבה שתלווה אותך ותנהיג בחמלה — ${G("תן", "תני")} לה שם (למשל: המבוגר החכם, ההורה הטוב, הגרסה הבוגרת שלי).</p>
+      <p class="hint">הדמות המיטיבה שתלווה אותך ותנהיג בחמלה — לתת לה שם (למשל: המבוגר החכם, ההורה הטוב, הגרסה הבוגרת שלי).</p>
       <input class="inp goal-ideal" id="idealName" value="${esc(st.idealName || "")}" placeholder="שם הדמות האידיאלית...">
       ${st.idealName ? `<p class="target-line">🌱 ההורה המיטיב שלי: <b>${esc(st.idealName)}</b></p>` : ""}</div>`;
   }
@@ -359,7 +359,7 @@ function goalField(f, plan) {
       </div>`;
     return `<div class="goal-field">
       <label class="mini-label">${esc(f.label)}</label>
-      <p class="hint">אם לא אעשה את השינוי — לאן זה מוביל? ${G("דמיין", "דמייני")} בבירור.</p>
+      <p class="hint">אם לא אעשה את השינוי — לאן זה מוביל? לדמיין בבירור.</p>
       ${block("stay5", "בעוד 5 שנים")}
       ${block("stay10", "בעוד עשור")}</div>`;
   }
@@ -369,13 +369,13 @@ function goalField(f, plan) {
     const emoOther = week1EmoOther || (!!st.emotion.name && !emotions.includes(st.emotion.name));
     const lr = st.emotion.ratings.length ? st.emotion.ratings[st.emotion.ratings.length - 1].value : 5;
     return `<div class="goal-field emotion-pick">
-      <label class="mini-label">${esc(f.label)} — ${G("נבחר", "נבחר")} פעם אחת ומלווה את כל התהליך</label>
+      <label class="mini-label">${esc(f.label)} — נבחר פעם אחת ומלווה את כל התהליך</label>
       <div class="chip-row">
         ${emotions.map(e => `<button type="button" class="chip ${st.emotion.name === e ? "on" : ""}" data-emotion="${e}">${e}</button>`).join("")}
         <button type="button" class="chip ${emoOther ? "on" : ""}" data-emotion="__other__">אחר…</button>
       </div>
       ${emoOther ? `<div class="other-emo-row">
-        <input class="inp" id="w1EmoOther" placeholder="${G("כתוב", "כתבי")} את הרגש שלך..." value="${esc(emotions.includes(st.emotion.name) ? "" : (st.emotion.name || ""))}">
+        <input class="inp" id="w1EmoOther" placeholder="לכתוב את הרגש שלך..." value="${esc(emotions.includes(st.emotion.name) ? "" : (st.emotion.name || ""))}">
         <button type="button" class="btn ghost2" id="w1EmoSave">שמירת הרגש</button></div>` : ""}
       <label class="mini-label" style="margin-top:12px">עוצמת הרגש עכשיו (0–10) — נקודת מוצא למדידה</label>
       <div class="rating-row">
@@ -388,14 +388,14 @@ function goalField(f, plan) {
     const st = S.getState();
     if (!st.emotion.name)
       return `<div class="goal-field emotion-pick"><label class="mini-label">${esc(f.label)}</label>
-        <p class="subtle">${G("בחר", "בחרי")} קודם את הרגש המרכזי בשלב 1 — הרגש החלופי ייגזר ממנו.</p></div>`;
+        <p class="subtle">לבחור קודם את הרגש המרכזי בשלב 1 — הרגש החלופי ייגזר ממנו.</p></div>`;
     const suggested = EMOTION_ALTERNATIVES[st.emotion.name];
     const altPool = [...new Set([suggested, ...ALT_EMOTION_POOL].filter(Boolean))];
     return `<div class="goal-field emotion-pick">
       <label class="mini-label">${esc(f.label)} — חלופה ל<b>${esc(st.emotion.name)}</b></label>
       <p class="hint">${suggested
-        ? `במקום <b>${esc(st.emotion.name)}</b>, אפשר לכוון אל <b>${esc(suggested)}</b>. ${G("בחר", "בחרי")} את היעד שלך:`
-        : `${G("בחר", "בחרי")} את הרגש שאליו רוצים להגיע במסע:`}</p>
+        ? `במקום <b>${esc(st.emotion.name)}</b>, אפשר לכוון אל <b>${esc(suggested)}</b>. לבחור את היעד שלך:`
+        : `לבחור את הרגש שאליו רוצים להגיע במסע:`}</p>
       <div class="chip-row">
         ${altPool.map(a => `<button type="button" class="chip alt ${st.emotion.target === a ? "on" : ""}" data-alt="${esc(a)}">${esc(a)}</button>`).join("")}
       </div>
@@ -404,7 +404,7 @@ function goalField(f, plan) {
         const lp = pr.length ? pr[pr.length - 1].value : 3;
         return `<p class="target-line">🎯 היעד הרגשי שלי: <b>${esc(st.emotion.target)}</b></p>
         <div class="alt-pos-rate">
-          <label class="mini-label center">וכמה <b>${esc(st.emotion.target)}</b> ${G("נוכח", "נוכחת")} עכשיו? (0–10) — נקודת מוצא שתעלה במסע</label>
+          <label class="mini-label center">וכמה <b>${esc(st.emotion.target)}</b> יש בי עכשיו? (0–10) — נקודת מוצא שתעלה במסע</label>
           <div class="rating-row rating-center">
             <input type="range" id="altPosRange" min="0" max="10" value="${lp}">
             <span class="rate-val" id="altPosVal">${lp}</span></div>
@@ -601,17 +601,12 @@ function renderOnboarding() {
   const emoOther = onb.otherMode || (!!onb.emotion && !ONB_EMOTIONS.includes(onb.emotion));
   if (onbStep === 0) body = `
     ${onbArt(0)}
-    <h2>${onb.gender === "f" ? "ברוכה הבאה" : "ברוך הבא"} למסע 8 הזהויות</h2>
+    <h2>טוב שהגעת — למסע 8 הזהויות</h2>
     <p class="onb-promise">${JOURNEY_PROMISE}</p>
     <p class="onb-sub">נתחיל בהיכרות קצרה.</p>
     <label class="onb-label">איך קוראים לך?</label>
     <input class="inp" id="onbName" placeholder="השם שלך" value="${esc(onb.name)}">
-    <label class="onb-label">אני:</label>
-    <div class="chip-row">
-      <button class="chip ${onb.gender === "m" ? "on" : ""}" data-onbgender="m">זכר</button>
-      <button class="chip ${onb.gender === "f" ? "on" : ""}" data-onbgender="f">נקבה</button>
-    </div>
-    <p class="onb-safety">כלי עזר ותמיכה — לא ${onb.gender === "f" ? "תחליף" : "תחליף"} לטיפול מקצועי. במצוקה חריפה: ער״ן 1201 · חירום 101.</p>`;
+    <p class="onb-safety">כלי עזר ותמיכה — לא תחליף לטיפול מקצועי. במצוקה חריפה: ער״ן 1201 · חירום 101.</p>`;
   if (onbStep === 1) body = `
     ${onbArt(1)}
     <h2>איזה רגש הכי מלווה אותך?</h2>
@@ -651,7 +646,7 @@ function renderOnboarding() {
       <div class="onb-actions">
         ${onbStep > 0 ? `<button class="btn ghost2" id="onbBack">חזרה</button>` : ""}
         ${onbStep === 2 ? `<button class="btn ghost2" id="onbSkip">דלג</button>` : ""}
-        <button class="btn onb-next" id="onbNext">${isLast ? "סיום — " + (onb.gender === "f" ? "בואי" : "בוא") + " נתחיל 🚀" : (onb.gender === "f" ? "המשיכי" : "המשך")}</button>
+        <button class="btn onb-next" id="onbNext">${isLast ? "סיום — יוצאים לדרך 🚀" : "הבא"}</button>
       </div>
     </div>`;
 
@@ -714,7 +709,7 @@ function renderHome() {
   const charge = S.computeCharge();
   const stage = S.avatarStage(charge);
   const stt = S.stats();
-  const hello = st.name ? `שלום ${st.name} 👋` : `${G("ברוך הבא", "ברוכה הבאה")} למסע 👋`;
+  const hello = st.name ? `שלום ${st.name} 👋` : `טוב שהגעת למסע 👋`;
 
   const ratings = st.emotion.ratings;
   const first = ratings[0]?.value;
@@ -1314,13 +1309,13 @@ function w1Parts() {
       </div>
 
       <h4 style="margin-top:6px">1. מה השם של החלק הגולה שלך?</h4>
-      <p class="hint">זה החלק שנעבוד עליו לאורך המסע. ${G("בחר", "בחרי")} שם שמדבר אליך, או ${G("כתוב", "כתבי")} משלך.</p>
+      <p class="hint">זה החלק שנעבוד עליו לאורך המסע. לבחור שם שמדבר אליך, או לכתוב משלך.</p>
       <div class="chip-row">
         ${exiles.map(p => `<button type="button" class="chip ${st.partName === p ? "on" : ""}" data-part="${esc(p)}">${esc(p)}</button>`).join("")}
         <button type="button" class="chip ${other ? "on" : ""}" data-part="__other__">אחר…</button>
       </div>
       ${other ? `<div class="other-emo-row">
-        <input class="inp" id="partOther" placeholder="${G("כתוב", "כתבי")} שם לחלק..." value="${esc(exiles.includes(st.partName) ? "" : (st.partName || ""))}">
+        <input class="inp" id="partOther" placeholder="לכתוב שם לחלק..." value="${esc(exiles.includes(st.partName) ? "" : (st.partName || ""))}">
         <button type="button" class="btn ghost2" id="partSave">שמירה</button></div>` : ""}
       ${st.partName ? `<p class="target-line">🧩 החלק הגולה שלי: <b>${esc(st.partName)}</b></p>` : ""}
 
@@ -1381,16 +1376,16 @@ function w1Emotion() {
   const emoOther = week1EmoOther || (!!st.emotion.name && !emotions.includes(st.emotion.name));
   return `
     <div class="tool-block">
-      <h4>1. ${G("בחר", "בחרי")} רגש מרכזי שמלווה אותך</h4>
+      <h4>1. לבחור רגש מרכזי שמלווה אותך</h4>
       <div class="chip-row">
         ${emotions.map(e => `<button class="chip ${st.emotion.name === e ? "on" : ""}" data-emotion="${e}">${e}</button>`).join("")}
         <button class="chip ${emoOther ? "on" : ""}" data-emotion="__other__">אחר…</button>
       </div>
       ${emoOther ? `<div class="other-emo-row">
-        <input class="inp" id="w1EmoOther" placeholder="${G("כתוב", "כתבי")} את הרגש שלך..." value="${esc(emotions.includes(st.emotion.name) ? "" : (st.emotion.name || ""))}">
+        <input class="inp" id="w1EmoOther" placeholder="לכתוב את הרגש שלך..." value="${esc(emotions.includes(st.emotion.name) ? "" : (st.emotion.name || ""))}">
         <button class="btn ghost2" id="w1EmoSave">שמירת הרגש</button></div>` : ""}
 
-      <h4>2. ${G("דרג", "דרגי")} את עוצמתו עכשיו (0–10) — נקודת מוצא למדידה</h4>
+      <h4>2. לדרג את עוצמתו עכשיו (0–10) — נקודת מוצא למדידה</h4>
       <div class="rating-row">
         <input type="range" id="rate" min="0" max="10" value="${lastRating(st) ?? 5}" ${st.emotion.name ? "" : "disabled"}>
         <span class="rate-val" id="rateVal">${lastRating(st) ?? 5}</span>
@@ -3095,11 +3090,11 @@ function w7Prep() {
   if (!items.length) {
     return `
     <div class="tool-block">
-      <p class="hint">כאן ${G("מתכונן", "מתכוננת")} לחשיפה. ${G("בחר", "בחרי")} פחד מ<b>סולם הפחדים</b> להתכונן אליו — אפשר להכין <b>כמה חשיפות</b>, ולבחור על מה לעבוד.</p>
+      <p class="hint">כאן מתכוננים לחשיפה. לבחור פחד מ<b>סולם הפחדים</b> להתכונן אליו — אפשר להכין <b>כמה חשיפות</b>, ולבחור על מה לעבוד.</p>
       ${fears.length
         ? `<div class="prior-block"><div class="prior-t">מסולם הפחדים — לחיצה פותחת הכנה לחשיפה:</div>
             <div class="chip-row">${toAdd.map(fr => `<button type="button" class="chip prep-add" data-fear="${esc(fr)}">＋ ${esc(fr)}</button>`).join("")}</div></div>`
-        : `<p class="subtle">קודם ${G("מלא", "מלאי")} את <b>סולם הפחדים</b> (בטאב הקודם) — ומשם ${G("תבחר", "תבחרי")} על מה להתכונן.</p>`}
+        : `<p class="subtle">קודם למלא את <b>סולם הפחדים</b> (בטאב הקודם) — ומשם לבחור על מה להתכונן.</p>`}
     </div>`;
   }
 
@@ -3158,8 +3153,8 @@ function w7After() {
   if (!items.length) {
     return `
     <div class="tool-block">
-      <p class="hint">כאן מתעדים <b>אחרי</b> החשיפה. ${G("הכן", "הכיני")} ותשבץ חשיפה קודם — וכאן ${G("תבחר", "תבחרי")}
-        על איזו חשיפה מדובר ${G("ותתעד", "ותתעדי")} מה קרה.</p>
+      <p class="hint">כאן מתעדים <b>אחרי</b> החשיפה. להכין ולשבץ חשיפה קודם — וכאן לבחור
+        על איזו חשיפה מדובר ולתעד מה קרה.</p>
     </div>`;
   }
   const sel = Math.min(Math.max(week7AfterSel, 0), items.length - 1);
@@ -3168,7 +3163,7 @@ function w7After() {
     <textarea class="ta afterf" data-f="${key}" placeholder="${esc(ph)}">${esc(d[key] || "")}</textarea>`;
   return `
     <div class="tool-block">
-      <p class="hint">טופס אחרי חשיפה — ${G("בחר", "בחרי")} על איזו חשיפה מדובר, וממלאים כדי לעגן את הלמידה החדשה.</p>
+      <p class="hint">טופס אחרי חשיפה — לבחור על איזו חשיפה מדובר, וממלאים כדי לעגן את הלמידה החדשה.</p>
       <div class="exp-picker">
         <div class="prior-t">על איזו חשיפה מדובר?</div>
         <div class="chip-row">${items.map((it, i) => `<button type="button" class="chip after-sel ${i === sel ? "on" : ""}" data-i="${i}">${esc(expLabel(it, i))}${it.done ? " ✓" : ""}</button>`).join("")}</div>
@@ -3260,8 +3255,8 @@ function w7Ladder() {
       <div class="chip-row">${emoChips}</div>
 
       <h5 style="margin-top:14px">סולם הפחדים — מהקל אל הכבד</h5>
-      <p class="hint">${G("דרג", "דרגי")} את מה שמפחיד אותך <b>מהקל אל הכבד</b> — ${G("סדר", "סדרי")} עם החיצים ▲▼,
-        ${G("והתחל", "והתחילי")} מהדרגה <b>הקלה ביותר</b>. הוספנו לך אוטומטית את מה שכבר כתבת — אפשר לערוך, למחוק או להוסיף.</p>
+      <p class="hint">לדרג את מה שמפחיד אותך <b>מהקל אל הכבד</b> — לסדר עם החיצים ▲▼,
+        ולהתחיל מהדרגה <b>הקלה ביותר</b>. הוספנו לך אוטומטית את מה שכבר כתבת — אפשר לערוך, למחוק או להוסיף.</p>
       ${priorRungChips()}
       <div id="rungs">${L.rungs.map((r, i) => rungCard(r, i, L.rungs.length)).join("")}</div>
       <button class="btn ghost2 add-case" id="addRung">＋ הוספת דרגה</button>
@@ -3318,7 +3313,7 @@ function w7Journal() {
   if (!items.length) {
     return `
     <div class="tool-block">
-      <p class="hint">כאן משבצים ליומן את החשיפות. ${G("הכן", "הכיני")} קודם חשיפה בטאב <b>"הכנה לחשיפה"</b> —
+      <p class="hint">כאן משבצים ליומן את החשיפות. להכין קודם חשיפה בטאב <b>"הכנה לחשיפה"</b> —
         וכל חשיפה שהוכנה תופיע כאן לקביעת יום ושעה.</p>
     </div>`;
   }
@@ -3336,7 +3331,7 @@ function w7Journal() {
 
   return `
     <div class="tool-block">
-      <p class="hint">שבץ את החשיפות שכבר הכנת — לכל אחת ${G("קבע", "קבעי")} בצד <b>יום ושעה</b>. תרגול קבוע וחוזר
+      <p class="hint">לשבץ את החשיפות שכבר הכנת — לכל אחת לקבוע בצד <b>יום ושעה</b>. תרגול קבוע וחוזר
         הוא מה שמלמד את הגוף שהפחד עולה וחולף.</p>
 
       <h4>יומן החשיפות שלי</h4>
@@ -3809,7 +3804,7 @@ function w8Identity() {
 
   return `
     <div class="tool-block">
-      <p class="hint">הגעת לסוף המסע. הזהות החדשה שלך נבנתה כאן <b>אוטומטית מכל מה שעבדת עליו</b> — ${G("ערוך", "ערכי")} או ${G("הוסף", "הוסיפי")} כרצונך, ואז ${G("שמור", "שמרי")}.</p>
+      <p class="hint">הגעת לסוף המסע. הזהות החדשה שלך נבנתה כאן <b>אוטומטית מכל מה שעבדת עליו</b> — לערוך או להוסיף כרצונך, ואז לשמור.</p>
 
       <label class="mini-label">🌟 השם של האני האידיאלי שלי</label>
       <input class="inp idf" data-k="name" value="${esc(nameVal)}" placeholder="השם שנתת לדמות המיטיבה בפרק 1...">
@@ -4562,11 +4557,6 @@ function renderSettings() {
       <label class="field">שם המשתתף
         <input id="setName" class="inp" value="${esc(st.name)}" placeholder="שם">
       </label>
-      <label class="onb-label">לשון פנייה (מגדר)</label>
-      <div class="chip-row">
-        <button class="chip ${st.gender !== "f" ? "on" : ""}" data-setgender="m">זכר</button>
-        <button class="chip ${st.gender === "f" ? "on" : ""}" data-setgender="f">נקבה</button>
-      </div>
     </section>
 
     <section class="card">
@@ -4949,7 +4939,7 @@ function renderSOS() {
     body = `
       <div class="sos-emoji">🤗</div>
       <h2>רגע קשה? אני כאן איתך</h2>
-      <p class="sos-sub">${G("אתה בטוח", "את בטוחה")}. מה ש${G("אתה מרגיש", "את מרגישה")} הוא גל — הוא יעלה ויחלוף. ${G("בוא", "בואי")} נעבור אותו יחד, צעד אחד.</p>
+      <p class="sos-sub">יש כאן ביטחון עכשיו. מה שעולה עכשיו הוא גל — הוא יעלה ויחלוף. נעבור אותו יחד, צעד אחד.</p>
       <div class="sos-menu">
         <button class="sos-item protocol" data-sos="protocol"><span>🧭</span> פרוטוקול המענה — 5 צעדים</button>
         <button class="sos-item" data-sos="breath"><span>🌬️</span> נשימה מרגיעה</button>
