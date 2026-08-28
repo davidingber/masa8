@@ -779,8 +779,8 @@ function renderHome() {
   checkNewBadges();
   const badgeCount = badgeSummary();
   const today = new Date().toISOString().slice(0, 10);
-  const checkedToday = ratings.some(r => r.date.slice(0, 10) === today);
-  const todayVal = [...ratings].reverse().find(r => r.date.slice(0, 10) === today)?.value;
+  const checkedToday = ratings.some(r => r.date && r.date.slice(0, 10) === today);
+  const todayVal = [...ratings].reverse().find(r => r.date && r.date.slice(0, 10) === today)?.value;
 
 
   app.innerHTML = `

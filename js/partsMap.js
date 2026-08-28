@@ -121,9 +121,9 @@ export function buildPartsMap(S) {
   add(resource, "behavior", "משאב חסר", beliefTool.resources, 6);
   // תחושות חיוביות שנבחרו אחרי רגיעה/מדיטציה
   (st.senseNow || []).forEach(s => add(resource, "sensation", "תחושה עכשיו", s, 4));
-  // האזנה למדיטציות — כמספר האזנות שנרשמו
-  const medListens = (st.activities || []).filter(a => a.type === "meditation").length;
-  if (medListens) resource.behavior.push({ label: "מדיטציות", text: `האזנת ${medListens} פעמים`, week: 4 });
+  // כל מדיטציה שהאזנו לה — בשמה, כמענה מיטיב לחלק (כפילויות מתמזגות)
+  (st.activities || []).filter(a => a.type === "meditation").forEach(a =>
+    add(resource, "behavior", "מדיטציה", `🎧 ${(a.note || "").trim() || "מדיטציה"}`, 4));
 
   // ===== קישור הופכי: לכל רגש-כאב — רגש מיטיב שכנגד =====
   // כך צד המשאב (השמאלי) תמיד "עונה" לצד הכאב (הימני):
