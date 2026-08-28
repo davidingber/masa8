@@ -125,6 +125,28 @@ function renderGate() {
 //  מפת החלקים / "הדמות שלי" — דשבורד מרכזי מסונכרן מכל השבועות
 //  partsDashCards מרנדר את גוף הדשבורד (משמש גם את מסך הבית)
 // ============================================================
+// עוגת ההצלחה — כמה מהמפה הפנימית כבר הפכה לצד המיטיב
+function successDonut(m) {
+  const res = m.counts.resource, pain = m.counts.pain, total = res + pain;
+  if (!total) return `<div class="success-empty">כאן תיבנה ההצלחה שלך — ככל שתעבור/י בשבועות, העוגה תתמלא בירוק 🌱</div>`;
+  const pct = Math.round(res / total * 100);
+  const C = 2 * Math.PI * 48;
+  const fg = (res / total) * C;
+  return `
+    <svg viewBox="0 0 120 120" class="donut" role="img" aria-label="ההצלחה שלי בתהליך: ${pct} אחוז">
+      <circle cx="60" cy="60" r="48" class="donut-track" fill="none" stroke-width="15"></circle>
+      <circle cx="60" cy="60" r="48" class="donut-arc" fill="none" stroke-width="15" stroke-linecap="round"
+        stroke-dasharray="${fg.toFixed(1)} ${(C - fg).toFixed(1)}" transform="rotate(-90 60 60)"></circle>
+      <text x="60" y="58" class="donut-pct">${pct}%</text>
+      <text x="60" y="78" class="donut-cap">בדרך להנהגה עצמית</text>
+    </svg>
+    <div class="chart-legend">
+      <div class="lg-row"><span class="lg-dot lg-res"></span><span class="lg-txt">משאב מיטיב — מה שכבר נבנה</span><b class="lg-num">${res}</b></div>
+      <div class="lg-row"><span class="lg-dot lg-pain"></span><span class="lg-txt">כאב — מה שעדיין בעבודה</span><b class="lg-num">${pain}</b></div>
+    </div>
+    <div class="chart-cap">ככל שהירוק גדל — ההצלחה מתחזקת 🌱</div>`;
+}
+
 function partsDashCards(m, opts = {}) {
   const pct = Math.round(m.balance * 100);
   const resPct = pct, sufPct = 100 - pct;
@@ -163,16 +185,11 @@ function partsDashCards(m, opts = {}) {
   return `
     <section class="card self-hero">
       ${opts.streak > 0 ? `<div class="streak-chip" title="ימים רצופים של עבודה">🔥 ${opts.streak} ${opts.streak === 1 ? "יום" : "ימים"} ברצף</div>` : ""}
-      <div class="avatar-wrap">${renderAvatarPhoto(pct)}</div>
-      <div class="hero-cap subtle">פורחת ככל שההורה המיטיב מוזן</div>
+      <div class="chart-title">ההצלחה שלי בתהליך</div>
+      <div class="success-chart">${successDonut(m)}</div>
       ${posTrend}
       ${emoTrend}
-      ${p ? `<div class="emo-sub subtle">יורד בסביבה בטוחה ובחמלה 🛡️</div>` : ""}
-      <div class="self-balance">
-        <div class="pm-col"><div class="pm-bar pm-bar-res" style="height:${34 + resPct * 0.9}px">משאב</div><div class="pm-col-lbl cl-res">▲ ${m.counts.resource}</div></div>
-        <div class="pm-col"><div class="pm-bar pm-bar-suf" style="height:${34 + sufPct * 0.9}px">כאב</div><div class="pm-col-lbl cl-suf">▼ ${m.counts.pain}</div></div>
-      </div>
-      <div class="self-note"><b>בסביבה בטוחה ובחמלה — הרגש יורד.</b> ולחלק יש כמה רגשות: גם אם הפחד עוד כאן, התסכול, הכעס והחוסר-אונים שסביבו פוחתים.</div>
+      ${p ? `<div class="emo-sub subtle">הכאב יורד — והמיטיב עולה כנגדו 🛡️</div>` : ""}
     </section>
 
     ${!has ? `<section class="card"><p class="subtle" style="text-align:center;line-height:1.7">
