@@ -182,6 +182,21 @@ function partsDashCards(m, opts = {}) {
   const partHdr = m.partName ? `החלק · ${esc(m.partName)}` : "החלק";
   const idealHdr = m.idealName ? esc(m.idealName) : "ההורה המיטיב";
 
+  // ===== מבנה "שורה מול שורה" — כל קטגוריית כאב מול המענה המיטיב שלה =====
+  const cellChips = (items, side) => items && items.length
+    ? `<div class="dmini">${items.map(it => dchip(it, side)).join("")}</div>`
+    : `<div class="d-empty">—</div>`;
+  const cellBelief = (text, cls) => text ? `<div class="belief ${cls}">${esc(text)}</div>` : `<div class="d-empty">—</div>`;
+  const burdenItems = m.resource.behavior.filter(it => it.label === "הסרת העול");
+  const activityItems = m.resource.behavior.filter(it => ["פעילות מהנה", "מדיטציות", "ערך מנחה"].includes(it.label));
+  const compassionItems = m.resource.behavior.filter(it => it.label !== "הסרת העול" && !["פעילות מהנה", "מדיטציות", "ערך מנחה"].includes(it.label));
+  const expChips = (m.exposures || []).length
+    ? `<div class="dmini">${m.exposures.map(e => `<span class="dchip d-parent${e.done ? " exp-done" : ""}">${e.done ? "✅" : "🎯"} ${esc(clip(e.fear))}</span>`).join("")}</div>`
+    : `<div class="d-empty">—</div>`;
+  const pRow = (lblP, painHtml, lblR, resHtml) => `
+      <div class="dg-cell c-pain"><div class="dg-lbl">${lblP}</div>${painHtml}</div>
+      <div class="dg-cell c-res"><div class="dg-lbl">${lblR}</div>${resHtml}</div>`;
+
   return `
     <section class="card self-hero">
       ${opts.streak > 0 ? `<div class="streak-chip" title="ימים רצופים של עבודה">🔥 ${opts.streak} ${opts.streak === 1 ? "יום" : "ימים"} ברצף</div>` : ""}
@@ -195,28 +210,17 @@ function partsDashCards(m, opts = {}) {
     ${!has ? `<section class="card"><p class="subtle" style="text-align:center;line-height:1.7">
         כאן נבנית הדמות שלך לאורך המסע. ${m.partName ? "" : `לבחור קודם את שם החלק בפרק 1. `}ככל שכותבים בשבועות — אמונה, מחשבות, רגש, פעילות, חשיפות — הכול יופיע כאן.</p></section>` : `
 
-    <div class="dash-cols">
-      <div class="dash-side d-partside">
-        <div class="dash-head dh-part">${partHdr}</div>
-        ${m.pain.belief ? `<div class="dblk"><div class="dblk-lbl">אמונה ראשית</div><div class="belief b-part">${esc(m.pain.belief)}</div></div>` : ""}
-        ${blk("מחשבות", m.pain.thought, "part", m.resource.thought.length > 0)}
-        ${blk("רגשות", m.pain.emotion, "part", m.resource.emotion.length > 0)}
-        ${blk("תחושות", m.pain.sensation, "part", m.resource.sensation.length > 0)}
-        ${(m.pain.over.length || m.pain.avoid.length) ? `<div class="dblk"><div class="dblk-lbl">התנהגות${m.resource.behavior.length ? ` <span class="dblk-ans">✓ יש מענה</span>` : ""}</div>
-          ${m.pain.over.length ? `<div class="dblk-sub">עשיית יתר</div><div class="dmini">${m.pain.over.map(it => dchip(it, "part")).join("")}</div>` : ""}
-          ${m.pain.avoid.length ? `<div class="dblk-sub">הימנעות / חוסר עשייה</div><div class="dmini">${m.pain.avoid.map(it => dchip(it, "part")).join("")}</div>` : ""}
-        </div>` : ""}
-      </div>
-
-      <div class="dash-side d-parentside">
-        <div class="dash-head dh-parent">${idealHdr}</div>
-        ${m.resource.belief ? `<div class="dblk"><div class="dblk-lbl">אמונת יסוד חדשה</div><div class="belief b-parent">${esc(m.resource.belief)}</div></div>` : ""}
-        ${blk("מחשבות חדשות", m.resource.thought, "parent")}
-        ${blk("רגשות מיטיבים", m.resource.emotion, "parent")}
-        ${blk("תחושות", m.resource.sensation, "parent")}
-        ${blk("התנהגות מיטיבה", m.resource.behavior.filter(it => it.label !== "הסרת העול"), "parent")}
-        ${blk("הסרת העול", m.resource.behavior.filter(it => it.label === "הסרת העול"), "parent")}
-      </div>
+    <div class="dash-grid">
+      <div class="dg-head dh-part">${partHdr}</div>
+      <div class="dg-head dh-parent">${idealHdr}</div>
+      ${pRow("אמונת יסוד", cellBelief(m.pain.belief, "b-part"), "אמונת יסוד חדשה", cellBelief(m.resource.belief, "b-parent"))}
+      ${pRow("מחשבות", cellChips(m.pain.thought, "part"), "מחשבות מיטיבות", cellChips(m.resource.thought, "parent"))}
+      ${pRow("רגשות", cellChips(m.pain.emotion, "part"), "רגשות מיטיבים", cellChips(m.resource.emotion, "parent"))}
+      ${pRow("תחושות", cellChips(m.pain.sensation, "part"), "תחושות", cellChips(m.resource.sensation, "parent"))}
+      ${pRow("עשיית יתר", cellChips(m.pain.over, "part"), "הסרת העול", cellChips(burdenItems, "parent"))}
+      ${pRow("הימנעות", cellChips(m.pain.avoid, "part"), "חשיפות", expChips)}
+      ${activityItems.length ? `<div class="dg-cell dg-wide c-res"><div class="dg-lbl">פעילות · מענה</div>${cellChips(activityItems, "parent")}</div>` : ""}
+      ${compassionItems.length ? `<div class="dg-cell dg-wide c-res"><div class="dg-lbl">התנהגות חומלת</div>${cellChips(compassionItems, "parent")}</div>` : ""}
     </div>
     ${m.exposures && m.exposures.length ? `
     <section class="card exp-dash">

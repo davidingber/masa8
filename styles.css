@@ -1023,3 +1023,20 @@ body{font-size:15.5px;line-height:1.5}
 .lg-num{font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink)}
 .chart-cap{font-size:.83rem;color:var(--subtle);text-align:center;line-height:1.5}
 .success-empty{font-size:.94rem;color:var(--subtle);text-align:center;max-width:34ch;line-height:1.65;padding:18px 0}
+
+/* ===== דשבורד שורה-מול-שורה (מזווג) ===== */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.dg-head{font-family:var(--font-head);font-weight:800;font-size:14px;text-align:center;padding:7px 6px;border-radius:12px}
+.dg-head.dh-part{background:rgba(126,147,168,.14);color:#5a6a78}
+.dg-head.dh-parent{background:rgba(143,182,156,.20);color:var(--teal)}
+[data-theme="dark"] .dg-head.dh-part{color:#aebccb}
+.dg-cell{border-radius:14px;padding:9px 10px;border:1px solid var(--line)}
+.dg-cell.c-pain{background:#eef1f4}
+.dg-cell.c-res{background:#eef3ec}
+[data-theme="dark"] .dg-cell.c-pain{background:#1f242a;border-color:#333c45}
+[data-theme="dark"] .dg-cell.c-res{background:#20281f;border-color:#33402d}
+.dg-cell.dg-wide{grid-column:1 / -1;background:#eaf2ea}
+[data-theme="dark"] .dg-cell.dg-wide{background:#1d271c}
+.dg-lbl{font-size:11px;font-weight:800;color:var(--subtle);margin-bottom:6px}
+.d-empty{color:var(--subtle);opacity:.45;font-size:13px;padding:2px 0}
+.dchip.exp-done{opacity:.72}
