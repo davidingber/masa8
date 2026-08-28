@@ -188,8 +188,9 @@ function partsDashCards(m, opts = {}) {
     : `<div class="d-empty">—</div>`;
   const cellBelief = (text, cls) => text ? `<div class="belief ${cls}">${esc(text)}</div>` : `<div class="d-empty">—</div>`;
   const burdenItems = m.resource.behavior.filter(it => it.label === "הסרת העול");
-  const activityItems = m.resource.behavior.filter(it => ["פעילות מהנה", "מדיטציות", "ערך מנחה"].includes(it.label));
-  const compassionItems = m.resource.behavior.filter(it => it.label !== "הסרת העול" && !["פעילות מהנה", "מדיטציות", "ערך מנחה"].includes(it.label));
+  // "התנהגות חומלת" מאגדת את כל ההתנהגות המיטיבה (חוץ מהסרת העול שיושבת מול עשיית יתר):
+  // פעילות מהנה, פעילות מבוססת ערכים, האזנה למדיטציות, מפגש עם החמלה (מה שהחלק צריך), ועוד.
+  const compassionItems = m.resource.behavior.filter(it => it.label !== "הסרת העול");
   const expChips = (m.exposures || []).length
     ? `<div class="dmini">${m.exposures.map(e => `<span class="dchip d-parent${e.done ? " exp-done" : ""}">${e.done ? "✅" : "🎯"} ${esc(clip(e.fear))}</span>`).join("")}</div>`
     : `<div class="d-empty">—</div>`;
@@ -219,7 +220,6 @@ function partsDashCards(m, opts = {}) {
       ${pRow("תחושות", cellChips(m.pain.sensation, "part"), "תחושות", cellChips(m.resource.sensation, "parent"))}
       ${pRow("עשיית יתר", cellChips(m.pain.over, "part"), "הסרת העול", cellChips(burdenItems, "parent"))}
       ${pRow("הימנעות", cellChips(m.pain.avoid, "part"), "חשיפות", expChips)}
-      ${activityItems.length ? `<div class="dg-cell dg-wide c-res"><div class="dg-lbl">פעילות · מענה</div>${cellChips(activityItems, "parent")}</div>` : ""}
       ${compassionItems.length ? `<div class="dg-cell dg-wide c-res"><div class="dg-lbl">התנהגות חומלת</div>${cellChips(compassionItems, "parent")}</div>` : ""}
     </div>
     ${m.exposures && m.exposures.length ? `
