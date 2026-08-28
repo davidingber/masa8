@@ -110,6 +110,9 @@ export function buildPartsMap(S) {
   // התנהגות מיטיבה
   Object.values(td(1, "activityPlan") || {}).forEach(v => add(resource, "behavior", "פעילות מהנה", v && v.activity, 1));
   (td(8, "values") || []).forEach(v => add(resource, "behavior", "ערך מנחה", v, 8));
+  // פעולות ממשיות להגשמת הערכים (הלו"ז של הערכים — שבוע 8)
+  Object.values(td(8, "realize") || {}).forEach(arr =>
+    (Array.isArray(arr) ? arr : []).forEach(a => add(resource, "behavior", "פעילות מבוססת ערכים", a, 8)));
   add(resource, "behavior", "מה החלק צריך", (td(5, "focusing") || {}).needs, 5);
   Object.values(td(5, "burden") || {}).forEach(v => {
     const t = (v || "").trim();

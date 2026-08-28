@@ -1040,3 +1040,7 @@ body{font-size:15.5px;line-height:1.5}
 .dg-lbl{font-size:11px;font-weight:800;color:var(--subtle);margin-bottom:6px}
 .d-empty{color:var(--subtle);opacity:.45;font-size:13px;padding:2px 0}
 .dchip.exp-done{opacity:.72}
+
+/* תג פרק־מקור על כל פריט בדשבורד */
+.dchip-wk{display:inline-block;margin-inline-start:6px;font-size:8.5px;font-weight:800;color:var(--subtle);background:rgba(0,0,0,.05);border-radius:6px;padding:1px 5px;vertical-align:middle}
+[data-theme="dark"] .dchip-wk{background:rgba(255,255,255,.08)}

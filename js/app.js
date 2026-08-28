@@ -152,7 +152,7 @@ function partsDashCards(m, opts = {}) {
   const resPct = pct, sufPct = 100 - pct;
   const has = m.counts.pain + m.counts.resource > 0 || !!m.partName || !!m.idealName || !!m.pain.belief || !!m.resource.belief;
   const clip = (t) => t.length > 40 ? t.slice(0, 40) + "…" : t;
-  const dchip = (it, side) => `<span class="dchip d-${side}">${esc(clip(it.text))}</span>`;
+  const dchip = (it, side) => `<span class="dchip d-${side}">${esc(clip(it.text))}${it.week ? `<span class="dchip-wk">פרק ${it.week}</span>` : ""}</span>`;
 
   // בלוק קטגוריה בעמודה
   const blk = (title, items, side, answered) => items.length ? `
@@ -192,7 +192,7 @@ function partsDashCards(m, opts = {}) {
   // פעילות מהנה, פעילות מבוססת ערכים, האזנה למדיטציות, מפגש עם החמלה (מה שהחלק צריך), ועוד.
   const compassionItems = m.resource.behavior.filter(it => it.label !== "הסרת העול");
   const expChips = (m.exposures || []).length
-    ? `<div class="dmini">${m.exposures.map(e => `<span class="dchip d-parent${e.done ? " exp-done" : ""}">${e.done ? "✅" : "🎯"} ${esc(clip(e.fear))}</span>`).join("")}</div>`
+    ? `<div class="dmini">${m.exposures.map(e => `<span class="dchip d-parent${e.done ? " exp-done" : ""}">${e.done ? "✅" : "🎯"} ${esc(clip(e.fear))}<span class="dchip-wk">פרק 7</span></span>`).join("")}</div>`
     : `<div class="d-empty">—</div>`;
   const pRow = (lblP, painHtml, lblR, resHtml) => `
       <div class="dg-cell c-pain"><div class="dg-lbl">${lblP}</div>${painHtml}</div>
