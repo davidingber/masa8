@@ -8,6 +8,7 @@
 //   resource (ההורה): belief, thought[], emotion[], sensation[], behavior[]
 //   + partName, idealName, primary (מגמת הרגש), counts, balance
 // ============================================================
+import { EMOTION_ALTERNATIVES } from "./data.js";
 
 export function buildPartsMap(S) {
   const st = S.getState();
@@ -96,7 +97,7 @@ export function buildPartsMap(S) {
   add(resource, "behavior", "דרך חלופית", rf[4], 3);
   add(resource, "thought", "אי-הזדהות", td(3, "thirdPerson"), 3);
   add(resource, "thought", "חזון הזהות", (td(1, "dickens") || {}).identity, 1);
-  add(resource, "thought", "חזון", goal.dream_feel, 1);
+  add(resource, "emotion", "רגש בחזון", goal.dream_feel, 1);   // "מה עוד עולה בי שם, בגוף וברגש" — רגש, ולכן תחת קטגוריית רגש
   add(resource, "thought", "המטרה שלי", goal.goal_precise, 1);
   // כלי החלפת אמונות (שבוע 6)
   add(pain, "thought", "אמונה", beliefTool.belief, 6);
@@ -120,6 +121,24 @@ export function buildPartsMap(S) {
   // האזנה למדיטציות — כמספר האזנות שנרשמו
   const medListens = (st.activities || []).filter(a => a.type === "meditation").length;
   if (medListens) resource.behavior.push({ label: "מדיטציות", text: `האזנת ${medListens} פעמים`, week: 4 });
+
+  // ===== קישור הופכי: לכל רגש-כאב — רגש מיטיב שכנגד =====
+  // כך צד המשאב (השמאלי) תמיד "עונה" לצד הכאב (הימני):
+  // לא רק שהפחד יורד — עולה כנגדו אומץ; מול חרדה — ביטחון; מול בושה — חמלה עצמית, וכו'.
+  const opposite = (text) => {
+    const t = (text || "").trim();
+    if (!t) return null;
+    for (const [p, r] of Object.entries(EMOTION_ALTERNATIVES)) if (t.includes(p)) return r;
+    return null;
+  };
+  // עותק של רגשות הכאב שנאספו עד כה (לפני שנוסיף מיטיבים), כדי לייצר לכל אחד מענה
+  pain.emotion.slice().forEach(e => {
+    const opp = opposite(e.text);
+    if (opp) add(resource, "emotion", "רגש מיטיב שכנגד", opp, e.week);
+  });
+  // היעד שנבחר לרגש הראשוני (או ההופכי שלו) — מענה מרכזי
+  const primaryOpp = (st.emotion.target || "").trim() || opposite(st.emotion.name);
+  if (primaryOpp) add(resource, "emotion", "הרגש שאליו אני מכוון", primaryOpp, 1);
 
   const painCount = pain.thought.length + pain.emotion.length + pain.sensation.length + pain.over.length + pain.avoid.length;
   const resCount = resource.thought.length + resource.emotion.length + resource.sensation.length + resource.behavior.length;

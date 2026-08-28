@@ -195,7 +195,7 @@ function partsDashCards(m, opts = {}) {
         <div class="dash-head dh-parent">${idealHdr}</div>
         ${m.resource.belief ? `<div class="dblk"><div class="dblk-lbl">אמונת יסוד חדשה</div><div class="belief b-parent">${esc(m.resource.belief)}</div></div>` : ""}
         ${blk("מחשבות חדשות", m.resource.thought, "parent")}
-        ${blk("רגש", m.resource.emotion, "parent")}
+        ${blk("רגשות מיטיבים", m.resource.emotion, "parent")}
         ${blk("תחושות", m.resource.sensation, "parent")}
         ${blk("התנהגות מיטיבה", m.resource.behavior.filter(it => it.label !== "הסרת העול"), "parent")}
         ${blk("הסרת העול", m.resource.behavior.filter(it => it.label === "הסרת העול"), "parent")}
