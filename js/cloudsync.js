@@ -16,15 +16,17 @@ const ALLOWLIST_CSV_URL = "";
 // טופס "בקשת גישה" (Google Form) — מוצג למי שאינו ברשימה. ריק = לא מוצג.
 export const REQUEST_FORM_URL = "";
 
-// כשיש בדיקת רשימה צריך גם את המייל של המשתמש (openid+email)
-const SCOPE = ALLOWLIST_CSV_URL
-  ? "https://www.googleapis.com/auth/drive.appdata openid email"
-  : "https://www.googleapis.com/auth/drive.appdata";
+// תמיד מבקשים גם זהות (openid+email+profile) — לשם וזיהוי אוטומטי לפי חשבון.
+// אם ההרשאות עדיין לא הוגדרו בקונסולה — יש נפילה חזרה ל-drive בלבד (חיבור עדיין עובד).
+const BASE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
+const FULL_SCOPE = BASE_SCOPE + " openid https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile";
 const FILE_NAME = "masa8_state.json";
 
 const FLAG_ON = "masa8_cloud_on";     // "1" אם המשתמש חיבר סנכרון
 const FLAG_SYNC = "masa8_cloud_sync"; // modifiedTime אחרון שסונכרן
 const FLAG_TOK = "masa8_cloud_tok";   // אסימון גישה שמור (תקף ~שעה) — מונע חלון גוגל בכל רענון
+const FLAG_EMAIL = "masa8_cloud_email"; // המייל של החשבון המחובר
+const FLAG_GNAME = "masa8_cloud_gname"; // השם מחשבון הגוגל
 const FLAG_RELOADED = "masa8_cloud_reloaded"; // מונע רענון כפול באותה טעינה (sessionStorage)
 
 export const CLOUD_ENABLED = !!CLIENT_ID;
@@ -48,31 +50,41 @@ function getLastSync() { try { return localStorage.getItem(FLAG_SYNC) || ""; } c
 function setLastSync(v) { try { if (v) localStorage.setItem(FLAG_SYNC, v); } catch (e) {} }
 function emitChanged() { try { window.dispatchEvent(new CustomEvent("cloud:changed")); } catch (e) {} }
 
+function storedEmail() { try { return localStorage.getItem(FLAG_EMAIL) || ""; } catch (e) { return ""; } }
+function storedGName() { try { return localStorage.getItem(FLAG_GNAME) || ""; } catch (e) { return ""; } }
+function storeGoogle(info) {
+  try {
+    if (info && info.email) localStorage.setItem(FLAG_EMAIL, info.email);
+    if (info && info.name) localStorage.setItem(FLAG_GNAME, info.name);
+  } catch (e) {}
+}
+
 export function cloudStatus() {
-  return { enabled: CLOUD_ENABLED, connected: isConnected(), lastSync: getLastSync(), syncing };
+  return { enabled: CLOUD_ENABLED, connected: isConnected(), lastSync: getLastSync(), syncing, email: storedEmail() };
 }
 
 // ---- טעינת ספריית Google Identity Services ----
 function loadGis() {
   if (gisReady) return gisReady;
   gisReady = new Promise((resolve, reject) => {
-    if (window.google && window.google.accounts && window.google.accounts.oauth2) {
-      initTokenClient(); return resolve();
-    }
+    if (window.google && window.google.accounts && window.google.accounts.oauth2) return resolve();
     const s = document.createElement("script");
     s.src = "https://accounts.google.com/gsi/client";
     s.async = true; s.defer = true;
-    s.onload = () => { try { initTokenClient(); resolve(); } catch (e) { reject(e); } };
+    s.onload = () => resolve();
     s.onerror = () => reject(new Error("GIS load failed"));
     document.head.appendChild(s);
   });
   return gisReady;
 }
-function initTokenClient() {
-  if (tokenClient) return;
-  tokenClient = window.google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID, scope: SCOPE, callback: () => {},
-  });
+// שליפת שם+מייל מחשבון הגוגל (דורש הרשאות openid/email/profile). null אם אין הרשאה.
+async function getUserInfo() {
+  try {
+    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: "Bearer " + accessToken } });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return { email: (d.email || "").trim().toLowerCase(), name: (d.name || d.given_name || "").trim() };
+  } catch (e) { return null; }
 }
 
 // ---- אסימון גישה ----
@@ -86,21 +98,29 @@ function loadStoredToken() {
   } catch (e) {}
   return null;
 }
-// בקשת אסימון אינטראקטיבית — עלולה לפתוח חלון גוגל. נקראת רק מפעולה יזומה של המשתמש.
-function requestToken() {
+function requestTokenWith(scope) {
   return new Promise((resolve, reject) => {
-    if (!tokenClient) return reject(new Error("no token client"));
-    tokenClient.callback = (resp) => {
-      if (resp && resp.access_token) {
-        accessToken = resp.access_token;
-        tokenExp = Date.now() + ((resp.expires_in || 3600) * 1000);
-        persistToken();
-        resolve(accessToken);
-      } else reject(new Error((resp && resp.error) || "token error"));
-    };
-    try { tokenClient.requestAccessToken({ prompt: "" }); }
+    if (!(window.google && window.google.accounts && window.google.accounts.oauth2)) return reject(new Error("no GIS"));
+    const tc = window.google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID, scope,
+      callback: (resp) => {
+        if (resp && resp.access_token) {
+          accessToken = resp.access_token;
+          tokenExp = Date.now() + ((resp.expires_in || 3600) * 1000);
+          persistToken();
+          resolve(accessToken);
+        } else reject(new Error((resp && resp.error) || "token error"));
+      },
+    });
+    try { tc.requestAccessToken({ prompt: "" }); }
     catch (e) { reject(e); }
   });
+}
+// בקשת אסימון אינטראקטיבית — עלולה לפתוח חלון גוגל. נקראת רק מפעולה יזומה.
+// מנסה סקופ מלא (עם זהות); אם ההרשאות עוד לא הוגדרו — נופל ל-drive בלבד כדי שהחיבור עדיין יעבוד.
+async function requestToken() {
+  try { return await requestTokenWith(FULL_SCOPE); }
+  catch (e) { log("full scope failed → drive-only fallback", e.message); return await requestTokenWith(BASE_SCOPE); }
 }
 // אסימון שקט בלבד — לעולם לא פותח חלון. משתמש באסימון שבמטמון (עד שעה). null אם אין.
 async function ensureToken() {
@@ -241,6 +261,9 @@ async function startupSync() {
 export async function cloudConnect() {
   await loadGis();
   await requestToken(); // מפעיל מסך הסכמה בפעם הראשונה (בתגובה ללחיצת המשתמש)
+  // זהות מחשבון הגוגל — המייל והשם. אלה מזהים את המשתמש (המייל = הזהות הקבועה).
+  const info = await getUserInfo();
+  if (info) storeGoogle(info);
   // בדיקת רשימת מאושרים (אם הוגדרה) — לפני שמחברים
   if (ALLOWLIST_CSV_URL) {
     const email = await getUserEmail();
@@ -278,7 +301,12 @@ export async function cloudConnect() {
     reloadOnce();
     return { action: "loaded" };
   }
-  // אין קובץ בענן — ניצור מהמקומי
+  // אין קובץ בענן — חשבון חדש. השם נקבע אוטומטית מחשבון הגוגל,
+  // ומסך בחירת השם לא יופיע (setOnboarded). המייל הוא הזהות הקבועה.
+  try {
+    if (info && info.name) S.setName(info.name);
+    if (!S.isOnboarded()) S.setOnboarded();
+  } catch (e) {}
   setConnected(true);
   await push();
   return { action: "created" };
@@ -286,7 +314,11 @@ export async function cloudConnect() {
 
 export function cloudDisconnect() {
   accessToken = null; tokenExp = 0; fileId = null;
-  try { localStorage.removeItem(FLAG_TOK); } catch (e) {}
+  try {
+    localStorage.removeItem(FLAG_TOK);
+    localStorage.removeItem(FLAG_EMAIL);
+    localStorage.removeItem(FLAG_GNAME);
+  } catch (e) {}
   setConnected(false);
 }
 
@@ -302,6 +334,16 @@ export async function cloudSyncNow() {
 // דחיפה יזומה מיידית (למשל מיד אחרי onboarding) — שהשם/הנתונים יידבקו לחשבון ולא ייאבדו
 export async function cloudPush() { try { await push(); } catch (e) { log("cloudPush", e.message); } }
 
+// יישום זהות (השם מחשבון הגוגל) — סינכרוני, ללא רשת. נקרא לפני הרינדור הראשון,
+// כך שהשם הנכון מוצג מיד. החשבון קובע את השם, לא בחירה.
+export function cloudBootIdentity() {
+  if (!CLOUD_ENABLED || !isConnected()) return;
+  try {
+    const gn = storedGName();
+    if (gn && (S.getState().name || "").trim() !== gn) S.setName(gn);
+  } catch (e) {}
+}
+
 export async function initCloud() {
   if (!CLOUD_ENABLED) return;
   window.addEventListener("state:changed", schedulePush);
@@ -310,6 +352,11 @@ export async function initCloud() {
   window.addEventListener("pagehide", closePush);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") closePush(); });
   if (isConnected()) {
+    // השם נקבע ע"י חשבון הגוגל — לא ע"י בחירה. אם שמור שם מהחשבון, מיישמים אותו.
+    try {
+      const gn = storedGName();
+      if (gn && (S.getState().name || "").trim() !== gn) S.setName(gn);
+    } catch (e) {}
     try { await loadGis(); await startupSync(); }
     catch (e) { log("startup sync failed", e.message); }
   }
