@@ -16,7 +16,7 @@ import { buildPartsMap } from "./partsMap.js";
 import { askAI } from "./ai.js";
 import { requestPermission, startReminderLoop } from "./reminders.js";
 import { downloadWeeklyICS, googleEventUrl, downloadDailyICS, googleDailyUrl } from "./calendar.js";
-import { CLOUD_ENABLED, initCloud, cloudConnect, cloudDisconnect, cloudStatus, REQUEST_FORM_URL } from "./cloudsync.js";
+import { CLOUD_ENABLED, initCloud, cloudConnect, cloudDisconnect, cloudStatus, cloudSyncNow, REQUEST_FORM_URL } from "./cloudsync.js";
 
 const app = document.getElementById("view");
 const navEl = document.getElementById("nav");
@@ -4829,7 +4829,7 @@ function renderSettings() {
       <h3>☁️ סנכרון לגוגל דרייב</h3>
       ${cloudStatus().connected ? `
         <p class="subtle">מחובר ✓ — ההתקדמות מסתנכרנת אוטומטית לדרייב הפרטי שלך. אפשר להיכנס מכל מכשיר עם אותו חשבון גוגל ולראות את אותם נתונים.${cloudStatus().lastSync ? `<br><span style="opacity:.7">סונכרן לאחרונה: ${esc(new Date(cloudStatus().lastSync).toLocaleString("he-IL"))}</span>` : ""}</p>
-        <div class="med-actions"><button class="btn ghost2" id="cloudDisconnect">ניתוק מהדרייב</button></div>
+        <div class="med-actions"><button class="btn ghost2" id="cloudSyncNow">🔄 סנכרן עכשיו</button><button class="btn ghost2" id="cloudDisconnect">ניתוק מהדרייב</button></div>
       ` : `
         <p class="subtle">חבר את ההתקדמות לגוגל דרייב הפרטי שלך — כך היא נשמרת בענן ומסתנכרנת בין כל המכשירים שלך. הנתונים נשמרים בחשבון שלך בלבד.</p>
         <div class="med-actions"><button class="btn" id="cloudConnect">🔗 התחברות עם גוגל</button></div>
@@ -4865,6 +4865,12 @@ function renderSettings() {
       toast("החיבור לגוגל לא הושלם. אפשר לנסות שוב.");
       ccBtn.disabled = false; ccBtn.textContent = "🔗 התחברות עם גוגל";
     }
+  });
+  const csBtn = app.querySelector("#cloudSyncNow");
+  if (csBtn) csBtn.addEventListener("click", async () => {
+    csBtn.disabled = true; csBtn.textContent = "מסנכרן...";
+    try { await cloudSyncNow(); toast("סונכרן ✓"); renderSettings(); }
+    catch (e) { toast("הסנכרון לא הושלם. נסה שוב."); csBtn.disabled = false; csBtn.textContent = "🔄 סנכרן עכשיו"; }
   });
   const cdBtn = app.querySelector("#cloudDisconnect");
   if (cdBtn) cdBtn.addEventListener("click", () => {

@@ -24,6 +24,7 @@ const FILE_NAME = "masa8_state.json";
 
 const FLAG_ON = "masa8_cloud_on";     // "1" אם המשתמש חיבר סנכרון
 const FLAG_SYNC = "masa8_cloud_sync"; // modifiedTime אחרון שסונכרן
+const FLAG_TOK = "masa8_cloud_tok";   // אסימון גישה שמור (תקף ~שעה) — מונע חלון גוגל בכל רענון
 const FLAG_RELOADED = "masa8_cloud_reloaded"; // מונע רענון כפול באותה טעינה (sessionStorage)
 
 export const CLOUD_ENABLED = !!CLIENT_ID;
@@ -75,6 +76,17 @@ function initTokenClient() {
 }
 
 // ---- אסימון גישה ----
+function persistToken() {
+  try { localStorage.setItem(FLAG_TOK, JSON.stringify({ t: accessToken, e: tokenExp })); } catch (e) {}
+}
+function loadStoredToken() {
+  try {
+    const o = JSON.parse(localStorage.getItem(FLAG_TOK) || "null");
+    if (o && o.t && o.e && Date.now() < o.e - 60000) { accessToken = o.t; tokenExp = o.e; return accessToken; }
+  } catch (e) {}
+  return null;
+}
+// בקשת אסימון אינטראקטיבית — עלולה לפתוח חלון גוגל. נקראת רק מפעולה יזומה של המשתמש.
 function requestToken() {
   return new Promise((resolve, reject) => {
     if (!tokenClient) return reject(new Error("no token client"));
@@ -82,6 +94,7 @@ function requestToken() {
       if (resp && resp.access_token) {
         accessToken = resp.access_token;
         tokenExp = Date.now() + ((resp.expires_in || 3600) * 1000);
+        persistToken();
         resolve(accessToken);
       } else reject(new Error((resp && resp.error) || "token error"));
     };
@@ -89,9 +102,10 @@ function requestToken() {
     catch (e) { reject(e); }
   });
 }
+// אסימון שקט בלבד — לעולם לא פותח חלון. משתמש באסימון שבמטמון (עד שעה). null אם אין.
 async function ensureToken() {
   if (accessToken && Date.now() < tokenExp - 60000) return accessToken;
-  try { return await requestToken(); } catch (e) { log("token failed", e.message); return null; }
+  return loadStoredToken();
 }
 
 // ---- קריאות Drive REST (מרחב appDataFolder) ----
@@ -267,7 +281,17 @@ export async function cloudConnect() {
 
 export function cloudDisconnect() {
   accessToken = null; tokenExp = 0; fileId = null;
+  try { localStorage.removeItem(FLAG_TOK); } catch (e) {}
   setConnected(false);
+}
+
+// סנכרון יזום (בלחיצת כפתור) — מרענן אסימון ומסנכרן. משמש כשהאסימון השמור פג.
+export async function cloudSyncNow() {
+  await loadGis();
+  await requestToken();   // אינטראקטיבי (בתגובה ללחיצה)
+  await startupSync();    // משיכת גרסה חדשה יותר אם יש
+  await push();           // דחיפת המצב הנוכחי
+  return true;
 }
 
 export async function initCloud() {
