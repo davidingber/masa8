@@ -172,8 +172,9 @@ function successDonut(m) {
     ${gaps.length ? `<div class="chart-missing"><div class="cm-h">כדי להשלים — עוד לא מילאת:</div><ul class="cm-list">${gaps.slice(0, 6).map(g => `<li>${g}</li>`).join("")}</ul></div>` : `<div class="chart-missing done">✅ מילאת את כל התחומים — כל הכבוד!</div>`}`;
 }
 
-// התנהגות חומלת = רק פעולות/התנהגות (מדיטציה, דרך חלופית) — לא מחשבות/רגשות/צרכים
-const COMPASSION_LABELS = ["מדיטציה", "דרך חלופית"];
+// התנהגות חומלת = רק פעולות/התנהגות: מדיטציות וכלי ויסות (פרק 4),
+// חשיפה תוך-גופנית (פרק 4), ומפגש החמלה (פרק 5) — לא מחשבות/רגשות/צרכים
+const COMPASSION_LABELS = ["מדיטציה", "חשיפה תוך-גופנית", "מפגש החמלה"];
 // זוגות ערך → איך מגשימים אותו בפועל (מחבר את הגשמת הערך לבחירת הערך)
 function pairedValues() {
   const values = S.getToolData(8, "values") || [];

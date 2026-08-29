@@ -124,9 +124,20 @@ export function buildPartsMap(S) {
   });
   // תחושות חיוביות שנבחרו אחרי רגיעה/מדיטציה
   (st.senseNow || []).forEach(s => add(resource, "sensation", "תחושה עכשיו", s, 4));
-  // כל מדיטציה שהאזנו לה — בשמה, כמענה מיטיב לחלק (כפילויות מתמזגות)
+  // כל מדיטציה שהאזנו לה (כולל כלי הוויסות של פרק 4) — בשמה, כמענה מיטיב לחלק
   (st.activities || []).filter(a => a.type === "meditation").forEach(a =>
     add(resource, "behavior", "מדיטציה", `🎧 ${(a.note || "").trim() || "מדיטציה"}`, 4));
+  // חשיפה תוך-גופנית (פרק 4) — פעולה חומלת: להישאר עם קצה התחושה
+  (S.getToolEntries(4, "sensations") || []).forEach(e => {
+    const what = [...(e.sens || []), ...(e.locations || [])].filter(Boolean).join(", ") || (e.note || "").trim();
+    add(resource, "behavior", "חשיפה תוך-גופנית", "🫀 חשיפה תוך-גופנית" + (what ? ` · ${what}` : ""), 4);
+  });
+  // מפגש החמלה (פרק 5) — פעולה חומלת: הקשבה לתחושה וליווי שלה עד שחרור
+  const foc5 = td(5, "focusing") || {};
+  if ((foc5.word || "").trim() || foc5.agree || (Array.isArray(foc5.sens) && foc5.sens.length)) {
+    const w = (foc5.word || "").trim();
+    add(resource, "behavior", "מפגש החמלה", "💗 מפגש עם החמלה" + (w ? ` · ${w}` : ""), 5);
+  }
 
   // ===== קישור הופכי: לכל רגש-כאב — רגש מיטיב שכנגד =====
   // כך צד המשאב (השמאלי) תמיד "עונה" לצד הכאב (הימני):
