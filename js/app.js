@@ -172,6 +172,19 @@ function successDonut(m) {
     ${gaps.length ? `<div class="chart-missing"><div class="cm-h">כדי להשלים — עוד לא מילאת:</div><ul class="cm-list">${gaps.slice(0, 6).map(g => `<li>${g}</li>`).join("")}</ul></div>` : `<div class="chart-missing done">✅ מילאת את כל התחומים — כל הכבוד!</div>`}`;
 }
 
+// התנהגות חומלת = רק פעולות/התנהגות (מדיטציה, דרך חלופית) — לא מחשבות/רגשות/צרכים
+const COMPASSION_LABELS = ["מדיטציה", "דרך חלופית"];
+// זוגות ערך → איך מגשימים אותו בפועל (מחבר את הגשמת הערך לבחירת הערך)
+function pairedValues() {
+  const values = S.getToolData(8, "values") || [];
+  const realize = S.getToolData(8, "realize") || {};
+  return values.map(v => (v || "").trim()).filter(Boolean).map(v => {
+    const ways = (realize[v] || []).map(w => (w || "").trim()).filter(Boolean);
+    return { value: v, ways };
+  });
+}
+function pairedValueText(x, sep = " · ") { return x.ways.length ? `${x.value} — ${x.ways.join(sep)}` : x.value; }
+
 function partsDashCards(m, opts = {}) {
   const pct = Math.round(m.balance * 100);
   const resPct = pct, sufPct = 100 - pct;
@@ -215,10 +228,10 @@ function partsDashCards(m, opts = {}) {
   const burdenItems = m.resource.behavior.filter(it => it.label === "הסרת העול");
   // שלושה בלוקים נפרדים בתחתית הצד המיטיב:
   const funItems = m.resource.behavior.filter(it => it.label === "פעילות מהנה");
-  const valueItems = m.resource.behavior.filter(it => ["ערך מנחה", "פעילות מבוססת ערכים"].includes(it.label));
-  // "התנהגות חומלת" = השאר (מענה לצורך, מדיטציות, משאב חסר, דרך חלופית) — בלי הסרת העול/פעילות/ערכים
-  const compassionItems = m.resource.behavior.filter(it =>
-    !["הסרת העול", "פעילות מהנה", "ערך מנחה", "פעילות מבוססת ערכים"].includes(it.label));
+  // ערכים — כל ערך מחובר לדרך שבה מגשימים אותו בפועל
+  const valueItems = pairedValues().map(x => ({ label: "ערך", text: pairedValueText(x), week: 8 }));
+  // "התנהגות חומלת" = רק התנהגות/פעולה (מדיטציה, דרך חלופית) — לא מחשבות/רגשות/צרכים
+  const compassionItems = m.resource.behavior.filter(it => COMPASSION_LABELS.includes(it.label));
   // החוזה שלי עם התחושות (פרק 4) — מוצג בתחתית הדשבורד
   const contractD = S.getToolData(4, "contract") || {};
   const contractRows = CONTRACT_FIELDS.filter(f => (contractD[f.key] || "").trim()).map(f =>
@@ -2889,9 +2902,8 @@ function openDashPrint(m) {
   const bLi = t => t ? `<li>${esc(t)}</li>` : `<li class="empty">—</li>`;
   const burden = m.resource.behavior.filter(it => it.label === "הסרת העול");
   const funB = m.resource.behavior.filter(it => it.label === "פעילות מהנה");
-  const valB = m.resource.behavior.filter(it => ["ערך מנחה", "פעילות מבוססת ערכים"].includes(it.label));
-  const compassion = m.resource.behavior.filter(it =>
-    !["הסרת העול", "פעילות מהנה", "ערך מנחה", "פעילות מבוססת ערכים"].includes(it.label));
+  const valB = pairedValues().map(x => ({ text: pairedValueText(x, ", "), week: 8 }));
+  const compassion = m.resource.behavior.filter(it => COMPASSION_LABELS.includes(it.label));
   const expLi = (m.exposures || []).length
     ? m.exposures.map(e => `<li>${e.done ? "✅" : "🎯"} ${esc(e.fear)}${e.learned ? " — " + esc(e.learned) : ""} <span class="wk">פרק 7</span></li>`).join("")
     : `<li class="empty">—</li>`;
@@ -4104,8 +4116,8 @@ function w8Identity() {
   const thoughtsVal = pref("thoughts", join(byLabel(m.resource.thought, ["מחשבה חלופית", "מנטרה", "מסגור מחדש", "אי-הזדהות", "הסבר אחר", "בדיקת מציאות", "רווח משומר", "חזון", "חזון הזהות", "המטרה שלי"])));
   const exposureVal = pref("exposure", join(byLabel(m.resource.thought, ["למידה מחשיפה"])));
   const activityVal = pref("activity", join(byLabel(m.resource.behavior, ["פעילות מהנה"])));
-  const valuesVal = pref("values", join(byLabel(m.resource.behavior, ["ערך מנחה", "פעילות מבוססת ערכים"])));
-  const compassionVal = pref("compassion", join(byLabel(m.resource.behavior, ["מדיטציה", "מה החלק צריך", "משאב חסר", "דרך חלופית"])));
+  const valuesVal = pref("values", pairedValues().map(x => pairedValueText(x, ", ")).join("\n"));
+  const compassionVal = pref("compassion", join(byLabel(m.resource.behavior, COMPASSION_LABELS)));
 
   const sec = (id, icon, label, val, ph) => `
     <label class="mini-label">${icon} ${label}</label>
