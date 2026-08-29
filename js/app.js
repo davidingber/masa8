@@ -1672,6 +1672,8 @@ function emptyCycleRow() {
 }
 
 let week2Tab = "journal";
+// מספר המחשבות המרבי שאדם עובד עליהן לאורך התהליך — נבחרות ביומן המעגל (פרק 2)
+const MAX_THOUGHTS = 7;
 const W2_TABS = [
   { id: "journal", label: "יומן המעגל" },
   { id: "map",     label: "מיפוי אישי" },
@@ -1734,7 +1736,9 @@ function w2Journal() {
       <p class="hint">מלא מקרה אחר מקרה. כל מקרה עוקב אחרי הרצף:
         <b>טריגר → מחשבה → רגש → תחושה → תגובה</b>. אפשר להוסיף כמה מקרים שרוצים.</p>
       <div id="cycleCases">${rows.map((r, i) => cycleCase(r, i)).join("")}</div>
-      <button class="btn ghost2 add-case" id="addCase">＋ הוספת מקרה</button>
+      ${rows.length < MAX_THOUGHTS
+        ? `<button class="btn ghost2 add-case" id="addCase">＋ הוספת מקרה (${rows.length}/${MAX_THOUGHTS})</button>`
+        : `<p class="tiny-note">💡 יש כאן ${MAX_THOUGHTS} מחשבות — זה המספר שכדאי להתמקד בו. אלו המחשבות שילוו אותך לאורך כל התהליך. אפשר למחוק מקרה כדי לפנות מקום.</p>`}
       <div class="activation-actions">
         <button class="btn" id="saveCycle">שמירה + טעינת האווטר</button>
         <button class="btn ghost2" id="pdfCycleFull">⬇ הורדת היומן המלא</button>
@@ -1749,6 +1753,19 @@ function w2Journal() {
     </div>` : ""}`;
 }
 
+// המחשבות שנכתבו ביומן המעגל (פרק 2) — מקור אחד לכל התהליך
+function journalThoughts() {
+  const rows = S.getToolData(2, "cycleJournal") || [];
+  return [...new Set(rows.map(r => (r.thought || "").trim()).filter(Boolean))];
+}
+// שבבי הצעה מהמחשבות של יומן המעגל — לחיצה מוסיפה לשדה היעד
+function journalThoughtChips(targetSel, title) {
+  const list = journalThoughts();
+  if (!list.length) return "";
+  return `<div class="prior-block"><div class="prior-t">${esc(title || "💭 המחשבות מיומן המעגל — לחיצה להוספה:")}</div>
+    <div class="chip-row">${list.map(t => `<button type="button" class="chip mini prior-chip" data-target="${esc(targetSel)}" data-x="${esc(t)}">${esc(t.length > 34 ? t.slice(0, 34) + "…" : t)}</button>`).join("")}</div></div>`;
+}
+
 // --- מיפוי אישי — מה מפעיל, ממה נמנע, מה עושה יותר מדי ---
 function w2Map() {
   const d = S.getToolData(2, "selfMap") || {};
@@ -1757,6 +1774,7 @@ function w2Map() {
       <p class="hint">יורדים לשורש: מ<b>האמונה הראשית</b> של החלק → ה<b>חוקים</b> שנגזרים ממנה → ה<b>מחשבות</b> → ה<b>התנהגות</b>. הכול זורם למפת החלקים.</p>
       ${SELFMAP_FIELDS.map(f => `
         <label class="mini-label">${f.icon} ${f.label}</label>
+        ${f.key === "thoughts" ? journalThoughtChips(`.selfmap-ta[data-m='thoughts']`) : ""}
         ${f.exByType ? Object.entries(ANXIETY_EXAMPLES).map(([type, ex]) => (ex[f.exByType] && ex[f.exByType].length) ? `
           <div class="ex-group"><span class="ex-group-t">${esc(type)}</span>
             <div class="chip-row">${ex[f.exByType].map(x => `<button type="button" class="chip mini sm-ex" data-m="${f.key}" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>` : "").join("")
@@ -1820,6 +1838,7 @@ function stashWeek2Drafts() {
 }
 
 function mountWeek2Handlers() {
+  bindPriorChips();
   app.querySelectorAll("[data-w2tab]").forEach(b =>
     b.addEventListener("click", () => { stashWeek2Drafts(); week2Tab = b.dataset.w2tab; renderChapter(2); }));
 
@@ -1842,7 +1861,9 @@ function mountWeek2Handlers() {
 
   const add = app.querySelector("#addCase");
   if (add) add.addEventListener("click", () => {
-    const rows = collectCycleRows(); rows.push(emptyCycleRow());
+    const rows = collectCycleRows();
+    if (rows.length >= MAX_THOUGHTS) return;
+    rows.push(emptyCycleRow());
     S.setToolData(2, "cycleJournal", rows); renderChapter(2);
   });
 
@@ -2574,7 +2595,7 @@ function w5Beliefs() {
 
       <div class="bs-now">
         <div class="bs-h">🌰 מה האמונה או המחשבה שלי</div>
-        ${priorChips("thought", ".bs-field[data-b=belief]", "המחשבות/אמונות שכתבת — לחיצה לעבודה עליהן:")}
+        ${journalThoughtChips(".bs-field[data-b=belief]", "💭 המחשבות מיומן המעגל (פרק 2) — לחיצה לעבודה עליהן:")}
         ${f("belief", "האמונה / המחשבה", "למשל: אנשים תמיד ידחו אותי")}
         ${f("emotion", "ומה הרגש שעולה?", "בושה, חרדה, עצב...")}
         <label class="mini-label">📊 עוצמת הרגש עכשיו (0–10)</label>
