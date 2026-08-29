@@ -98,7 +98,7 @@ function loadStoredToken() {
   } catch (e) {}
   return null;
 }
-function requestTokenWith(scope) {
+function requestTokenWith(scope, prompt) {
   return new Promise((resolve, reject) => {
     if (!(window.google && window.google.accounts && window.google.accounts.oauth2)) return reject(new Error("no GIS"));
     const tc = window.google.accounts.oauth2.initTokenClient({
@@ -112,15 +112,17 @@ function requestTokenWith(scope) {
         } else reject(new Error((resp && resp.error) || "token error"));
       },
     });
-    try { tc.requestAccessToken({ prompt: "" }); }
+    try { tc.requestAccessToken({ prompt: prompt || "" }); }
     catch (e) { reject(e); }
   });
 }
 // בקשת אסימון אינטראקטיבית — עלולה לפתוח חלון גוגל. נקראת רק מפעולה יזומה.
-// מנסה סקופ מלא (עם זהות); אם ההרשאות עוד לא הוגדרו — נופל ל-drive בלבד כדי שהחיבור עדיין יעבוד.
-async function requestToken() {
-  try { return await requestTokenWith(FULL_SCOPE); }
-  catch (e) { log("full scope failed → drive-only fallback", e.message); return await requestTokenWith(BASE_SCOPE); }
+// prompt="select_account" מכריח בחירת חשבון — כדי שהמשתמש יתחבר לחשבון הנכון
+// (ולא לחשבון הפעיל בדפדפן בטעות). מנסה סקופ מלא (עם זהות); אם ההרשאות עוד לא
+// הוגדרו — נופל ל-drive בלבד כדי שהחיבור עדיין יעבוד.
+async function requestToken(prompt) {
+  try { return await requestTokenWith(FULL_SCOPE, prompt); }
+  catch (e) { log("full scope failed → drive-only fallback", e.message); return await requestTokenWith(BASE_SCOPE, prompt); }
 }
 // אסימון שקט בלבד — לעולם לא פותח חלון. משתמש באסימון שבמטמון (עד שעה). null אם אין.
 async function ensureToken() {
@@ -260,7 +262,7 @@ async function startupSync() {
 // ---- API ציבורי ----
 export async function cloudConnect() {
   await loadGis();
-  await requestToken(); // מפעיל מסך הסכמה בפעם הראשונה (בתגובה ללחיצת המשתמש)
+  await requestToken("select_account"); // בחירת חשבון מפורשת — כדי להתחבר לחשבון הנכון
   // זהות מחשבון הגוגל — המייל והשם. אלה מזהים את המשתמש (המייל = הזהות הקבועה).
   const info = await getUserInfo();
   if (info) storeGoogle(info);
