@@ -16,7 +16,7 @@ import { buildPartsMap } from "./partsMap.js";
 import { askAI } from "./ai.js";
 import { requestPermission, startReminderLoop } from "./reminders.js";
 import { downloadWeeklyICS, googleEventUrl, downloadDailyICS, googleDailyUrl } from "./calendar.js";
-import { CLOUD_ENABLED, initCloud, cloudConnect, cloudDisconnect, cloudStatus, cloudSyncNow, REQUEST_FORM_URL } from "./cloudsync.js";
+import { CLOUD_ENABLED, initCloud, cloudConnect, cloudDisconnect, cloudStatus, cloudSyncNow, cloudPush, REQUEST_FORM_URL } from "./cloudsync.js";
 
 const app = document.getElementById("view");
 const navEl = document.getElementById("nav");
@@ -782,6 +782,7 @@ async function finishOnboarding() {
     if (p !== "granted") toast("אפשר התראות בדפדפן כדי לקבל תזכורת");
   }
   S.setOnboarded();
+  if (cloudStatus().connected) cloudPush(); // דחיפה מיידית — שהשם והנתונים יידבקו לחשבון בענן
   onbStep = 0;
   go("home");
   setTimeout(celebrate, 350);
@@ -819,6 +820,7 @@ function renderHome() {
         <div class="subtle">${COURSE.subtitle}</div>
       </div>
       <button class="icon-btn" id="themeToggle" title="מצב כהה / בהיר" aria-label="מצב כהה או בהיר">${S.getTheme() === "dark" ? "☀️" : "🌙"}</button>
+      ${CLOUD_ENABLED && cloudStatus().connected ? `<button class="icon-btn" id="logoutBtn" title="יציאה מהחשבון" aria-label="יציאה מהחשבון">🚪</button>` : ""}
     </header>
 
     ${installBanner()}
@@ -832,6 +834,11 @@ function renderHome() {
 
   // מאזינים — מסך בית ממוקד
   app.querySelector("#themeToggle").addEventListener("click", toggleTheme);
+  app.querySelector("#logoutBtn")?.addEventListener("click", () => {
+    if (confirm("לצאת מהחשבון? ההתקדמות שמורה בענן — כניסה חוזרת עם אותו חשבון גוגל תחזיר הכול.")) {
+      cloudDisconnect(); render();
+    }
+  });
   app.querySelector("#achvLink").addEventListener("click", () => go("achievements"));
   app.querySelector("#posEmoChapters")?.addEventListener("click", () => go("chapters"));
   app.querySelector("#trustSOS")?.addEventListener("click", openSOS);

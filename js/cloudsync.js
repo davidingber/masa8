@@ -299,9 +299,16 @@ export async function cloudSyncNow() {
   return true;
 }
 
+// דחיפה יזומה מיידית (למשל מיד אחרי onboarding) — שהשם/הנתונים יידבקו לחשבון ולא ייאבדו
+export async function cloudPush() { try { await push(); } catch (e) { log("cloudPush", e.message); } }
+
 export async function initCloud() {
   if (!CLOUD_ENABLED) return;
   window.addEventListener("state:changed", schedulePush);
+  // דחיפה בסגירה/מעבר-רקע — מאמץ אחרון לשמור לענן לפני יציאה
+  const closePush = () => { if (isConnected()) push(); };
+  window.addEventListener("pagehide", closePush);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") closePush(); });
   if (isConnected()) {
     try { await loadGis(); await startupSync(); }
     catch (e) { log("startup sync failed", e.message); }
