@@ -136,21 +136,26 @@ function downloadTextFile(filename, text, type = "text/plain") {
 // עוגת ההצלחה — כמה מהמפה הפנימית כבר הפכה לצד המיטיב
 function successDonut(m) {
   const res = m.counts.resource, pain = m.counts.pain, total = res + pain;
-  if (!total) return `<div class="success-empty">כאן תיבנה ההצלחה שלך — ככל שתעבור/י בשבועות, העוגה תתמלא בירוק 🌱</div>`;
-  const pct = Math.round(res / total * 100);
-  const C = 2 * Math.PI * 48;
-  const fg = (res / total) * C;
-  // מה עוד חסר כדי להשלים — כדי שהלקוח יֵדע איפה החוסר
+  // מה עוד חסר כדי להשלים — כדי שהלקוח יֵדע איפה החוסר.
+  // האחוז מחושב לפי התקדמות אמיתית: כמה מאבני הדרך מולאו (ולא לפי יחס משאב/כאב).
   const behLabels = new Set(m.resource.behavior.map(b => b.label));
-  const gaps = [];
-  if (!m.resource.belief) gaps.push("אמונת יסוד חדשה · פרק 6");
-  if (!m.resource.thought.length) gaps.push("מחשבות מיטיבות · פרקים 3 ו-6");
-  if (!m.resource.emotion.length) gaps.push("רגשות מיטיבים · פרק 6");
-  if (!m.resource.sensation.length) gaps.push("תחושות טובות · פרק 4");
-  if (!behLabels.has("הסרת העול")) gaps.push("הסרת העול · פרק 5");
-  if (!(m.exposures || []).length) gaps.push("חשיפות · פרק 7");
-  if (!behLabels.has("פעילות מהנה")) gaps.push("פעילות מהנה · פרק 1");
-  if (!behLabels.has("ערך מנחה")) gaps.push("ערכים ופעולות · פרק 8");
+  const milestones = [
+    { done: !!m.resource.belief,            gap: "אמונת יסוד חדשה · פרק 6" },
+    { done: !!m.resource.thought.length,    gap: "מחשבות מיטיבות · פרקים 3 ו-6" },
+    { done: !!m.resource.emotion.length,    gap: "רגשות מיטיבים · פרק 6" },
+    { done: !!m.resource.sensation.length,  gap: "תחושות טובות · פרק 4" },
+    { done: behLabels.has("הסרת העול"),     gap: "הסרת העול · פרק 5" },
+    { done: !!(m.exposures || []).length,   gap: "חשיפות · פרק 7" },
+    { done: behLabels.has("פעילות מהנה"),   gap: "פעילות מהנה · פרק 1" },
+    { done: behLabels.has("ערך מנחה"),      gap: "ערכים ופעולות · פרק 8" },
+  ];
+  const doneCount = milestones.filter(x => x.done).length;
+  const gaps = milestones.filter(x => !x.done).map(x => x.gap);
+  // מסך התחלה — עוד לא נבנה כלום
+  if (!total && !doneCount) return `<div class="success-empty">כאן תיבנה ההצלחה שלך — ככל שתעבור/י בשבועות, העוגה תתמלא בירוק 🌱</div>`;
+  const pct = Math.round(doneCount / milestones.length * 100);
+  const C = 2 * Math.PI * 48;
+  const fg = (doneCount / milestones.length) * C;
   return `
     <svg viewBox="0 0 120 120" class="donut" role="img" aria-label="ההצלחה שלי בתהליך: ${pct} אחוז">
       <circle cx="60" cy="60" r="48" class="donut-track" fill="none" stroke-width="15"></circle>
@@ -214,6 +219,13 @@ function partsDashCards(m, opts = {}) {
   // "התנהגות חומלת" = השאר (מענה לצורך, מדיטציות, משאב חסר, דרך חלופית) — בלי הסרת העול/פעילות/ערכים
   const compassionItems = m.resource.behavior.filter(it =>
     !["הסרת העול", "פעילות מהנה", "ערך מנחה", "פעילות מבוססת ערכים"].includes(it.label));
+  // החוזה שלי עם התחושות (פרק 4) — מוצג בתחתית הדשבורד
+  const contractD = S.getToolData(4, "contract") || {};
+  const contractRows = CONTRACT_FIELDS.filter(f => (contractD[f.key] || "").trim()).map(f =>
+    `<div class="contract-row"><div class="contract-q">${esc(f.label)}</div><div class="contract-a">${esc(contractD[f.key])}</div></div>`).join("");
+  const contractCard = contractRows
+    ? `<section class="card contract-dash"><div class="exp-dash-head">📜 החוזה שלי עם התחושות<span class="dchip-wk">פרק 4</span></div>${contractRows}</section>`
+    : "";
   const expChips = (m.exposures || []).length
     ? `<div class="dmini">${m.exposures.map(e => `<span class="dchip d-parent${e.done ? " exp-done" : ""}">${e.done ? "✅" : "🎯"} ${esc(clip(e.fear))}<span class="dchip-wk">פרק 7</span></span>`).join("")}</div>`
     : `<div class="d-empty">—</div>`;
@@ -258,6 +270,7 @@ function partsDashCards(m, opts = {}) {
           </div>`).join("")}
       </div>
     </section>` : ""}`}
+    ${contractCard}
     ${m.target ? `<div class="target-anchor">🌱 היעד שלי: <b>${esc(m.target)}</b></div>` : ""}`;
 }
 
@@ -532,6 +545,7 @@ function renderGoalTool() {
   app.querySelector("#backHome").addEventListener("click", () => go("home"));
   app.querySelectorAll("input[type=range].goal-input").forEach(r =>
     r.addEventListener("input", () => r.nextElementSibling.textContent = r.value));
+  wireGoalAutosave();
   const gb = app.querySelector("#goalBreath");
   if (gb) gb.addEventListener("click", () => openBreathingPlayer({ patternId: "478" }));
   app.querySelector("#saveGoal").addEventListener("click", () => {
@@ -544,15 +558,33 @@ function renderGoalTool() {
 }
 
 function collectGoal() {
-  const plan = {};
+  // מתחילים מהתוכנית הקיימת ומעדכנים לפי השדות שבמסך — כך שדות שאינם על המסך לא נמחקים
+  const plan = { ...(S.getGoalPlan() || {}) };
+  // איפוס קבוצות ה-checks שמופיעות במסך (כדי שביטול-סימון יישמר), ואז מילוי מחדש
+  const checkKeys = new Set();
+  app.querySelectorAll(".goal-check").forEach(c => checkKeys.add(c.dataset.k));
+  checkKeys.forEach(k => { plan[k] = []; });
   app.querySelectorAll(".goal-input").forEach(el => {
     plan[el.dataset.k] = el.dataset.t === "rating" ? Number(el.value) : el.value.trim();
   });
   app.querySelectorAll(".goal-check").forEach(c => {
-    plan[c.dataset.k] = plan[c.dataset.k] || [];
     if (c.checked) plan[c.dataset.k].push(c.value);
   });
   return plan;
+}
+
+// שמירה מיידית של תוכנית המטרה — כדי שכל שינוי (סימון תיבה, יציאה משדה) יישמר לבד
+function saveGoalNow() {
+  const p = collectGoal();
+  S.setGoalPlan(p);
+  if (p.goal_precise) S.setGoal(p.goal_precise);
+  return p;
+}
+// חיווט שמירה-אוטומטית: סימון תיבה → נשמר מיד; יציאה משדה טקסט/דירוג → נשמר.
+function wireGoalAutosave() {
+  const h = () => saveGoalNow();
+  app.querySelectorAll(".goal-check").forEach(c => c.addEventListener("change", h));
+  app.querySelectorAll(".goal-input").forEach(el => el.addEventListener("change", h));
 }
 
 function openGoalPrint(plan) {
@@ -2031,10 +2063,9 @@ function openReframePrint(answers) {
 // ============================================================
 //  שבוע 4 — הנהגת הגוף: סריקה ונשימה, חשיפה תוך-גופנית, טבלת חשיפות
 // ============================================================
-let week4Tab = "scan";
+let week4Tab = "sensations";
 let activeTimer = null;
 const W4_TABS = [
-  { id: "scan",       label: "סריקה ונשימה" },
   { id: "sensations", label: "להכיר את התחושות" },
   { id: "contract",   label: "החוזה שלי" },
   { id: "exposure",   label: "חשיפה תוך-גופנית" },
@@ -2049,6 +2080,7 @@ const CONTRACT_FIELDS = [
   { key: "contract", label: "החוזה שלי עם עצמי:", ph: "אני מתחייב ל..." },
 ];
 // שלבי "להכיר את התחושות" — תהליך שחרור מודרך
+const SENS_LOCATIONS = ["חזה", "בטן", "גרון", "ראש", "ידיים", "רגליים", "אחר"];
 const SENS_QUALITIES = ["כיווץ", "כבדות", "משהו שרוצה להתפרץ", "מחנק", "דקירה", "נימול", "חום", "זרמים", "ריקנות", "לחץ"];
 const SENS_RELEASE = ["תנועה", "נשימה", "מגע", "תיפוף עם קצות האצבעות", "דימוי של משהו שמתפזר"];
 
@@ -2058,7 +2090,6 @@ function toolWeek4(c) {
   const tabs = `<div class="subtool-tabs">${W4_TABS.map(t =>
     `<button class="subtool-tab ${week4Tab === t.id ? "on" : ""}" data-w4tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body = "";
-  if (week4Tab === "scan") body = w4Scan();
   if (week4Tab === "sensations") body = w4Sensations();
   if (week4Tab === "contract") body = w4Contract();
   if (week4Tab === "exposure") body = w4Exposure();
@@ -2089,6 +2120,8 @@ function w4Contract() {
 // --- תת-כלי: להכיר את התחושות — תהליך שחרור ב-7 שלבים ---
 function w4Sensations() {
   const d = S.getToolData(4, "sensProcess") || {};
+  const locChips = SENS_LOCATIONS.map(l =>
+    `<button class="chip mini sl-chip ${(d.locations || []).includes(l) ? "on" : ""}" data-loc="${l}">${l}</button>`).join("");
   const qChips = SENS_QUALITIES.map(q =>
     `<button class="chip mini sq-chip ${(d.quality || []).includes(q) ? "on" : ""}" data-q="${q}">${q}</button>`).join("");
   const relChips = SENS_RELEASE.map(r =>
@@ -2099,7 +2132,8 @@ function w4Sensations() {
 
       <div class="focus-step"><span class="fs-num">1</span>
         <div><b>איפה התחושה בגוף?</b>
-          <input class="inp" id="sWhere" value="${esc(d.where || "")}" placeholder="למשל: בחזה, בבטן, בגרון..."></div></div>
+          <div class="chip-row" style="margin-top:6px">${locChips}</div>
+          <input class="inp" id="sWhere" style="margin-top:8px" value="${esc(d.where || "")}" placeholder="פירוט נוסף (למשל: בצד ימין של החזה)..."></div></div>
 
       <div class="focus-step"><span class="fs-num">2</span>
         <div><b>מה אופי התחושה?</b>
@@ -2179,12 +2213,16 @@ function w4Scan() {
 function w4Exposure() {
   const chips = WEEK4_SENSATIONS.map(s =>
     `<button class="chip mini sens-chip" data-sens="${s}">${s}</button>`).join("");
+  const eLocChips = SENS_LOCATIONS.map(l =>
+    `<button class="chip mini eloc-chip" data-loc="${l}">${l}</button>`).join("");
   return `
     <div class="tool-block">
       <div class="def-tech">
         <h5>👁️ שלב 1 — לשים לב לתחושה בגוף</h5>
         <p class="hint">לפני הכול — לעצור ולשים לב: איזו תחושה גופנית נוכחת עכשיו, והיכן היא יושבת?</p>
         <div class="chip-row">${chips}</div>
+        <p class="hint" style="margin:8px 0 4px"><b>איפה בגוף?</b></p>
+        <div class="chip-row">${eLocChips}</div>
         <p class="hint edge-note">💡 חשוב: להתמקד רק ב<b>קצה של התחושה</b> — רק באזור שבו היא מתחילה, בגבול שלה —
           <b>בלי לקפוץ ישר אל תוך מרכז התחושה.</b></p>
       </div>
@@ -2350,7 +2388,7 @@ function mountWeek4Handlers() {
   // תת-כלי: להכיר את התחושות (תהליך שחרור)
   const sInt = app.querySelector("#sIntensity");
   if (sInt) sInt.addEventListener("input", () => app.querySelector("#sIntensityV").textContent = sInt.value);
-  app.querySelectorAll(".sq-chip, .sr-chip").forEach(b => b.addEventListener("click", () => b.classList.toggle("on")));
+  app.querySelectorAll(".sl-chip, .sq-chip, .sr-chip").forEach(b => b.addEventListener("click", () => b.classList.toggle("on")));
   app.querySelectorAll("[data-sagree]").forEach(b => b.addEventListener("click", () => {
     app.querySelectorAll("[data-sagree]").forEach(x => x.classList.remove("on")); b.classList.add("on");
   }));
@@ -2363,6 +2401,7 @@ function mountWeek4Handlers() {
   const ssp = app.querySelector("#saveSensProcess");
   if (ssp) ssp.addEventListener("click", () => {
     S.setToolData(4, "sensProcess", {
+      locations: [...app.querySelectorAll(".sl-chip.on")].map(b => b.dataset.loc),
       where: qv("#sWhere"),
       quality: [...app.querySelectorAll(".sq-chip.on")].map(b => b.dataset.q),
       intensity: Number(app.querySelector("#sIntensity")?.value || 5),
@@ -2411,13 +2450,14 @@ function mountWeek4Handlers() {
   const est = app.querySelector("#heartStop");
   if (est) est.addEventListener("click", () => { stopActiveTimer(); app.querySelector("#heartTimer").innerHTML = `<div class="timer-idle">נעצר</div>`; });
 
-  app.querySelectorAll(".sens-chip").forEach(b =>
+  app.querySelectorAll(".sens-chip, .eloc-chip").forEach(b =>
     b.addEventListener("click", () => b.classList.toggle("on")));
   const ss = app.querySelector("#saveSens");
   if (ss) ss.addEventListener("click", () => {
     const sens = [...app.querySelectorAll(".sens-chip.on")].map(b => b.dataset.sens);
+    const locations = [...app.querySelectorAll(".eloc-chip.on")].map(b => b.dataset.loc);
     const note = app.querySelector("#sensNote").value.trim();
-    S.saveToolEntry(4, "sensations", { sens, note });
+    S.saveToolEntry(4, "sensations", { sens, locations, note });
     S.logActivity("exposure", "חשיפה תוך-גופנית");
     toast("נשמר ✓"); renderChapter(4);
   });
@@ -4475,6 +4515,7 @@ function mountWeek1Handlers() {
   // כלי הגדרת המטרה (מוטמע בפרק 1)
   app.querySelectorAll("input[type=range].goal-input").forEach(r =>
     r.addEventListener("input", () => { const sp = r.nextElementSibling; if (sp) sp.textContent = r.value; }));
+  wireGoalAutosave();
   const gBreath = app.querySelector("#goalBreath");
   if (gBreath) gBreath.addEventListener("click", () => openBreathingPlayer({ patternId: "478" }));
   const gSave = app.querySelector("#saveGoal");

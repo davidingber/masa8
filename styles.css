@@ -994,6 +994,10 @@ body{font-size:15.5px;line-height:1.5}
 [data-theme="dark"] .exp-dash-head{color:#e0a866}
 .exp-dash-list{display:flex;flex-direction:column;gap:8px}
 .exp-dash-item{border:1px solid #eaddcb;border-radius:11px;padding:9px 11px;background:#fffdfa}
+.contract-dash .contract-row{padding:9px 0;border-bottom:1px solid var(--line)}
+.contract-dash .contract-row:last-child{border-bottom:none}
+.contract-dash .contract-q{font-weight:700;font-size:13.5px;color:var(--ink);margin-bottom:2px}
+.contract-dash .contract-a{font-size:14px;color:var(--subtle);line-height:1.55;white-space:pre-wrap}
 [data-theme="dark"] .exp-dash-item{background:#1c1812;border-color:#3d3426}
 .exp-dash-item.done{border-color:#bfe0cf;background:#f4fbf7}
 [data-theme="dark"] .exp-dash-item.done{background:#16241c;border-color:#2f4a39}
