@@ -124,10 +124,46 @@ async function requestToken(prompt) {
   try { return await requestTokenWith(FULL_SCOPE, prompt); }
   catch (e) { log("full scope failed → drive-only fallback", e.message); return await requestTokenWith(BASE_SCOPE, prompt); }
 }
-// אסימון שקט בלבד — לעולם לא פותח חלון. משתמש באסימון שבמטמון (עד שעה). null אם אין.
+// רענון שקט של האסימון — prompt:'' עם hint לחשבון. כשהמשתמש מחובר לגוגל
+// בדפדפן וכבר העניק הרשאה, מתקבל אסימון חדש דרך iframe מוסתר (בלי בורר חשבונות
+// ובלי חלון). אם נדרשת אינטראקציה — נכשל בשקט (error_callback) ולא פותח חלון.
+let refreshPromise = null;
+function silentRefresh() {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = new Promise((resolve) => {
+    if (!(window.google && window.google.accounts && window.google.accounts.oauth2)) { refreshPromise = null; return resolve(null); }
+    const email = storedEmail();
+    const done = (tok) => { refreshPromise = null; resolve(tok); };
+    const tryScope = (scope, next) => {
+      let tc;
+      try {
+        tc = window.google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID, scope,
+          callback: (resp) => {
+            if (resp && resp.access_token) {
+              accessToken = resp.access_token;
+              tokenExp = Date.now() + ((resp.expires_in || 3600) * 1000);
+              persistToken(); done(accessToken);
+            } else if (next) next(); else done(null);
+          },
+          error_callback: () => { if (next) next(); else done(null); },
+        });
+      } catch (e) { if (next) return next(); return done(null); }
+      try { tc.requestAccessToken({ prompt: "", ...(email ? { hint: email } : {}) }); }
+      catch (e) { if (next) next(); else done(null); }
+    };
+    tryScope(FULL_SCOPE, () => tryScope(BASE_SCOPE, null));
+  });
+  return refreshPromise;
+}
+
+// אסימון לסנכרון רקע — קודם מהזיכרון/מטמון, ואם פג — רענון שקט (בלי בורר חשבונות).
 async function ensureToken() {
   if (accessToken && Date.now() < tokenExp - 60000) return accessToken;
-  return loadStoredToken();
+  const stored = loadStoredToken();
+  if (stored) return stored;
+  try { await loadGis(); return await silentRefresh(); }
+  catch (e) { log("silent refresh failed", e.message); return null; }
 }
 
 // ---- קריאות Drive REST (מרחב appDataFolder) ----
@@ -239,10 +275,12 @@ function schedulePush() {
   pushTimer = setTimeout(() => { push(); }, 2500);
 }
 
-// ---- סנכרון בהעלאת האפליקציה (משיכת גרסה חדשה יותר ממכשיר אחר) ----
-async function startupSync() {
+// ---- משיכת הגרסה העדכנית מהענן (ממכשיר אחר) ----
+let lastPullAt = 0;
+async function doPull(reloadFn) {
   const tok = await ensureToken();
-  if (!tok) { log("startup — no token (will sync after reconnect)"); return; }
+  if (!tok) { log("pull — no token (will sync after reconnect)"); return; }
+  lastPullAt = Date.now();
   const f = await driveFind();
   if (!f) { await push(); return; }            // אין קובץ בענן — ניצור מהמקומי
   const cloudMs = Date.parse(f.modifiedTime || 0) || 0;
@@ -251,12 +289,21 @@ async function startupSync() {
     const text = await driveDownload(f.id);
     try { JSON.parse(text); } catch (e) { log("cloud file invalid"); return; }
     S.importState(text);
-    setLastSync(f.modifiedTime);
+    setLastSync(f.modifiedTime);   // מעדכן קודם — כדי שלא ייווצר לולאת רענון
     log("pulled newer from cloud — reloading");
-    reloadOnce();
+    reloadFn();
   } else {
     log("local up to date");
   }
+}
+// בהעלאת האפליקציה — עם שמירה מפני רענון-כפול באותה טעינה
+async function startupSync() { return doPull(reloadOnce); }
+// בחזרה לפורגראונד — מושך שינויים שנעשו במכשיר אחר בזמן שהאפליקציה ברקע
+async function foregroundPull() {
+  if (!isConnected()) return;
+  if (Date.now() - lastPullAt < 20000) return;   // לא לתקוף את הרשת
+  try { await loadGis(); await doPull(() => location.reload()); }
+  catch (e) { log("foreground pull failed", e.message); }
 }
 
 // ---- API ציבורי ----
@@ -352,7 +399,10 @@ export async function initCloud() {
   // דחיפה בסגירה/מעבר-רקע — מאמץ אחרון לשמור לענן לפני יציאה
   const closePush = () => { if (isConnected()) push(); };
   window.addEventListener("pagehide", closePush);
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") closePush(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") closePush();
+    else if (document.visibilityState === "visible") foregroundPull(); // חזרה לאפליקציה → משיכת עדכונים מהענן
+  });
   if (isConnected()) {
     // השם נקבע ע"י חשבון הגוגל — לא ע"י בחירה. אם שמור שם מהחשבון, מיישמים אותו.
     try {
