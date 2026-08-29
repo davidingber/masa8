@@ -304,7 +304,7 @@ function bindAfterEmo() {
 }
 
 // "מה אני מרגיש/ה עכשיו?" אחרי רגיעה/מדיטציה — תחושה חיובית שנכנסת לתחושות ההורה המיטיב בדשבורד
-const CALM_SENSES = ["רוגע", "שלווה", "שמחה", "קלילות", "נשימה"];
+const CALM_SENSES = ["רוגע", "שלווה", "הקלה", "קלילות", "נשימה"];
 function calmSenseWidget() {
   const st = S.getState();
   const chosen = st.senseNow || [];
@@ -1394,7 +1394,7 @@ let w1PartOther = false;
 const W1_TABS = [
   { id: "parts",      label: "החלקים בנפש" },
   { id: "goal",       label: "הגדרת המטרה" },
-  { id: "calm",       label: "סריקה ורגיעה" },
+  { id: "calm",       label: "נשימות ומיינדפולנס" },
   { id: "activation", label: "יומן פעילות" },
 ];
 
@@ -1490,7 +1490,12 @@ function w1Calm() {
       <h4>🧘 מיינדפולנס</h4>
       <p class="hint">תרגול נוכחות עדין — לשים לב לרגע הזה כמו שהוא, בלי לשפוט.</p>
       ${medCard(mindfulness)}
-    </div>` : "");
+    </div>` : "") + `
+    <div class="tool-block">
+      ${calmSenseWidget()}
+      ${afterEmoWidget()}
+      <button class="btn" id="scanDone">סיימתי ✓</button>
+    </div>`;
 }
 
 // חלק 1 — רגש מרכזי + דירוג + רגש חלופי
@@ -2203,9 +2208,6 @@ function w4Scan() {
         </div>
       </div>
 
-      ${calmSenseWidget()}
-      ${afterEmoWidget()}
-      <button class="btn" id="scanDone">סיימתי סריקה ונשימה ✓</button>
     </div>`;
 }
 
