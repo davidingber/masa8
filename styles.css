@@ -1044,3 +1044,19 @@ body{font-size:15.5px;line-height:1.5}
 /* תג פרק־מקור על כל פריט בדשבורד */
 .dchip-wk{display:inline-block;margin-inline-start:6px;font-size:8.5px;font-weight:800;color:var(--subtle);background:rgba(0,0,0,.05);border-radius:6px;padding:1px 5px;vertical-align:middle}
 [data-theme="dark"] .dchip-wk{background:rgba(255,255,255,.08)}
+
+/* מחשבות שמורות בכלי החלפת אמונות (פרק 6) */
+.bs-saved{margin-top:14px;border-top:1px dashed var(--line);padding-top:12px}
+.bs-saved-h{font-weight:800;color:var(--teal);font-size:14px;margin-bottom:8px}
+.bs-saved-item{position:relative;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 30px 10px 12px;margin-bottom:8px}
+.bs-saved-old{font-size:13px;color:var(--subtle)}
+.bs-saved-new{font-size:14px;font-weight:700;margin-top:2px}
+.bs-saved-int{font-size:11px;color:var(--subtle);margin-top:3px}
+.bs-del{position:absolute;inset-inline-end:8px;top:8px;background:none;border:none;color:var(--subtle);font-size:15px;cursor:pointer;line-height:1}
+
+/* "מה עוד חסר" מתחת לעוגת ההצלחה */
+.chart-missing{width:100%;max-width:340px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:2px}
+.chart-missing.done{text-align:center;color:var(--teal);font-weight:700}
+.cm-h{font-size:12.5px;font-weight:800;color:var(--subtle);margin-bottom:6px;text-align:center}
+.cm-list{margin:0;padding-inline-start:18px}
+.cm-list li{font-size:12.5px;margin-bottom:3px;color:var(--ink)}

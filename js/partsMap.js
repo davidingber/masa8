@@ -30,7 +30,8 @@ export function buildPartsMap(S) {
   // ===== אמונות יסוד =====
   const selfMap = td(2, "selfMap") || {};
   pain.belief = (selfMap.belief || "").trim();
-  const beliefTool = td(6, "beliefSwap") || {};      // כלי החלפת אמונות (שבוע 6) — מזין מחשבות, לא אמונת יסוד
+  // כלי החלפת אמונות (שבוע 6): כל מחשבה ששמרו (beliefSwapList) + הטופס הנוכחי — כולן נשמרות ולא נמחקות
+  const beliefEntries = [...(td(6, "beliefSwapList") || []), td(6, "beliefSwap") || {}];
   resource.belief = (selfMap.newBelief || st.idealBelief || "").trim();
 
   // ===== רגש ראשוני + מגמה =====
@@ -99,14 +100,17 @@ export function buildPartsMap(S) {
   add(resource, "thought", "חזון הזהות", (td(1, "dickens") || {}).identity, 1);
   add(resource, "emotion", "רגש בחזון", goal.dream_feel, 1);   // "מה עוד עולה בי שם, בגוף וברגש" — רגש, ולכן תחת קטגוריית רגש
   add(resource, "thought", "המטרה שלי", goal.goal_precise, 1);
-  // כלי החלפת אמונות (שבוע 6)
-  add(pain, "thought", "אמונה", beliefTool.belief, 6);
-  add(pain, "emotion", "רגש", beliefTool.emotion, 6);
-  add(resource, "emotion", "רגש שעולה", beliefTool.emotionInstead, 6);
-  add(resource, "thought", "אמונה חדשה", beliefTool.newBelief, 6);
-  add(resource, "thought", "בדיקת מציאות", beliefTool.real, 6);
-  add(resource, "thought", "הסבר אחר", beliefTool.reframe, 6);
-  add(resource, "thought", "רווח משומר", beliefTool.keepBenefit, 6);
+  // כלי החלפת אמונות (שבוע 6) — כל המחשבות ששמרו
+  beliefEntries.forEach(bt => {
+    add(pain, "thought", "אמונה", bt.belief, 6);
+    add(pain, "emotion", "רגש", bt.emotion, 6);
+    add(resource, "emotion", "רגש שעולה", bt.emotionInstead, 6);
+    add(resource, "thought", "אמונה חדשה", bt.newBelief, 6);
+    add(resource, "thought", "בדיקת מציאות", bt.real, 6);
+    add(resource, "thought", "הסבר אחר", bt.reframe, 6);
+    add(resource, "thought", "רווח משומר", bt.keepBenefit, 6);
+    add(resource, "behavior", "משאב חסר", bt.resources, 6);
+  });
   // התנהגות מיטיבה
   Object.values(td(1, "activityPlan") || {}).forEach(v => add(resource, "behavior", "פעילות מהנה", v && v.activity, 1));
   (td(8, "values") || []).forEach(v => add(resource, "behavior", "ערך מנחה", v, 8));
@@ -118,7 +122,6 @@ export function buildPartsMap(S) {
     const t = (v || "").trim();
     if (t) add(resource, "behavior", "הסרת העול", t, 5);   // הטקסט הגולמי — הקטגוריה "הסרת העול" מוצגת מעל
   });
-  add(resource, "behavior", "משאב חסר", beliefTool.resources, 6);
   // תחושות חיוביות שנבחרו אחרי רגיעה/מדיטציה
   (st.senseNow || []).forEach(s => add(resource, "sensation", "תחושה עכשיו", s, 4));
   // כל מדיטציה שהאזנו לה — בשמה, כמענה מיטיב לחלק (כפילויות מתמזגות)

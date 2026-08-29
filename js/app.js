@@ -125,6 +125,14 @@ function renderGate() {
 //  מפת החלקים / "הדמות שלי" — דשבורד מרכזי מסונכרן מכל השבועות
 //  partsDashCards מרנדר את גוף הדשבורד (משמש גם את מסך הבית)
 // ============================================================
+// הורדת טקסט לקובץ
+function downloadTextFile(filename, text, type = "text/plain") {
+  const url = URL.createObjectURL(new Blob([text], { type: type + ";charset=utf-8" }));
+  const a = document.createElement("a"); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 // עוגת ההצלחה — כמה מהמפה הפנימית כבר הפכה לצד המיטיב
 function successDonut(m) {
   const res = m.counts.resource, pain = m.counts.pain, total = res + pain;
@@ -132,6 +140,17 @@ function successDonut(m) {
   const pct = Math.round(res / total * 100);
   const C = 2 * Math.PI * 48;
   const fg = (res / total) * C;
+  // מה עוד חסר כדי להשלים — כדי שהלקוח יֵדע איפה החוסר
+  const behLabels = new Set(m.resource.behavior.map(b => b.label));
+  const gaps = [];
+  if (!m.resource.belief) gaps.push("אמונת יסוד חדשה · פרק 6");
+  if (!m.resource.thought.length) gaps.push("מחשבות מיטיבות · פרקים 3 ו-6");
+  if (!m.resource.emotion.length) gaps.push("רגשות מיטיבים · פרק 6");
+  if (!m.resource.sensation.length) gaps.push("תחושות טובות · פרק 4");
+  if (!behLabels.has("הסרת העול")) gaps.push("הסרת העול · פרק 5");
+  if (!(m.exposures || []).length) gaps.push("חשיפות · פרק 7");
+  if (!behLabels.has("פעילות מהנה")) gaps.push("פעילות מהנה · פרק 1");
+  if (!behLabels.has("ערך מנחה")) gaps.push("ערכים ופעולות · פרק 8");
   return `
     <svg viewBox="0 0 120 120" class="donut" role="img" aria-label="ההצלחה שלי בתהליך: ${pct} אחוז">
       <circle cx="60" cy="60" r="48" class="donut-track" fill="none" stroke-width="15"></circle>
@@ -144,7 +163,8 @@ function successDonut(m) {
       <div class="lg-row"><span class="lg-dot lg-res"></span><span class="lg-txt">משאב מיטיב — מה שכבר נבנה</span><b class="lg-num">${res}</b></div>
       <div class="lg-row"><span class="lg-dot lg-pain"></span><span class="lg-txt">כאב — מה שעדיין בעבודה</span><b class="lg-num">${pain}</b></div>
     </div>
-    <div class="chart-cap">ככל שהירוק גדל — ההצלחה מתחזקת 🌱</div>`;
+    <div class="chart-cap">ככל שהירוק גדל — ההצלחה מתחזקת 🌱</div>
+    ${gaps.length ? `<div class="chart-missing"><div class="cm-h">כדי להשלים — עוד לא מילאת:</div><ul class="cm-list">${gaps.slice(0, 6).map(g => `<li>${g}</li>`).join("")}</ul></div>` : `<div class="chart-missing done">✅ מילאת את כל התחומים — כל הכבוד!</div>`}`;
 }
 
 function partsDashCards(m, opts = {}) {
@@ -188,9 +208,12 @@ function partsDashCards(m, opts = {}) {
     : `<div class="d-empty">—</div>`;
   const cellBelief = (text, cls) => text ? `<div class="belief ${cls}">${esc(text)}</div>` : `<div class="d-empty">—</div>`;
   const burdenItems = m.resource.behavior.filter(it => it.label === "הסרת העול");
-  // "התנהגות חומלת" מאגדת את כל ההתנהגות המיטיבה (חוץ מהסרת העול שיושבת מול עשיית יתר):
-  // פעילות מהנה, פעילות מבוססת ערכים, האזנה למדיטציות, מפגש עם החמלה (מה שהחלק צריך), ועוד.
-  const compassionItems = m.resource.behavior.filter(it => it.label !== "הסרת העול");
+  // שלושה בלוקים נפרדים בתחתית הצד המיטיב:
+  const funItems = m.resource.behavior.filter(it => it.label === "פעילות מהנה");
+  const valueItems = m.resource.behavior.filter(it => ["ערך מנחה", "פעילות מבוססת ערכים"].includes(it.label));
+  // "התנהגות חומלת" = השאר (מענה לצורך, מדיטציות, משאב חסר, דרך חלופית) — בלי הסרת העול/פעילות/ערכים
+  const compassionItems = m.resource.behavior.filter(it =>
+    !["הסרת העול", "פעילות מהנה", "ערך מנחה", "פעילות מבוססת ערכים"].includes(it.label));
   const expChips = (m.exposures || []).length
     ? `<div class="dmini">${m.exposures.map(e => `<span class="dchip d-parent${e.done ? " exp-done" : ""}">${e.done ? "✅" : "🎯"} ${esc(clip(e.fear))}<span class="dchip-wk">פרק 7</span></span>`).join("")}</div>`
     : `<div class="d-empty">—</div>`;
@@ -220,6 +243,8 @@ function partsDashCards(m, opts = {}) {
       ${pRow("תחושות", cellChips(m.pain.sensation, "part"), "תחושות", cellChips(m.resource.sensation, "parent"))}
       ${pRow("עשיית יתר", cellChips(m.pain.over, "part"), "הסרת העול", cellChips(burdenItems, "parent"))}
       ${pRow("הימנעות", cellChips(m.pain.avoid, "part"), "חשיפות", expChips)}
+      ${funItems.length ? `<div class="dg-cell dg-wide c-res"><div class="dg-lbl">פעילות מהנה</div>${cellChips(funItems, "parent")}</div>` : ""}
+      ${valueItems.length ? `<div class="dg-cell dg-wide c-res"><div class="dg-lbl">ערכים</div>${cellChips(valueItems, "parent")}</div>` : ""}
       ${compassionItems.length ? `<div class="dg-cell dg-wide c-res"><div class="dg-lbl">התנהגות חומלת</div>${cellChips(compassionItems, "parent")}</div>` : ""}
     </div>
     ${m.exposures && m.exposures.length ? `
@@ -347,9 +372,13 @@ function renderSelf() {
       <div><div class="greeting">🌱 הדמות שלי</div><div class="subtle">מפת החלקים — מסונכרן מכל השבועות</div></div>
     </header>
     ${partsDashCards(m)}
-    <div class="chapter-footer"><button class="btn ghost2 back-all" id="backHome">↩ חזרה לבית</button></div>`;
+    <div class="chapter-footer">
+      <button class="btn ghost2" id="dlDash">⬇ הורדת הדשבורד</button>
+      <button class="btn ghost2 back-all" id="backHome">↩ חזרה לבית</button>
+    </div>`;
   app.querySelector("#back").addEventListener("click", () => go("home"));
   app.querySelector("#backHome").addEventListener("click", () => go("home"));
+  app.querySelector("#dlDash")?.addEventListener("click", () => openDashPrint(m));
   app.querySelector("#posEmoChapters")?.addEventListener("click", () => go("chapters"));
 }
 
@@ -2449,6 +2478,7 @@ function toolWeek5(c) {
 // --- כלי החלפת אמונות ומחשבות — מזין את ההורה המיטיב במפת החלקים ---
 function w5Beliefs() {
   const d = S.getToolData(6, "beliefSwap") || {};
+  const list = S.getToolData(6, "beliefSwapList") || [];
   const f = (key, label, ph) => `<label class="mini-label">${label}</label>
     <textarea class="ta bs-field" data-b="${key}" placeholder="${esc(ph)}">${esc(d[key] || "")}</textarea>`;
   return `
@@ -2481,7 +2511,18 @@ function w5Beliefs() {
         <textarea class="ta bs-field" data-b="emotionInstead" placeholder="הרגש שמתחיל להופיע — רוגע, ביטחון, הקלה...">${esc(d.emotionInstead || "")}</textarea>
       </div>
 
-      <button class="btn" id="saveBeliefSwap">שמירה + טעינת האווטר</button>
+      <button class="btn" id="saveBeliefSwap">שמירה למחשבות שלי + טעינת האווטר</button>
+      ${list.length ? `
+      <div class="bs-saved">
+        <div class="bs-saved-h">🗂️ המחשבות ששמרתי (${list.length}) — נשמרות ולא נמחקות</div>
+        ${list.map((e, i) => `<div class="bs-saved-item">
+          <button class="bs-del" data-bsdel="${i}" title="מחיקה">✕</button>
+          <div class="bs-saved-old">🌰 ${esc(e.belief || "—")}</div>
+          <div class="bs-saved-new">✨ ${esc(e.newBelief || "—")}</div>
+          ${(e.intBefore != null && e.intAfter != null) ? `<div class="bs-saved-int">עוצמה: ${esc(String(e.intBefore))} → ${esc(String(e.intAfter))}</div>` : ""}
+        </div>`).join("")}
+        <button class="btn ghost2" id="dlBeliefs">⬇ הורדת המחשבות לקובץ</button>
+      </div>` : ""}
     </div>`;
 }
 
@@ -2611,11 +2652,36 @@ function mountWeek5Handlers() {
   const sbs = app.querySelector("#saveBeliefSwap");
   if (sbs) sbs.addEventListener("click", () => {
     const d = collectBeliefSwap();
-    S.setToolData(6, "beliefSwap", d);
-    if (Object.values(d).some(Boolean)) S.logActivity("thought", "החלפת אמונה");
-    // עוצמת ה"אחרי" נכנסת למגמת הרגש בדשבורד
+    if (!d.belief && !d.newBelief) return toast("צריך לכתוב מחשבה או ניסוח חדש");
+    // כל מחשבה נשמרת לרשימה (ולא נמחקת), והטופס מתנקה למחשבה הבאה
+    const list = S.getToolData(6, "beliefSwapList") || [];
+    list.push({ ...d, savedAt: new Date().toISOString() });
+    S.setToolData(6, "beliefSwapList", list);
+    S.setToolData(6, "beliefSwap", {});
+    S.logActivity("thought", "החלפת אמונה");
     if (d.intAfter != null && S.getState().emotion.name) S.logEmotionRating(d.intAfter);
-    celebrate(); toast("נשמר ✓ — העוצמה עודכנה במגמה");
+    celebrate(); toast("המחשבה נשמרה לרשימה ✓"); renderChapter(6);
+  });
+  app.querySelectorAll(".bs-del").forEach(b => b.addEventListener("click", () => {
+    const list = S.getToolData(6, "beliefSwapList") || [];
+    list.splice(Number(b.dataset.bsdel), 1);
+    S.setToolData(6, "beliefSwapList", list); renderChapter(6);
+  }));
+  const dlb = app.querySelector("#dlBeliefs");
+  if (dlb) dlb.addEventListener("click", () => {
+    const list = S.getToolData(6, "beliefSwapList") || [];
+    const txt = list.map((e, i) => [
+      `מחשבה ${i + 1}`,
+      `האמונה/המחשבה: ${e.belief || ""}`,
+      `הרגש שעלה: ${e.emotion || ""}${e.intBefore != null ? ` (עוצמה ${e.intBefore})` : ""}`,
+      `בדיקת מציאות: ${e.real || ""}`,
+      `הסבר אחר: ${e.reframe || ""}`,
+      `שמירת הרווח: ${e.keepBenefit || ""}`,
+      `משאבים שחסרים: ${e.resources || ""}`,
+      `האמונה החדשה: ${e.newBelief || ""}`,
+      `הרגש שעולה במקום: ${e.emotionInstead || ""}${e.intAfter != null ? ` (עוצמה ${e.intAfter})` : ""}`,
+    ].join("\n")).join("\n\n————————————————\n\n");
+    downloadTextFile("מחשבות-חלופיות.txt", txt || "אין מחשבות שמורות");
   });
 
   // בדיקה מהירה (30 שניות)
@@ -2701,6 +2767,62 @@ function openThoughtPrint(rows) {
     <p class="sub">מסע 8 הזהויות · שבוע 6 — הנהגת המחשבות</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
+    <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
+    <script>setTimeout(()=>window.print(),400)<\/script>
+    </body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) { toast("אפשר חלונות קופצים כדי להוריד"); return; }
+  w.document.write(html); w.document.close();
+}
+
+// הורדת הדשבורד (מפת החלקים) כדף להדפסה / שמירה כ-PDF
+function openDashPrint(m) {
+  const st = S.getState();
+  const today = new Date().toLocaleDateString("he-IL");
+  const li = arr => (arr && arr.length) ? arr.map(it => `<li>${esc(it.text)}${it.week ? ` <span class="wk">פרק ${it.week}</span>` : ""}</li>`).join("") : `<li class="empty">—</li>`;
+  const bLi = t => t ? `<li>${esc(t)}</li>` : `<li class="empty">—</li>`;
+  const burden = m.resource.behavior.filter(it => it.label === "הסרת העול");
+  const funB = m.resource.behavior.filter(it => it.label === "פעילות מהנה");
+  const valB = m.resource.behavior.filter(it => ["ערך מנחה", "פעילות מבוססת ערכים"].includes(it.label));
+  const compassion = m.resource.behavior.filter(it =>
+    !["הסרת העול", "פעילות מהנה", "ערך מנחה", "פעילות מבוססת ערכים"].includes(it.label));
+  const expLi = (m.exposures || []).length
+    ? m.exposures.map(e => `<li>${e.done ? "✅" : "🎯"} ${esc(e.fear)}${e.learned ? " — " + esc(e.learned) : ""} <span class="wk">פרק 7</span></li>`).join("")
+    : `<li class="empty">—</li>`;
+  const row = (lblP, painHtml, lblR, resHtml) => `<tr><td><div class="cl">${lblP}</div><ul>${painHtml}</ul></td><td class="res"><div class="cl">${lblR}</div><ul>${resHtml}</ul></td></tr>`;
+  const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
+    <title>מפת החלקים שלי — מסע 8</title>
+    <style>
+      body{font-family:"Segoe UI",Arial,sans-serif;color:#222;padding:22px;max-width:900px;margin:auto}
+      h1{color:#45614f;margin:0 0 2px}.sub{color:#6a8189;margin:0 0 10px}
+      .meta{color:#6a8189;font-size:13px;margin-bottom:12px}
+      .head{display:flex;gap:8px;margin-bottom:6px}.head div{flex:1;text-align:center;font-weight:800;padding:6px;border-radius:8px}
+      .h-part{background:#eef1f4;color:#5a6a78}.h-res{background:#e4f1e8;color:#2c6644}
+      table{width:100%;border-collapse:collapse;table-layout:fixed}
+      td{border:1px solid #d9e2dc;padding:10px;vertical-align:top;width:50%}
+      td.res{background:#f2f7f1}
+      .cl{font-weight:800;color:#45614f;margin-bottom:6px;font-size:13px}
+      ul{margin:0;padding-inline-start:18px}li{font-size:12.5px;margin-bottom:4px}
+      li.empty{list-style:none;color:#aaa}.wk{font-size:9px;color:#888;background:#eee;border-radius:5px;padding:1px 5px}
+      .btn{background:#45614f;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:15px;cursor:pointer;margin-top:16px}
+      @media print{.noprint{display:none}}
+    </style></head><body>
+    <h1>מפת החלקים שלי</h1>
+    <p class="sub">מסע 8 הזהויות — מהישרדות פנימית להנהגה עצמית</p>
+    <div class="meta">שם: ${esc(st.name) || "____"} · תאריך: ${today}</div>
+    <div class="head"><div class="h-part">${esc(m.partName ? "החלק · " + m.partName : "החלק")}</div><div class="h-res">${esc(m.idealName || "המבוגר המיטיב")}</div></div>
+    <table><tbody>
+      ${row("אמונת יסוד", bLi(m.pain.belief), "אמונת יסוד חדשה", bLi(m.resource.belief))}
+      ${row("מחשבות", li(m.pain.thought), "מחשבות מיטיבות", li(m.resource.thought))}
+      ${row("רגשות", li(m.pain.emotion), "רגשות מיטיבים", li(m.resource.emotion))}
+      ${row("תחושות", li(m.pain.sensation), "תחושות", li(m.resource.sensation))}
+      ${row("עשיית יתר", li(m.pain.over), "הסרת העול", li(burden))}
+      ${row("הימנעות", li(m.pain.avoid), "חשיפות", expLi)}
+      ${funB.length ? `<tr><td colspan="2"><div class="cl">פעילות מהנה</div><ul>${li(funB)}</ul></td></tr>` : ""}
+      ${valB.length ? `<tr><td colspan="2"><div class="cl">ערכים</div><ul>${li(valB)}</ul></td></tr>` : ""}
+      ${compassion.length ? `<tr><td colspan="2"><div class="cl">התנהגות חומלת</div><ul>${li(compassion)}</ul></td></tr>` : ""}
+    </tbody></table>
+    ${m.target ? `<p style="margin-top:12px"><b>🌱 היעד שלי:</b> ${esc(m.target)}</p>` : ""}
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
     <script>setTimeout(()=>window.print(),400)<\/script>
     </body></html>`;
@@ -3853,8 +3975,8 @@ function w8Identity() {
   const thoughtsVal = pref("thoughts", join(byLabel(m.resource.thought, ["מחשבה חלופית", "מנטרה", "מסגור מחדש", "אי-הזדהות", "הסבר אחר", "בדיקת מציאות", "רווח משומר", "חזון", "חזון הזהות", "המטרה שלי"])));
   const exposureVal = pref("exposure", join(byLabel(m.resource.thought, ["למידה מחשיפה"])));
   const activityVal = pref("activity", join(byLabel(m.resource.behavior, ["פעילות מהנה"])));
-  const valuesVal = pref("values", join(byLabel(m.resource.behavior, ["ערך מנחה"])));
-  const compassionVal = pref("compassion", join(byLabel(m.resource.behavior, ["מדיטציות", "מה החלק צריך", "הסרת העול"])));
+  const valuesVal = pref("values", join(byLabel(m.resource.behavior, ["ערך מנחה", "פעילות מבוססת ערכים"])));
+  const compassionVal = pref("compassion", join(byLabel(m.resource.behavior, ["מדיטציה", "מה החלק צריך", "משאב חסר", "דרך חלופית"])));
 
   const sec = (id, icon, label, val, ph) => `
     <label class="mini-label">${icon} ${label}</label>
