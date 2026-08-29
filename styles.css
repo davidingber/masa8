@@ -823,6 +823,12 @@ body{font-size:15.5px;line-height:1.5}
 .dmini{display:flex;flex-wrap:wrap;gap:5px}
 .dchip{font-size:10.5px;font-weight:600;line-height:1.25;border-radius:8px;padding:4px 8px;background:#fff}
 .d-part{border:1px solid #dfe4e9;color:#4a5a68}
+.dchip-done{border-color:#8fbf9e !important;background:#eef7f0}
+.belief.dchip-done{border-color:#8fbf9e !important;background:#eef7f0}
+[data-theme="dark"] .dchip-done{background:#17281c;border-color:#3c6349 !important}
+.tick{display:inline-block;color:#2f8a5a;font-weight:800;margin-inline-end:3px}
+[data-theme="dark"] .tick{color:#57b083}
+.dash-legend{font-size:11px;color:var(--muted,#6a8189);text-align:center;margin:4px 0 8px;display:flex;gap:5px;align-items:center;justify-content:center}
 .d-parent{border:1px solid #dbe7dd;color:#33493c}
 [data-theme="dark"] .dchip{background:#141a15}
 [data-theme="dark"] .d-part{border-color:#333c45;color:#c3ccd4}

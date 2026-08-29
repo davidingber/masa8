@@ -225,7 +225,9 @@ function partsDashCards(m, opts = {}) {
   const cellChips = (items, side) => items && items.length
     ? `<div class="dmini">${items.map(it => dchip(it, side)).join("")}</div>`
     : `<div class="d-empty">—</div>`;
-  const cellBelief = (text, cls) => text ? `<div class="belief ${cls}">${esc(text)}</div>` : `<div class="d-empty">—</div>`;
+  const cellBelief = (text, cls, done) => text
+    ? `<div class="belief ${cls}${done ? " dchip-done" : ""}">${done ? `<span class="tick">✓</span>` : ""}${esc(text)}</div>`
+    : `<div class="d-empty">—</div>`;
   const burdenItems = m.resource.behavior.filter(it => it.label === "הסרת העול");
   // שלושה בלוקים נפרדים בתחתית הצד המיטיב:
   const funItems = m.resource.behavior.filter(it => it.label === "פעילות מהנה");
@@ -243,6 +245,31 @@ function partsDashCards(m, opts = {}) {
   const expChips = (m.exposures || []).length
     ? `<div class="dmini">${m.exposures.map(e => `<span class="dchip d-parent${e.done ? " exp-done" : ""}">${e.done ? "✅" : "🎯"} ${esc(clip(e.fear))}<span class="dchip-wk">פרק 7</span></span>`).join("")}</div>`
     : `<div class="d-empty">—</div>`;
+  // ===== "טופל" — לכל פריט בצד הכאב, האם קיבל מענה בצד המיטיב =====
+  const nrm = s => (s == null ? "" : String(s)).trim();
+  const matches = (a, b) => { a = nrm(a); b = nrm(b); return !!a && !!b && (a.includes(b) || b.includes(a)); };
+  const beliefPairs = [...(S.getToolData(6, "beliefSwapList") || []), S.getToolData(6, "beliefSwap") || {}]
+    .filter(p => p && (nrm(p.belief) || nrm(p.newBelief)));
+  const thirdP = nrm(S.getToolData(3, "thirdPerson"));
+  const treatedThought = (t) =>
+    beliefPairs.some(p => nrm(p.newBelief) && matches(t, p.belief)) ||        // החלפת מחשבה (פרק 6)
+    (thirdP && matches(t, thirdP)) ||                                          // אי-הזדהות (פרק 3)
+    m.resource.thought.some(r => ["מחשבה חלופית", "אמונה חדשה", "הסבר אחר", "בדיקת מציאות", "מנטרה"].includes(r.label) && matches(t, r.text));
+  const treatedEmotion = (t) =>
+    Object.keys(EMOTION_ALTERNATIVES).some(k => nrm(t).includes(k)) ||        // רגש הופכי שכנגד
+    beliefPairs.some(p => nrm(p.emotionInstead) && matches(t, p.emotion));
+  const treatedSensation = (t) => m.resource.sensation.some(x => matches(t, x.text));
+  const treatedOver = (t) => burdenItems.some(b => matches(t, b.text)) || (m.exposures || []).some(e => matches(t, e.fear));
+  const treatedAvoid = (t) => (m.exposures || []).some(e => matches(t, e.fear));
+
+  const dchipP = (it, treatedFn) => {
+    const done = !!(treatedFn && treatedFn(it.text));
+    return `<span class="dchip d-part${done ? " dchip-done" : ""}">${done ? `<span class="tick">✓</span>` : ""}${esc(clip(it.text))}${it.week ? `<span class="dchip-wk">פרק ${it.week}</span>` : ""}</span>`;
+  };
+  const cellChipsP = (items, treatedFn) => items && items.length
+    ? `<div class="dmini">${items.map(it => dchipP(it, treatedFn)).join("")}</div>`
+    : `<div class="d-empty">—</div>`;
+
   const pRow = (lblP, painHtml, lblR, resHtml) => `
       <div class="dg-cell c-pain"><div class="dg-lbl">${lblP}</div>${painHtml}</div>
       <div class="dg-cell c-res"><div class="dg-lbl">${lblR}</div>${resHtml}</div>`;
@@ -260,15 +287,16 @@ function partsDashCards(m, opts = {}) {
     ${!has ? `<section class="card"><p class="subtle" style="text-align:center;line-height:1.7">
         כאן נבנית הדמות שלך לאורך המסע. ${m.partName ? "" : `לבחור קודם את שם החלק בפרק 1. `}ככל שכותבים בשבועות — אמונה, מחשבות, רגש, פעילות, חשיפות — הכול יופיע כאן.</p></section>` : `
 
+    <div class="dash-legend"><span class="tick">✓</span> = טופל — הפריט בצד החלק קיבל מענה בצד המיטיב</div>
     <div class="dash-grid">
       <div class="dg-head dh-part">${partHdr}</div>
       <div class="dg-head dh-parent">${idealHdr}</div>
-      ${pRow("אמונת יסוד", cellBelief(m.pain.belief, "b-part"), "אמונת יסוד חדשה", cellBelief(m.resource.belief, "b-parent"))}
-      ${pRow("מחשבות", cellChips(m.pain.thought, "part"), "מחשבות מיטיבות", cellChips(m.resource.thought, "parent"))}
-      ${pRow("רגשות", cellChips(m.pain.emotion, "part"), "רגשות מיטיבים", cellChips(m.resource.emotion, "parent"))}
-      ${pRow("תחושות", cellChips(m.pain.sensation, "part"), "תחושות", cellChips(m.resource.sensation, "parent"))}
-      ${pRow("עשיית יתר", cellChips(m.pain.over, "part"), "הסרת העול", cellChips(burdenItems, "parent"))}
-      ${pRow("הימנעות", cellChips(m.pain.avoid, "part"), "חשיפות", expChips)}
+      ${pRow("אמונת יסוד", cellBelief(m.pain.belief, "b-part", !!m.resource.belief), "אמונת יסוד חדשה", cellBelief(m.resource.belief, "b-parent"))}
+      ${pRow("מחשבות", cellChipsP(m.pain.thought, treatedThought), "מחשבות מיטיבות", cellChips(m.resource.thought, "parent"))}
+      ${pRow("רגשות", cellChipsP(m.pain.emotion, treatedEmotion), "רגשות מיטיבים", cellChips(m.resource.emotion, "parent"))}
+      ${pRow("תחושות", cellChipsP(m.pain.sensation, treatedSensation), "תחושות", cellChips(m.resource.sensation, "parent"))}
+      ${pRow("עשיית יתר", cellChipsP(m.pain.over, treatedOver), "הסרת העול", cellChips(burdenItems, "parent"))}
+      ${pRow("הימנעות", cellChipsP(m.pain.avoid, treatedAvoid), "חשיפות", expChips)}
       ${funItems.length ? `<div class="dg-cell dg-wide c-res"><div class="dg-lbl">פעילות מהנה</div>${cellChips(funItems, "parent")}</div>` : ""}
       ${valueItems.length ? `<div class="dg-cell dg-wide c-res"><div class="dg-lbl">ערכים</div>${cellChips(valueItems, "parent")}</div>` : ""}
       ${compassionItems.length ? `<div class="dg-cell dg-wide c-res"><div class="dg-lbl">התנהגות חומלת</div>${cellChips(compassionItems, "parent")}</div>` : ""}
