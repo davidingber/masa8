@@ -828,7 +828,33 @@ body{font-size:15.5px;line-height:1.5}
 [data-theme="dark"] .dchip-done{background:#17281c;border-color:#3c6349 !important}
 .tick{display:inline-block;color:#2f8a5a;font-weight:800;margin-inline-end:3px}
 [data-theme="dark"] .tick{color:#57b083}
-.dash-legend{font-size:11px;color:var(--muted,#6a8189);text-align:center;margin:4px 0 8px;display:flex;gap:5px;align-items:center;justify-content:center}
+.dash-legend{font-size:11px;color:var(--muted,#6a8189);text-align:center;margin:4px 0 10px;line-height:1.6}
+/* ===== מבנה זוגי: כל פריט כאב מול המענה שלו ===== */
+.pair-map{display:flex;flex-direction:column;gap:12px}
+.pair-head{display:flex;gap:8px;font-weight:800;font-size:12.5px}
+.pair-head .ph-part{flex-basis:42%;text-align:center;padding:7px;border-radius:9px;background:#eef1f4;color:#5a6a78}
+.pair-head .ph-res{flex:1;text-align:center;padding:7px;border-radius:9px;background:#e4f1e8;color:#2c6644}
+[data-theme="dark"] .pair-head .ph-part{background:#1f242a;color:#c3ccd4}
+[data-theme="dark"] .pair-head .ph-res{background:#1c3228;color:#cfe0d3}
+.pair-cat{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+.pair-cat-h{display:flex;gap:8px;padding:6px 10px;background:var(--bg2);font-size:11px;font-weight:700;color:var(--muted,#6a8189)}
+.pair-cat-h .pc-pain{flex-basis:42%}
+.pair-cat-h .pc-res{flex:1}
+.pair-row{display:flex;gap:8px;align-items:center;padding:8px 10px;border-top:1px solid var(--line)}
+.pair-row.done{background:#f4faf5}
+[data-theme="dark"] .pair-row.done{background:#141f16}
+.pair-pain{flex-basis:42%;display:flex;flex-wrap:wrap;gap:4px}
+.pair-arrow{flex-shrink:0;color:#2f8a5a;font-weight:800;font-size:14px}
+.pair-row.todo .pair-arrow{color:#c8a24a}
+.pair-res{flex:1;display:flex;flex-wrap:wrap;gap:4px}
+.pair-wait{font-size:10.5px;font-weight:600;color:#b8791a;background:#f7edd7;border-radius:8px;padding:3px 8px}
+[data-theme="dark"] .pair-wait{color:#e0b96d;background:#332a17}
+.pair-none{font-size:10.5px;font-weight:600;color:#2f8a5a}
+.dash-extra{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.res-block{border:1px solid #dbe7dd;border-radius:14px;padding:9px 11px;background:#f4faf5}
+[data-theme="dark"] .res-block{border-color:#33402d;background:#141f16}
+.res-block-h{font-weight:800;font-size:12px;color:#2c6644;margin-bottom:6px}
+[data-theme="dark"] .res-block-h{color:#82cea3}
 .d-parent{border:1px solid #dbe7dd;color:#33493c}
 [data-theme="dark"] .dchip{background:#141a15}
 [data-theme="dark"] .d-part{border-color:#333c45;color:#c3ccd4}
