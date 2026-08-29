@@ -859,6 +859,8 @@ function renderHome() {
 
     ${partsDashCards(m, { streak })}
 
+    <button class="btn ghost2" id="dlDashHome" style="width:100%;margin-bottom:10px">⬇ הורדת הדשבורד (PDF)</button>
+
     <button class="btn ghost2 achv-link" id="achvLink">🏅 ההישגים שלי · ${badgeCount.unlocked}/${badgeCount.total}</button>
 
     ${trustBlock()}
@@ -871,6 +873,7 @@ function renderHome() {
       cloudDisconnect(); render();
     }
   });
+  app.querySelector("#dlDashHome")?.addEventListener("click", () => openDashPrint(m));
   app.querySelector("#achvLink").addEventListener("click", () => go("achievements"));
   app.querySelector("#posEmoChapters")?.addEventListener("click", () => go("chapters"));
   app.querySelector("#trustSOS")?.addEventListener("click", openSOS);
@@ -1892,12 +1895,13 @@ function openCyclePrint(rows, empty) {
 let week3Tab = "defusion";
 const W3_TABS = [
   { id: "defusion", label: "הרחקת מחשבות" },
+  { id: "reframe", label: "מסגור מחדש" },
 ];
 
 function toolWeek3(c) {
   const tabs = `<div class="subtool-tabs">${W3_TABS.map(t =>
     `<button class="subtool-tab ${week3Tab === t.id ? "on" : ""}" data-w3tab="${t.id}">${t.label}</button>`).join("")}</div>`;
-  const body = w3Defusion();
+  const body = week3Tab === "reframe" ? w3Reframe() : w3Defusion();
   return `<p class="week-distinction">🍃 בשבוע הזה לא נצמדים למחשבה — שמים לב שהיא רק מחשבה. <b>בשבוע 6 נבדוק אם היא מדויקת.</b></p>`
     + tabs + `<div id="w3body">${body}</div>`;
 }
@@ -2590,7 +2594,7 @@ function w5Beliefs() {
           <div class="bs-saved-new">✨ ${esc(e.newBelief || "—")}</div>
           ${(e.intBefore != null && e.intAfter != null) ? `<div class="bs-saved-int">עוצמה: ${esc(String(e.intBefore))} → ${esc(String(e.intAfter))}</div>` : ""}
         </div>`).join("")}
-        <button class="btn ghost2" id="dlBeliefs">⬇ הורדת המחשבות לקובץ</button>
+        <button class="btn ghost2" id="dlBeliefs">⬇ הורדת המחשבות (PDF)</button>
       </div>` : ""}
     </div>`;
 }
@@ -2739,18 +2743,7 @@ function mountWeek5Handlers() {
   const dlb = app.querySelector("#dlBeliefs");
   if (dlb) dlb.addEventListener("click", () => {
     const list = S.getToolData(6, "beliefSwapList") || [];
-    const txt = list.map((e, i) => [
-      `מחשבה ${i + 1}`,
-      `האמונה/המחשבה: ${e.belief || ""}`,
-      `הרגש שעלה: ${e.emotion || ""}${e.intBefore != null ? ` (עוצמה ${e.intBefore})` : ""}`,
-      `בדיקת מציאות: ${e.real || ""}`,
-      `הסבר אחר: ${e.reframe || ""}`,
-      `שמירת הרווח: ${e.keepBenefit || ""}`,
-      `משאבים שחסרים: ${e.resources || ""}`,
-      `האמונה החדשה: ${e.newBelief || ""}`,
-      `הרגש שעולה במקום: ${e.emotionInstead || ""}${e.intAfter != null ? ` (עוצמה ${e.intAfter})` : ""}`,
-    ].join("\n")).join("\n\n————————————————\n\n");
-    downloadTextFile("מחשבות-חלופיות.txt", txt || "אין מחשבות שמורות");
+    openBeliefsPrint(list);
   });
 
   // בדיקה מהירה (30 שניות)
@@ -2844,6 +2837,50 @@ function openThoughtPrint(rows) {
   w.document.write(html); w.document.close();
 }
 
+// הורדת המחשבות החלופיות (שבוע 6) כדף להדפסה / שמירה כ-PDF
+function openBeliefsPrint(list) {
+  const st = S.getState();
+  const today = new Date().toLocaleDateString("he-IL");
+  const row = (lbl, val) => (val || val === 0) && String(val).trim()
+    ? `<div class="q"><span class="ql">${esc(lbl)}</span><span class="qa">${esc(String(val)).replace(/\n/g, "<br>")}</span></div>` : "";
+  const cards = (list || []).map((e, i) => `
+    <div class="bcard">
+      <div class="bnum">מחשבה ${i + 1}</div>
+      ${row("האמונה / המחשבה", e.belief)}
+      ${row("הרגש שעלה", (e.emotion || "") + (e.intBefore != null ? ` (עוצמה ${e.intBefore})` : ""))}
+      ${row("בדיקת מציאות", e.real)}
+      ${row("הסבר אחר", e.reframe)}
+      ${row("שמירת הרווח", e.keepBenefit)}
+      ${row("משאבים שחסרים", e.resources)}
+      ${row("האמונה החדשה", e.newBelief)}
+      ${row("הרגש שעולה במקום", (e.emotionInstead || "") + (e.intAfter != null ? ` (עוצמה ${e.intAfter})` : ""))}
+    </div>`).join("");
+  const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
+    <title>מחשבות חלופיות — שבוע 6</title>
+    <style>
+      body{font-family:"Segoe UI",Arial,sans-serif;color:#20353a;padding:22px;max-width:720px;margin:0 auto}
+      h1{color:#0f766e;margin:0 0 4px}.sub{color:#6a8189;margin:0 0 8px}
+      .meta{display:flex;gap:24px;color:#6a8189;font-size:13px;margin-bottom:16px}
+      .bcard{border:1px solid #cfe0dc;border-radius:12px;padding:14px 16px;margin-bottom:14px;break-inside:avoid}
+      .bnum{font-weight:700;color:#0f766e;margin-bottom:8px;font-size:15px}
+      .q{display:flex;gap:10px;padding:5px 0;border-bottom:1px dashed #e4eeea;font-size:13.5px}
+      .q:last-child{border-bottom:none}
+      .ql{font-weight:600;min-width:130px;color:#42606a}.qa{flex:1}
+      .btn{background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:15px;cursor:pointer;margin-top:8px}
+      @media print{.noprint{display:none}}
+    </style></head><body>
+    <h1>מחשבות חלופיות</h1>
+    <p class="sub">מסע 8 הזהויות · שבוע 6 — הנהגת המחשבות</p>
+    <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
+    ${cards || `<p class="sub">אין מחשבות שמורות עדיין.</p>`}
+    <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
+    <script>setTimeout(()=>window.print(),400)<\/script>
+    </body></html>`;
+  const w = window.open("", "_blank");
+  if (!w) { toast("אפשר חלונות קופצים כדי להוריד"); return; }
+  w.document.write(html); w.document.close();
+}
+
 // הורדת הדשבורד (מפת החלקים) כדף להדפסה / שמירה כ-PDF
 function openDashPrint(m) {
   const st = S.getState();
@@ -2908,7 +2945,6 @@ const W6_TABS = [
   { id: "identity", label: "מי אני בלי הבעיה" },
   { id: "guided",   label: "מפגש החמלה" },
   { id: "burden",   label: "הסרת העול" },
-  { id: "reframe",  label: "מסגור מחדש" },
 ];
 // הסרת העול — 4 עומסים שאני מניח מעליי
 const BURDEN_FIELDS = [
@@ -2930,7 +2966,6 @@ function toolWeek6(c) {
   if (week6Tab === "identity") body = w6Identity();
   if (week6Tab === "guided") body = w6Guided();
   if (week6Tab === "burden") body = w6Burden();
-  if (week6Tab === "reframe") body = w3Reframe();
   return tabs + `<div id="w6body">${body}</div>`;
 }
 
