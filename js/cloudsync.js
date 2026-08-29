@@ -188,6 +188,11 @@ async function push() {
   if (!isConnected()) return;
   const tok = await ensureToken();
   if (!tok) { log("push skipped — no token"); return; }
+  // הגנה קריטית: מכשיר ריק לא ידרוס גיבוי ענן קיים
+  if (!hasLocalData()) {
+    try { const f0 = await driveFind(); if (f0) { log("push skipped — local empty, cloud has data (protected)"); return; } }
+    catch (e) {}
+  }
   syncing = true; emitChanged();
   try {
     const text = S.exportState();
