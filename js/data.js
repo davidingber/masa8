@@ -315,11 +315,6 @@ export const GOAL_TOOL = {
       fields: [
         { key: "part_show", type: "part-show", label: "החלק שבחרתי לעבוד עליו" },
         { key: "cur_emotion", type: "emotion-start", label: "הרגש המרכזי שבחרתי לעבוד עליו" },
-        { key: "cur_thoughts", type: "area", label: "המחשבות החוזרות שעולות בי — מה הראש חוזר ואומר?", ph: "המשפטים שחוזרים על עצמם..." },
-        { key: "cur_behavior", type: "area", label: "ההתנהגות הכפייתית או הלא-רצויה שלי", ph: "ריטואלים, בדיקות חוזרות, הרגעה כפייתית..." },
-        { key: "cur_avoid", type: "checks", label: "ממה אני נמנע/ת?",
-          options: ["מפגשים חברתיים", "יציאה או התרחקות מהבית", "בדיקות רפואיות חוזרות", "זהירות יתר", "דחיינות", "בריחה ממצבים מעוררי חרדה"] },
-        { key: "cur_avoid_detail", type: "area", label: "פירוט ההימנעות — ממה, ובאילו מצבים?", ph: "לתאר בחופשיות..." },
         { key: "cur_distress_int", type: "rating", label: "עוצמת המצוקה הכוללת עכשיו (1–10)" },
         { key: "dickens_stay", type: "dickens-stay", label: "מחיר ההישארות — אם לא אעשה שינוי" },
       ],
