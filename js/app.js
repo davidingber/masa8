@@ -2085,7 +2085,7 @@ const CONTRACT_FIELDS = [
   { key: "contract", label: "החוזה שלי עם עצמי:", ph: "אני מתחייב ל..." },
 ];
 // שלבי "להכיר את התחושות" — תהליך שחרור מודרך
-const SENS_LOCATIONS = ["חזה", "בטן", "גרון", "ראש", "ידיים", "רגליים", "אחר"];
+const SENS_LOCATIONS = ["חזה", "בטן", "גרון", "ראש", "כתפיים", "ידיים", "רגליים", "אחר"];
 const SENS_QUALITIES = ["כיווץ", "כבדות", "משהו שרוצה להתפרץ", "מחנק", "דקירה", "נימול", "חום", "זרמים", "ריקנות", "לחץ"];
 const SENS_RELEASE = ["תנועה", "נשימה", "מגע", "תיפוף עם קצות האצבעות", "דימוי של משהו שמתפזר"];
 
@@ -2179,6 +2179,7 @@ function w4Sensations() {
 function w4Regulation() {
   const meds = S.getMeditationsByWeek(4);
   return `
+    ${breathBlock("נשימת בטן מווסתת — שאיפה קצרה, ונשיפה ארוכה וכפולה. אפשר להיעזר במד-הקצב ובקובץ הנשימה.")}
     <div class="tool-block med-block">
       <p class="hint">כלים לוויסות עצמי — מיינדפולנס, אימון אוטוגני, הרפיית ג'ייקובסון וכניסה לטראנס.
         לבחור כלי אחד שמתאים לך עכשיו ולתרגל אותו.</p>
@@ -2186,13 +2187,12 @@ function w4Regulation() {
     </div>`;
 }
 
-// --- תת-כלי 1: סריקת גוף + נשימת בטן + מחוון נשימה ---
-function w4Scan() {
+// --- בלוק נשימה מונחית + מד-קצב + קובץ הנשימה (משותף לפרק 1 ולכלי הוויסות) ---
+function breathBlock(hint) {
   const breathing = S.getMeditations().find(m => m.id === "autogenic") || {};
   return `
     <div class="tool-block">
-      <p class="hint">לסרוק את הגוף מהראש עד קצות האצבעות. לקחת כמה נשימות אל <b>הבטן התחתונה</b>,
-        עם נשיפות ארוכות ועדינות — <b>כפולות באורכן מהשאיפה</b>.</p>
+      ${hint ? `<p class="hint">${hint}</p>` : ""}
 
       <div class="breath-pacer">
         <div class="breath-circle" id="breathCircle"><span id="breathLabel">התחל</span></div>
@@ -2207,13 +2207,17 @@ function w4Scan() {
           ${breathing.file ? `<a class="btn ghost2" href="${esc(breathing.file)}" target="_blank" rel="noopener">⬇ קובץ הנשימה</a>` : ""}
         </div>
       </div>
-
     </div>`;
+}
+
+// --- תת-כלי 1: סריקת גוף + נשימת בטן + מחוון נשימה ---
+function w4Scan() {
+  return breathBlock("לסרוק את הגוף מהראש עד קצות האצבעות. לקחת כמה נשימות אל <b>הבטן התחתונה</b>, עם נשיפות ארוכות ועדינות — <b>כפולות באורכן מהשאיפה</b>.");
 }
 
 // --- תת-כלי 2: חשיפה תוך-גופנית (שים לב לתחושה → מעברים → תרגילים תומכים) ---
 function w4Exposure() {
-  const chips = WEEK4_SENSATIONS.map(s =>
+  const chips = [...WEEK4_SENSATIONS, "אחר"].map(s =>
     `<button class="chip mini sens-chip" data-sens="${s}">${s}</button>`).join("");
   const eLocChips = SENS_LOCATIONS.map(l =>
     `<button class="chip mini eloc-chip" data-loc="${l}">${l}</button>`).join("");
@@ -2223,8 +2227,10 @@ function w4Exposure() {
         <h5>👁️ שלב 1 — לשים לב לתחושה בגוף</h5>
         <p class="hint">לפני הכול — לעצור ולשים לב: איזו תחושה גופנית נוכחת עכשיו, והיכן היא יושבת?</p>
         <div class="chip-row">${chips}</div>
+        <input class="inp sens-other-inp" id="sensOther" style="display:none;margin-top:8px" placeholder="איזו תחושה אחרת?" maxlength="40">
         <p class="hint" style="margin:8px 0 4px"><b>איפה בגוף?</b></p>
         <div class="chip-row">${eLocChips}</div>
+        <input class="inp eloc-other-inp" id="elocOther" style="display:none;margin-top:8px" placeholder="איזה מיקום אחר?" maxlength="40">
         <p class="hint edge-note">💡 חשוב: להתמקד רק ב<b>קצה של התחושה</b> — רק באזור שבו היא מתחילה, בגבול שלה —
           <b>בלי לקפוץ ישר אל תוך מרכז התחושה.</b></p>
       </div>
@@ -2454,10 +2460,24 @@ function mountWeek4Handlers() {
 
   app.querySelectorAll(".sens-chip, .eloc-chip").forEach(b =>
     b.addEventListener("click", () => b.classList.toggle("on")));
+  // "אחר" — חשיפת תיבת טקסט לכתיבת התחושה/המיקום החופשי
+  const toggleOther = (chip, inputSel) => {
+    const inp = app.querySelector(inputSel);
+    if (!inp) return;
+    inp.style.display = chip.classList.contains("on") ? "" : "none";
+    if (chip.classList.contains("on")) inp.focus();
+  };
+  app.querySelectorAll('.sens-chip[data-sens="אחר"]').forEach(b =>
+    b.addEventListener("click", () => toggleOther(b, "#sensOther")));
+  app.querySelectorAll('.eloc-chip[data-loc="אחר"]').forEach(b =>
+    b.addEventListener("click", () => toggleOther(b, "#elocOther")));
   const ss = app.querySelector("#saveSens");
   if (ss) ss.addEventListener("click", () => {
-    const sens = [...app.querySelectorAll(".sens-chip.on")].map(b => b.dataset.sens);
-    const locations = [...app.querySelectorAll(".eloc-chip.on")].map(b => b.dataset.loc);
+    const sensOtherV = qv("#sensOther"), elocOtherV = qv("#elocOther");
+    const sens = [...app.querySelectorAll(".sens-chip.on")]
+      .flatMap(b => b.dataset.sens === "אחר" ? (sensOtherV ? [sensOtherV] : []) : [b.dataset.sens]);
+    const locations = [...app.querySelectorAll(".eloc-chip.on")]
+      .flatMap(b => b.dataset.loc === "אחר" ? (elocOtherV ? [elocOtherV] : []) : [b.dataset.loc]);
     const note = app.querySelector("#sensNote").value.trim();
     S.saveToolEntry(4, "sensations", { sens, locations, note });
     S.logActivity("exposure", "חשיפה תוך-גופנית");
@@ -3044,15 +3064,29 @@ function w6Write() {
 // --- תהליך מודרך (פוקוסינג) ---
 function w6Guided() {
   const d = S.getToolData(5, "focusing") || {};
-  const sensChips = FOCUS_SENSATIONS.map(s =>
-    `<button class="chip mini focus-sens ${(d.sens || []).includes(s) ? "on" : ""}" data-sens="${s}">${s}</button>`).join("");
+  const knownSens = new Set(FOCUS_SENSATIONS);
+  const customSens = (d.sens || []).find(s => !knownSens.has(s)) || "";
+  const sensChips = [...FOCUS_SENSATIONS, "אחר"].map(s => {
+    const on = s === "אחר" ? !!customSens : (d.sens || []).includes(s);
+    return `<button class="chip mini focus-sens ${on ? "on" : ""}" data-sens="${s}">${s}</button>`;
+  }).join("");
+  const knownLoc = new Set(SENS_LOCATIONS);
+  const customLoc = (d.locations || []).find(l => !knownLoc.has(l)) || "";
+  const focusLocChips = SENS_LOCATIONS.map(l => {
+    const on = l === "אחר" ? !!customLoc : (d.locations || []).includes(l);
+    return `<button class="chip mini focus-loc ${on ? "on" : ""}" data-loc="${l}">${l}</button>`;
+  }).join("");
   return `
     <div class="tool-block">
       <p class="hint">תהליך עדין של הקשבה לתחושה. לקחת את הזמן, לנשום, וללוות כל שלב ברוגע.</p>
 
       <div class="focus-step"><span class="fs-num">1</span>
-        <div><b>להתמקד בתחושה</b> — היכן היא יושבת בגוף? איזה סוג תחושה?
-          <div class="chip-row" style="margin-top:6px">${sensChips}</div></div></div>
+        <div><b>להתמקד בתחושה</b> — איזה סוג תחושה?
+          <div class="chip-row" style="margin-top:6px">${sensChips}</div>
+          <input class="inp" id="fSensOther" style="${customSens ? "" : "display:none;"}margin-top:8px" value="${esc(customSens)}" placeholder="איזו תחושה אחרת?" maxlength="40">
+          <p class="hint" style="margin:10px 0 4px"><b>איפה בגוף?</b></p>
+          <div class="chip-row">${focusLocChips}</div>
+          <input class="inp" id="fLocOther" style="${customLoc ? "" : "display:none;"}margin-top:8px" value="${esc(customLoc)}" placeholder="איזה מיקום אחר?" maxlength="40"></div></div>
 
       <div class="focus-step"><span class="fs-num">2</span>
         <div><b>איזו מילה או תמונה עולה מתוך התחושה</b> ומייצגת אותה?
@@ -3194,7 +3228,15 @@ function mountWeek6Handlers() {
   });
 
   // תהליך מודרך
-  app.querySelectorAll(".focus-sens").forEach(b => b.addEventListener("click", () => b.classList.toggle("on")));
+  app.querySelectorAll(".focus-sens, .focus-loc").forEach(b => b.addEventListener("click", () => b.classList.toggle("on")));
+  const toggleFocusOther = (chip, sel) => {
+    const i = app.querySelector(sel);
+    if (!i) return;
+    i.style.display = chip.classList.contains("on") ? "" : "none";
+    if (chip.classList.contains("on")) i.focus();
+  };
+  app.querySelectorAll('.focus-sens[data-sens="אחר"]').forEach(b => b.addEventListener("click", () => toggleFocusOther(b, "#fSensOther")));
+  app.querySelectorAll('.focus-loc[data-loc="אחר"]').forEach(b => b.addEventListener("click", () => toggleFocusOther(b, "#fLocOther")));
   app.querySelectorAll("[data-agree]").forEach(b => b.addEventListener("click", () => {
     app.querySelectorAll("[data-agree]").forEach(x => x.classList.remove("on")); b.classList.add("on");
   }));
@@ -3207,7 +3249,10 @@ function mountWeek6Handlers() {
   const sf = app.querySelector("#saveFocus");
   if (sf) sf.addEventListener("click", () => {
     const data = {
-      sens: [...app.querySelectorAll(".focus-sens.on")].map(b => b.dataset.sens),
+      sens: [...app.querySelectorAll(".focus-sens.on")]
+        .flatMap(b => b.dataset.sens === "אחר" ? (qv("#fSensOther") ? [qv("#fSensOther")] : []) : [b.dataset.sens]),
+      locations: [...app.querySelectorAll(".focus-loc.on")]
+        .flatMap(b => b.dataset.loc === "אחר" ? (qv("#fLocOther") ? [qv("#fLocOther")] : []) : [b.dataset.loc]),
       word: app.querySelector("#fWord").value.trim(),
       needs: app.querySelector("#fNeeds").value.trim(),
       agree: app.querySelector("[data-agree].on")?.dataset.agree || "",
