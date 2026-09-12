@@ -944,6 +944,7 @@ function renderHome() {
     <header class="topbar">
       <div>
         <div class="greeting" id="homeTitle">${hello}</div>
+        <div class="home-slogan">לחזור לסמוך על עצמנו</div>
         <div class="subtle">${COURSE.subtitle}</div>
       </div>
       <button class="icon-btn" id="themeToggle" title="מצב כהה / בהיר" aria-label="מצב כהה או בהיר">${S.getTheme() === "dark" ? "☀️" : "🌙"}</button>

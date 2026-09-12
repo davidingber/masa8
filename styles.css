@@ -49,6 +49,7 @@ body{min-height:100vh}
 /* כותרת עליונה */
 .topbar{display:flex;align-items:center;gap:12px;padding:8px 2px 16px}
 .greeting{font-size:22px;font-weight:800}
+.home-slogan{font-family:var(--font-head);font-weight:700;font-size:16px;color:var(--teal);margin:3px 0 1px}
 .subtle{color:var(--subtle);font-size:14px}
 .chapter-head{align-items:center}
 .back-btn,.link-btn{cursor:pointer}
