@@ -72,6 +72,7 @@ function renderNav() {
 // ============================================================
 function render() {
   updateSOSVisibility();
+  try { document.body.dataset.route = route; } catch (e) {}
   if (CLOUD_ENABLED && !cloudStatus().connected) { navEl.innerHTML = ""; return renderGate(); }
   if (!S.isOnboarded()) { navEl.innerHTML = ""; return renderOnboarding(); }
   renderNav();
@@ -285,26 +286,30 @@ function partsDashCards(m, opts = {}) {
   const avoidResp = (t) => (m.exposures || []).filter(e => matches(t, e.fear)).map(e => ({ text: `${e.done ? "✅" : "🎯"} ${e.fear}`, via: "חשיפה · פרק 7" }));
 
   const resChip = (r) => `<span class="dchip d-parent">${esc(clip(r.text))}${r.via ? `<span class="dchip-wk">${esc(r.via)}</span>` : ""}</span>`;
-  const pairRowHtml = (pain, resArr) => {
+  const pairRowHtml = (pain, resArr, showWaiting) => {
     const done = !!(resArr && resArr.length);
+    // "ממתין למענה" מוצג רק בקטגוריות שבהן באמת עובדים על מענה (מחשבה/רגש/אמונה);
+    // בשאר — פריט ללא מענה מוצג בעדינות בלי תגית מטרידה.
+    const resHtml = done ? resArr.map(resChip).join("")
+      : (showWaiting ? `<span class="pair-wait">ממתין למענה</span>` : `<span class="pair-dash">—</span>`);
     return `<div class="pair-row ${done ? "done" : "todo"}">
       <div class="pair-pain">${pain
         ? `<span class="dchip d-part">${esc(clip(pain.text))}${pain.week ? `<span class="dchip-wk">פרק ${pain.week}</span>` : ""}</span>`
         : `<span class="pair-none">🌱 מענה שנבנה</span>`}</div>
       <div class="pair-arrow">${done ? "➜" : "…"}</div>
-      <div class="pair-res">${done ? resArr.map(resChip).join("") : `<span class="pair-wait">ממתין למענה</span>`}</div>
+      <div class="pair-res">${resHtml}</div>
     </div>`;
   };
   // בלוק קטגוריה זוגי: שורות כאב→מענה, ואז מענה כללי שנבנה (בלי מקבילה בכאב)
-  const pairBlock = (label, painItems, responseFn, allResItems) => {
+  const pairBlock = (label, painItems, responseFn, allResItems, showWaiting) => {
     const shown = new Set();
     const rows = (painItems || []).filter(it => nrm(it.text)).map(it => {
       const res = responseFn(it.text) || [];
       res.forEach(r => shown.add(nrm(r.text)));
-      return pairRowHtml(it, res);
+      return pairRowHtml(it, res, showWaiting);
     });
     const extras = (allResItems || []).filter(r => nrm(r.text) && !shown.has(nrm(r.text)))
-      .map(r => pairRowHtml(null, [{ text: r.text, via: r.week ? `פרק ${r.week}` : null }]));
+      .map(r => pairRowHtml(null, [{ text: r.text, via: r.week ? `פרק ${r.week}` : null }], showWaiting));
     if (!rows.length && !extras.length) return "";
     return `<div class="pair-cat">
       <div class="pair-cat-h"><span class="pc-pain">${esc(label)} · החלק</span><span class="pc-res">המענה המיטיב</span></div>
@@ -342,12 +347,12 @@ function partsDashCards(m, opts = {}) {
     <div class="dash-legend">כל פריט בצד <b>החלק</b> (מימין) מחובר ל<b>מענה המיטיב</b> שכנגדו (משמאל) · <span class="pair-wait">ממתין למענה</span> = עוד לא טופל</div>
     <div class="pair-map">
       <div class="pair-head"><span class="ph-part">${partHdr}</span><span class="ph-res">${idealHdr}</span></div>
-      ${pairBlock("אמונת יסוד", m.pain.belief ? [{ text: m.pain.belief }] : [], beliefResp, [])}
-      ${pairBlock("מחשבות", m.pain.thought, thoughtResp, m.resource.thought)}
-      ${pairBlock("רגשות", m.pain.emotion, emotionResp, m.resource.emotion)}
-      ${pairBlock("תחושות", m.pain.sensation, sensResp, m.resource.sensation)}
-      ${pairBlock("עשיית יתר", m.pain.over, overResp, burdenItems)}
-      ${pairBlock("הימנעות", m.pain.avoid, avoidResp, [])}
+      ${pairBlock("אמונת יסוד", m.pain.belief ? [{ text: m.pain.belief }] : [], beliefResp, [], true)}
+      ${pairBlock("מחשבות", m.pain.thought, thoughtResp, m.resource.thought, true)}
+      ${pairBlock("רגשות", m.pain.emotion, emotionResp, m.resource.emotion, true)}
+      ${pairBlock("תחושות", m.pain.sensation, sensResp, m.resource.sensation, false)}
+      ${pairBlock("עשיית יתר", m.pain.over, overResp, burdenItems, false)}
+      ${pairBlock("הימנעות", m.pain.avoid, avoidResp, [], false)}
     </div>
     <div class="dash-extra">
       ${resList("פעילות מהנה", funItems)}

@@ -222,7 +222,7 @@ body{min-height:100vh}
 
 /* תתי-כלים בשבוע 1 */
 .subtool-tabs{display:flex;gap:6px;margin-bottom:14px;background:var(--bg2);padding:4px;border-radius:12px}
-.subtool-tab{flex:1;background:none;border:none;border-radius:9px;padding:8px 4px;font:inherit;
+.subtool-tab{flex:1;background:none;border:none;border-radius:9px;padding:8px 4px;font:inherit;font-size:12.5px;line-height:1.2;
   font-size:13px;font-weight:700;color:var(--subtle);cursor:pointer}
 .subtool-tab.on{background:#fff;color:var(--teal);box-shadow:var(--shadow)}
 /* מתג דו-שלבי (חלק א / חלק ב) */
@@ -495,9 +495,9 @@ body{min-height:100vh}
 .tool-tab{white-space:nowrap;background:var(--card);border:1px solid var(--line);border-radius:99px;
   padding:8px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .tool-tab.on{background:var(--teal);color:#fff;border-color:var(--teal)}
-.chat{display:flex;flex-direction:column;gap:10px;min-height:46vh;max-height:56vh;overflow-y:auto;
+.chat{display:flex;flex-direction:column;gap:10px;min-height:20vh;max-height:56vh;overflow-y:auto;
   padding:6px;margin-bottom:10px}
-.chat-empty{text-align:center;color:var(--ink);margin:auto;line-height:2}
+.chat-empty{text-align:center;color:var(--subtle);line-height:1.9;padding:22px 16px 8px;font-size:14.5px}
 .bubble{max-width:82%;padding:11px 14px;border-radius:16px;line-height:1.55;font-size:15px;
   white-space:pre-wrap;word-break:break-word}
 .bubble.user{align-self:flex-start;background:var(--teal);color:#fff;border-bottom-right-radius:4px}
@@ -822,7 +822,7 @@ body{font-size:15.5px;line-height:1.5}
 .dblk-ans{color:#5c9a6e;font-weight:800}
 .dblk-sub{font-size:9.5px;font-weight:700;color:#a9a89d;margin:6px 0 4px}
 .dmini{display:flex;flex-wrap:wrap;gap:5px}
-.dchip{font-size:10.5px;font-weight:600;line-height:1.25;border-radius:8px;padding:4px 8px;background:#fff}
+.dchip{font-size:11.5px;font-weight:600;line-height:1.3;border-radius:8px;padding:4px 8px;background:#fff}
 .d-part{border:1px solid #dfe4e9;color:#4a5a68}
 .dchip-done{border-color:#8fbf9e !important;background:#eef7f0}
 .belief.dchip-done{border-color:#8fbf9e !important;background:#eef7f0}
@@ -851,11 +851,22 @@ body{font-size:15.5px;line-height:1.5}
 .pair-wait{font-size:10.5px;font-weight:600;color:#b8791a;background:#f7edd7;border-radius:8px;padding:3px 8px}
 [data-theme="dark"] .pair-wait{color:#e0b96d;background:#332a17}
 .pair-none{font-size:10.5px;font-weight:600;color:#2f8a5a}
+.pair-dash{color:var(--subtle);font-size:13px}
 .dash-extra{display:flex;flex-direction:column;gap:10px;margin-top:12px}
 .res-block{border:1px solid #dbe7dd;border-radius:14px;padding:9px 11px;background:#f4faf5}
 [data-theme="dark"] .res-block{border-color:#33402d;background:#141f16}
 .res-block-h{font-weight:800;font-size:12px;color:#2c6644;margin-bottom:6px}
 [data-theme="dark"] .res-block-h{color:#82cea3}
+/* ===== דסקטופ: ניצול רוחב במסך הבית והדשבורד — במובייל נשאר עמודה אחת ===== */
+@media (min-width:900px){
+  body[data-route="home"] .view,
+  body[data-route="self"] .view{max-width:960px}
+  body[data-route="home"] .self-hero{max-width:560px;margin-inline:auto}
+  .dash-legend{max-width:760px;margin-inline:auto}
+  .pair-map{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+  .pair-map .pair-head{grid-column:1 / -1}
+  .dash-extra{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+}
 .d-parent{border:1px solid #dbe7dd;color:#33493c}
 [data-theme="dark"] .dchip{background:#141a15}
 [data-theme="dark"] .d-part{border-color:#333c45;color:#c3ccd4}
@@ -1079,7 +1090,7 @@ body{font-size:15.5px;line-height:1.5}
 .dchip.exp-done{opacity:.72}
 
 /* תג פרק־מקור על כל פריט בדשבורד */
-.dchip-wk{display:inline-block;margin-inline-start:6px;font-size:8.5px;font-weight:800;color:var(--subtle);background:rgba(0,0,0,.05);border-radius:6px;padding:1px 5px;vertical-align:middle}
+.dchip-wk{display:inline-block;margin-inline-start:6px;font-size:9.5px;font-weight:800;color:var(--subtle);background:rgba(0,0,0,.05);border-radius:6px;padding:1px 5px;vertical-align:middle}
 [data-theme="dark"] .dchip-wk{background:rgba(255,255,255,.08)}
 
 /* מחשבות שמורות בכלי החלפת אמונות (פרק 6) */
