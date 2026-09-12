@@ -69,6 +69,9 @@ function load() {
     // ניקוי הערת "קובץ זמני" ישנה מאימון אוטוגני (אצל משתמשים קיימים)
     const ag = merged.meditations.find(m => m.id === "autogenic");
     if (ag && ag.note && ag.note.includes("זמני")) ag.note = "";
+    // עדכון קישור המיינדפולנס לסרטון החדש (אצל משתמשים קיימים שנשארו על הישן)
+    const mf = merged.meditations.find(m => m.id === "mindfulness");
+    if (mf && mf.link && mf.link.includes("4u3DXZZ6rT0")) mf.link = "https://youtu.be/wamJZnoK5vc";
     // עדכון שיוך שבועות של מדיטציות (העברת טכניקות הוויסות לשבוע 4, מדיטציות החמלה לשבוע 5)
     const MED_WEEK = { mindfulness: 4, autogenic: 4, jacobson: 4, trance: 4, forgiveness: 5, metta: 5, gratitude: 5 };
     merged.meditations.forEach(m => { if (MED_WEEK[m.id] != null) m.week = MED_WEEK[m.id]; });

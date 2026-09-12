@@ -636,7 +636,7 @@ export const NLP_REFRAME_STEPS = [
 export const DEFAULT_MEDITATIONS = [
   // שבוע 4 — כלי ויסות (מיינדפולנס, אימון אוטוגני, הרפיית ג'ייקובסון, כניסה לטראנס)
   { id: "mindfulness", week: 4, name: "מיינדפולנס", icon: "🧘",
-    link: "https://youtu.be/4u3DXZZ6rT0", file: "resources/mindfulness.pdf", note: "" },
+    link: "https://youtu.be/wamJZnoK5vc", file: "resources/mindfulness.pdf", note: "" },
   { id: "autogenic", week: 4, name: "אימון אוטוגני", icon: "🌬️",
     link: "https://youtu.be/F1tfNiM2nNY", file: "resources/autogenic.pdf", note: "" },
   { id: "jacobson", week: 4, name: "הרפיית ג'ייקובסון", icon: "💪",
