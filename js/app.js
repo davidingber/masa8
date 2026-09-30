@@ -1496,50 +1496,33 @@ let week1Tab = "parts";
 let week1EmoOther = false;
 let w1PartOther = false;
 const W1_TABS = [
-  { id: "parts",      label: "החלקים בנפש" },
+  { id: "parts",      label: "החלק שלי" },
   { id: "goal",       label: "הגדרת המטרה" },
-  { id: "calm",       label: "נשימות ומיינדפולנס" },
   { id: "activation", label: "יומן פעילות" },
 ];
 
 function toolWeek1(c) {
+  if (week1Tab === "calm") week1Tab = "parts"; // הלשונית הישנה הוסרה
   const tabs = `<div class="subtool-tabs">${W1_TABS.map(t =>
     `<button class="subtool-tab ${week1Tab === t.id ? "on" : ""}" data-w1tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body = "";
   if (week1Tab === "parts") body = w1Parts();
   if (week1Tab === "goal") body = w1Goal();
-  if (week1Tab === "calm") body = w1Calm();
   if (week1Tab === "activation") body = w1Activation();
   return tabs + `<div id="w1body">${body}</div>`;
 }
 
-// לשונית ראשונה — שלושת החלקים בנפש + מתן שם לחלק הגולה
+// לשונית ראשונה — בחירת שם לחלק שעליו עובדים + מודל ששת השלבים (הכוונה החיובית)
 function w1Parts() {
   const st = S.getState();
-  const d = S.getToolData(1, "threeParts") || {};
   const exiles = ["פגוע", "דחוי", "מבוהל", "חסר אונים", "חסר שליטה", "חסר שפיות", "חלש", "פגום", "מקולקל", "לא מספיק טוב", "בודד", "לא נאהב"];
   const other = w1PartOther || (!!st.partName && !exiles.includes(st.partName));
   return `
     <div class="tool-block">
-      <p class="hint">לכל מה שקורה בתוכך יש <b>כוונה חיובית</b>. החלקים המגוננים מפחדים שהחלק הגולה ייפגע שוב — ולכן גם לחרדה יש כוונה חיובית: היא שומרת על הרגש הרך שמתחתיה.</p>
+      <p class="hint">בוחרים חלק אחד בנפש שנלווה אליו לאורך המסע. לכל חלק יש <b>כוונה חיובית</b> — גם כשהדרך שבה הוא פועל כבר לא משרתת אותנו. נלמד להנהיג אותו בחמלה.</p>
 
-      <div class="parts-cards">
-        <div class="part-info exile">
-          <div class="pi-h">🩹 החלק הגולה (הפגוע)</div>
-          <p>החלק הרך שנפגע פעם — דחוי, פגוע, מבוהל, חסר אונים. <b>זה החלק שאנחנו לומדים להנהיג בחמלה.</b></p>
-        </div>
-        <div class="part-info manager">
-          <div class="pi-h">🛡️ החלק המנהל</div>
-          <p>דואג שלא נגיע לכאב — פרפקציוניזם, ריצוי, ביקורתיות, שליטה.</p>
-        </div>
-        <div class="part-info fire">
-          <div class="pi-h">🧯 החלק המכבה</div>
-          <p>מכבה רגשות כשהם עולים — עבודה, אכילה, מסכים, התמכרות.</p>
-        </div>
-      </div>
-
-      <h4 style="margin-top:6px">1. מה השם של החלק הגולה שלך?</h4>
-      <p class="hint">זה החלק שנעבוד עליו לאורך המסע. לבחור שם שמדבר אליך, או לכתוב משלך.</p>
+      <h4 style="margin-top:6px">איך קוראים לחלק שעליו נעבוד?</h4>
+      <p class="hint">לבחור שם שמדבר אליך, או לכתוב משלך.</p>
       <div class="chip-row">
         ${exiles.map(p => `<button type="button" class="chip ${st.partName === p ? "on" : ""}" data-part="${esc(p)}">${esc(p)}</button>`).join("")}
         <button type="button" class="chip ${other ? "on" : ""}" data-part="__other__">אחר…</button>
@@ -1547,18 +1530,35 @@ function w1Parts() {
       ${other ? `<div class="other-emo-row">
         <input class="inp" id="partOther" placeholder="לכתוב שם לחלק..." value="${esc(exiles.includes(st.partName) ? "" : (st.partName || ""))}">
         <button type="button" class="btn ghost2" id="partSave">שמירה</button></div>` : ""}
-      ${st.partName ? `<p class="target-line">🧩 החלק הגולה שלי: <b>${esc(st.partName)}</b></p>` : ""}
+      ${st.partName ? `<p class="target-line">🧩 החלק שלי: <b>${esc(st.partName)}</b></p>` : ""}
+      <p class="tiny-note">✨ אחרי שיש לחלק שם — נחקור את הכוונה החיובית שלו במודל ששת השלבים כאן למטה, ואז נגדיר את מטרת התהליך בלשונית הבאה.</p>
+    </div>
+    ${sixStepModel()}`;
+}
 
-      <h4 style="margin-top:18px">2. איפה החלק המנהל שלך בא לידי ביטוי?</h4>
-      <div class="chip-row">${["פרפקציוניזם", "ריצוי", "ביקורת עצמית", "שליטה", "דאגנות", "בקרת גוף", "בדיקות חוזרות"].map(x => `<button type="button" class="chip mini tp-ex" data-tp="manager" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>
-      <textarea class="ta tp-field" data-tp="manager" placeholder="למשל: אני בודק הכל שוב ושוב כדי שלא אטעה...">${esc(d.manager || "")}</textarea>
-
-      <h4 style="margin-top:14px">3. איפה החלק המכבה שלך בא לידי ביטוי?</h4>
-      <div class="chip-row">${["עבודה מרובה", "אכילה", "מסכים", "התמכרות", "הסחות דעת", "נטרול מחשבות"].map(x => `<button type="button" class="chip mini tp-ex" data-tp="fire" data-x="${esc(x)}">${esc(x)}</button>`).join("")}</div>
-      <textarea class="ta tp-field" data-tp="fire" placeholder="למשל: כשעולה מצוקה אני שוקע בעבודה או במסך...">${esc(d.fire || "")}</textarea>
-
-      <button type="button" class="btn" id="saveThreeParts" style="margin-top:14px">שמירה</button>
-      <p class="tiny-note">✨ אחרי שיש לחלק שם — קל יותר להגדיר את מטרת התהליך בלשונית הבאה.</p>
+// מודל ששת השלבים (NLP) — חוקרים את הכוונה החיובית של החלק ואת הדרך לשמור עליה
+function sixStepModel() {
+  const saved = S.getToolData(3, "reframe") || [];
+  return `
+    <div class="tool-block">
+      <p class="hint">מודל ששת השלבים — חוקרים את <b>הכוונה החיובית</b> של החלק, ואת <b>הדרך לשמור עליה</b>.
+        השאלות מימין, מקום לתשובות משמאל.</p>
+      <div class="reframe-list">
+        ${NLP_REFRAME_STEPS.map((s, i) => `
+          <div class="reframe-row">
+            <div class="reframe-q">
+              <span class="step-num">${i}</span>
+              <div><div class="q-text">${s.q}</div>${s.hint ? `<div class="q-hint">${s.hint}</div>` : ""}</div>
+            </div>
+            <div class="reframe-a">
+              <textarea class="ta rf-input" data-i="${i}" placeholder="התשובה שלי...">${esc(saved[i] || "")}</textarea>
+            </div>
+          </div>`).join("")}
+      </div>
+      <div class="activation-actions">
+        <button class="btn" id="saveReframe">שמירה + טעינת האווטר</button>
+        <button class="btn ghost2" id="pdfReframe">⬇ הורדת התרגיל כ-PDF</button>
+      </div>
     </div>`;
 }
 
@@ -1583,22 +1583,6 @@ function w1Goal() {
         <button type="button" class="btn" id="saveGoal">שמירת המטרה</button>
         <button type="button" class="btn ghost2" id="pdfGoal">⬇ הורדת המטרה כ-PDF</button>
       </div>
-    </div>`;
-}
-
-// --- סריקת גוף + נשימה מונחית + מיינדפולנס ---
-function w1Calm() {
-  const mindfulness = S.getMeditations().find(m => m.id === "mindfulness");
-  return w4Scan() + (mindfulness ? `
-    <div class="tool-block med-block">
-      <h4>🧘 מיינדפולנס</h4>
-      <p class="hint">תרגול נוכחות עדין — לשים לב לרגע הזה כמו שהוא, בלי לשפוט.</p>
-      ${medCard(mindfulness)}
-    </div>` : "") + `
-    <div class="tool-block">
-      ${calmSenseWidget()}
-      ${afterEmoWidget()}
-      <button class="btn" id="scanDone">סיימתי ✓</button>
     </div>`;
 }
 
@@ -2017,13 +2001,14 @@ function openCyclePrint(rows, empty) {
 let week3Tab = "defusion";
 const W3_TABS = [
   { id: "defusion", label: "הרחקת מחשבות" },
-  { id: "reframe", label: "מסגור מחדש" },
+  { id: "mindfulness", label: "מיינדפולנס" },
 ];
 
 function toolWeek3(c) {
+  if (week3Tab === "reframe") week3Tab = "defusion"; // המסגור מחדש עבר לפרק 1
   const tabs = `<div class="subtool-tabs">${W3_TABS.map(t =>
     `<button class="subtool-tab ${week3Tab === t.id ? "on" : ""}" data-w3tab="${t.id}">${t.label}</button>`).join("")}</div>`;
-  const body = week3Tab === "reframe" ? w3Reframe() : w3Defusion();
+  const body = week3Tab === "mindfulness" ? w3Mindfulness() : w3Defusion();
   return `<p class="week-distinction">🍃 בשבוע הזה לא נצמדים למחשבה — שמים לב שהיא רק מחשבה. <b>בשבוע 6 נבדוק אם היא מדויקת.</b></p>`
     + tabs + `<div id="w3body">${body}</div>`;
 }
@@ -2072,29 +2057,16 @@ function w3Defusion() {
     </div>`;
 }
 
-function w3Reframe() {
-  const saved = S.getToolData(3, "reframe") || [];
-  return `
-    <div class="tool-block">
-      <p class="hint">מסגור מחדש (שלבים 0–6) — עבודה עם החלק שאחראי על ההתנהגות הלא רצויה.
-        השאלות מימין, מקום לתשובות משמאל.</p>
-      <div class="reframe-list">
-        ${NLP_REFRAME_STEPS.map((s, i) => `
-          <div class="reframe-row">
-            <div class="reframe-q">
-              <span class="step-num">${i}</span>
-              <div><div class="q-text">${s.q}</div>${s.hint ? `<div class="q-hint">${s.hint}</div>` : ""}</div>
-            </div>
-            <div class="reframe-a">
-              <textarea class="ta rf-input" data-i="${i}" placeholder="התשובה שלי...">${esc(saved[i] || "")}</textarea>
-            </div>
-          </div>`).join("")}
-      </div>
-      <div class="activation-actions">
-        <button class="btn" id="saveReframe">שמירה + טעינת האווטר</button>
-        <button class="btn ghost2" id="pdfReframe">⬇ הורדת התרגיל כ-PDF</button>
-      </div>
-    </div>`;
+// מיינדפולנס — הועבר מפרק 1 לפרק 3 (משלים את הרחקת המחשבות, בלי הנשימות)
+function w3Mindfulness() {
+  const mindfulness = S.getMeditations().find(m => m.id === "mindfulness");
+  return mindfulness ? `
+    <div class="tool-block med-block">
+      <h4>🧘 מיינדפולנס</h4>
+      <p class="hint">תרגול נוכחות עדין — לשים לב לרגע הזה כמו שהוא, בלי לשפוט.
+        משלים את הרחקת המחשבות: לא נאבקים במחשבה — פשוט נוכחים.</p>
+      ${medCard(mindfulness)}
+    </div>` : `<div class="tool-block"><p class="tiny-note">טרם הוגדרה מדיטציית מיינדפולנס — ניתן להוסיף במסך הניהול.</p></div>`;
 }
 
 function collectReframe() {
@@ -2135,25 +2107,12 @@ function mountWeek3Handlers() {
   if (br) br.addEventListener("click", () => playThoughtAnim("boardStage", "boardThought", "fall", "לכתוב קודם את המחשבה"));
   const sr = app.querySelector("#streamRelease");
   if (sr) sr.addEventListener("click", () => playThoughtAnim("streamStage", "streamThought", "drift", "לכתוב קודם את המחשבה"));
-
-  // מסגור מחדש
-  app.querySelectorAll(".rf-input").forEach(inp =>
-    inp.addEventListener("change", () => S.setToolData(3, "reframe", collectReframe())));
-  const sref = app.querySelector("#saveReframe");
-  if (sref) sref.addEventListener("click", () => {
-    const arr = collectReframe();
-    S.setToolData(3, "reframe", arr);
-    if (arr.some(Boolean)) S.logActivity("exercise", "מסגור מחדש");
-    toast("התרגיל נשמר ✓"); renderChapter(3);
-  });
-  const pref = app.querySelector("#pdfReframe");
-  if (pref) pref.addEventListener("click", () => { S.setToolData(3, "reframe", collectReframe()); openReframePrint(collectReframe()); });
+  // מודל ששת השלבים עבר לפרק 1 — אין כאן עוד טיפול במסגור מחדש
 }
 
 function stashWeek3Drafts() {
   const tp = app.querySelector("#thirdPerson");
   if (tp) S.setToolData(3, "thirdPerson", tp.value.trim());
-  if (app.querySelectorAll(".rf-input").length) S.setToolData(3, "reframe", collectReframe());
 }
 
 function openReframePrint(answers) {
@@ -2166,7 +2125,7 @@ function openReframePrint(answers) {
       <td class="a">${esc(answers[i] || "")}</td>
     </tr>`).join("");
   const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
-    <title>מסגור מחדש — שבוע 3</title>
+    <title>מודל ששת השלבים — פרק 1</title>
     <style>
       body{font-family:"Segoe UI",Arial,sans-serif;color:#20353a;padding:28px}
       h1{color:#0f766e;margin:0 0 4px}.sub{color:#6a8189;margin:0 0 8px}
@@ -2179,8 +2138,8 @@ function openReframePrint(answers) {
       .btn{background:#0f766e;color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:15px;cursor:pointer;margin-top:16px}
       @media print{.noprint{display:none}}
     </style></head><body>
-    <h1>מסגור מחדש בשישה שלבים</h1>
-    <p class="sub">מסע 8 הזהויות · שבוע 3 — עבודה עם החלקים הפנימיים</p>
+    <h1>מודל ששת השלבים</h1>
+    <p class="sub">מסע 8 הזהויות · פרק 1 — החלק שלי והכוונה החיובית</p>
     <div class="meta"><span>שם: ${esc(st.name) || "________"}</span><span>תאריך: ${today}</span></div>
     <table><tbody>${rows}</tbody></table>
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
@@ -4660,9 +4619,6 @@ function mountWeek1Handlers() {
       renderChapter(1);
     }));
 
-  // סריקה ורגיעה — סריקת גוף + נשימה מונחית
-  mountScanBreathHandlers();
-
   // חלק 1 — רגש
   app.querySelectorAll("[data-emotion]").forEach(b =>
     b.addEventListener("click", () => {
@@ -4701,19 +4657,18 @@ function mountWeek1Handlers() {
   const idn = app.querySelector("#idealName");
   if (idn) idn.addEventListener("change", () => S.setIdealName(idn.value));
 
-  // שלושת החלקים — דוגמאות מנהל/מכבה + שמירה
-  app.querySelectorAll(".tp-ex").forEach(b => b.addEventListener("click", () => {
-    const ta = app.querySelector(`.tp-field[data-tp="${b.dataset.tp}"]`);
-    if (ta) ta.value = (ta.value.trim() ? ta.value.trim() + ", " : "") + b.dataset.x;
-  }));
-  const stp = app.querySelector("#saveThreeParts");
-  if (stp) stp.addEventListener("click", () => {
-    const d = {};
-    app.querySelectorAll(".tp-field").forEach(t => d[t.dataset.tp] = t.value.trim());
-    S.setToolData(1, "threeParts", d);
-    if (Object.values(d).some(Boolean) || S.getState().partName) S.logActivity("exercise", "מיפוי שלושת החלקים");
-    toast("נשמר ✓");
+  // מודל ששת השלבים (הועבר לפרק 1) — חקירת הכוונה החיובית של החלק
+  app.querySelectorAll(".rf-input").forEach(inp =>
+    inp.addEventListener("change", () => S.setToolData(3, "reframe", collectReframe())));
+  const sref = app.querySelector("#saveReframe");
+  if (sref) sref.addEventListener("click", () => {
+    const arr = collectReframe();
+    S.setToolData(3, "reframe", arr);
+    if (arr.some(Boolean)) S.logActivity("exercise", "מודל ששת השלבים");
+    toast("התרגיל נשמר ✓"); renderChapter(1);
   });
+  const pref = app.querySelector("#pdfReframe");
+  if (pref) pref.addEventListener("click", () => { S.setToolData(3, "reframe", collectReframe()); openReframePrint(collectReframe()); });
 
   // כלי הגדרת המטרה (מוטמע בפרק 1)
   app.querySelectorAll("input[type=range].goal-input").forEach(r =>
@@ -4814,6 +4769,7 @@ function stashWeek1Drafts() {
   }
   const dayInputs = app.querySelectorAll(".day-input");
   if (dayInputs.length) S.setToolData(1, "activityPlan", collectPlan());
+  if (app.querySelectorAll(".rf-input").length) S.setToolData(3, "reframe", collectReframe());
 }
 
 // יצירת יומן להדפסה / שמירה כ-PDF (דרך מנוע ההדפסה של הדפדפן — תומך עברית)
