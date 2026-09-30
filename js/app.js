@@ -1889,6 +1889,12 @@ function medCard(m) {
     </div>`;
 }
 
+// לשונית "טראנס" — כל המדיטציות/תהליכים המודרכים של הפרק תחת לשונית אחת.
+// items = [{ id, icon, title, desc }] — כמה שיש, כולם זה מתחת לזה.
+function tranceTab(items) {
+  return items.map(it => guidedProcessTab(it.id, it)).join("");
+}
+
 // לשונית תהליך מודרך — תיאור + כרטיס המדיטציה (או "יתווסף בקרוב" כשעדיין אין קישור/קובץ)
 function guidedProcessTab(medId, opts = {}) {
   const m = S.getMeditations().find(x => x.id === medId);
@@ -2019,7 +2025,7 @@ let week3Tab = "defusion";
 const W3_TABS = [
   { id: "defusion", label: "הרחקת מחשבות" },
   { id: "mindfulness", label: "מיינדפולנס" },
-  { id: "relax", label: "כניסה להרפיה" },
+  { id: "trance", label: "טראנס" },
 ];
 
 function toolWeek3(c) {
@@ -2028,8 +2034,10 @@ function toolWeek3(c) {
     `<button class="subtool-tab ${week3Tab === t.id ? "on" : ""}" data-w3tab="${t.id}">${t.label}</button>`).join("")}</div>`;
   let body;
   if (week3Tab === "mindfulness") body = w3Mindfulness();
-  else if (week3Tab === "relax") body = guidedProcessTab("relax3", { icon: "🌿", title: "כניסה להרפיה",
-    desc: "תרגול מודרך של כניסה למצב רגיעה עמוק — להרפות את הגוף ואת הנשימה, ולתת למערכת העצבים לחזור לאיזון." });
+  else if (week3Tab === "trance") body = tranceTab([
+    { id: "relax3", icon: "🌿", title: "כניסה להרפיה",
+      desc: "תרגול מודרך של כניסה למצב רגיעה עמוק — להרפות את הגוף ואת הנשימה, ולתת למערכת העצבים לחזור לאיזון." },
+  ]);
   else body = w3Defusion();
   return `<p class="week-distinction">🍃 בשבוע הזה לא נצמדים למחשבה — שמים לב שהיא רק מחשבה. <b>בשבוע 6 נבדוק אם היא מדויקת.</b></p>`
     + tabs + `<div id="w3body">${body}</div>`;
@@ -2182,7 +2190,7 @@ const W4_TABS = [
   { id: "contract",   label: "החוזה שלי" },
   { id: "exposure",   label: "חשיפה תוך-גופנית" },
   { id: "regulation", label: "כלי ויסות" },
-  { id: "resources",  label: "חיבור למשאבים" },
+  { id: "trance",     label: "טראנס" },
 ];
 // שדות "החוזה שלי עם התחושות"
 const CONTRACT_FIELDS = [
@@ -2207,8 +2215,10 @@ function toolWeek4(c) {
   if (week4Tab === "contract") body = w4Contract();
   if (week4Tab === "exposure") body = w4Exposure();
   if (week4Tab === "regulation") body = w4Regulation();
-  if (week4Tab === "resources") body = guidedProcessTab("resources4", { icon: "💗", title: "חיבור למשאבים — אהבה וביטחון",
-    desc: "דמיון מודרך שמחזק את המשאבים הפנימיים — תחושת אהבה וביטחון בגוף, שאפשר לחזור אליהם בכל רגע של מצוקה." });
+  if (week4Tab === "trance") body = tranceTab([
+    { id: "resources4", icon: "💗", title: "חיבור למשאבים — אהבה וביטחון",
+      desc: "דמיון מודרך שמחזק את המשאבים הפנימיים — תחושת אהבה וביטחון בגוף, שאפשר לחזור אליהם בכל רגע של מצוקה." },
+  ]);
   return tabs + `<div id="w4body">${body}</div>`;
 }
 
@@ -3050,7 +3060,7 @@ const W6_TABS = [
   { id: "identity", label: "מי אני בלי הבעיה" },
   { id: "guided",   label: "מפגש החמלה" },
   { id: "burden",   label: "הסרת העול" },
-  { id: "selflove", label: "היזכרות באהבה" },
+  { id: "trance",   label: "טראנס" },
 ];
 // הסרת העול — 4 עומסים שאני מניח מעליי
 const BURDEN_FIELDS = [
@@ -3072,8 +3082,12 @@ function toolWeek6(c) {
   if (week6Tab === "identity") body = w6Identity();
   if (week6Tab === "guided") body = w6Guided();
   if (week6Tab === "burden") body = w6Burden();
-  if (week6Tab === "selflove") body = guidedProcessTab("selflove5", { icon: "🌟", title: "חיבור למי אני בלי הבעיה + היזכרות באהבה",
-    desc: "דמיון מודרך לחזרה אל מי שאני מעבר לבעיה — וההיזכרות באהבה ובטוב שכבר קיימים בי." });
+  if (week6Tab === "trance") body = tranceTab([
+    { id: "selfregress5", icon: "🌟", title: "מי אני בלי הבעיה (רגרסיה)",
+      desc: "רגרסיה מודרכת לחזרה אל מי שאני מעבר לבעיה — והיזכרות באהבה ובטוב שכבר קיימים בי." },
+    { id: "parttrance5", icon: "💗", title: "מפגש חומל עם החלק (טראנס)",
+      desc: "מפגש בטראנס עם החלק הפגוע — לפגוש אותו באהבה וחמלה, ולתת מענה לצורך שחסר." },
+  ]);
   return tabs + `<div id="w6body">${body}</div>`;
 }
 
@@ -3455,7 +3469,7 @@ const W7_PARTS = [
     { id: "ladder",   label: "סולם פחדים" },
     { id: "prep",     label: "הכנה לחשיפה" },
     { id: "imaginal", label: "חשיפה בדמיון" },
-    { id: "imgres",   label: "דמיון + משאבים" },
+    { id: "trance",   label: "טראנס" },
   ]},
   { id: "b", label: "חלק ב · ביצוע ומעקב", tabs: [
     { id: "journal",  label: "יומן חשיפות" },
@@ -3488,8 +3502,10 @@ function toolWeek7(c) {
   if (week7Tab === "rules") body = w7Rules();
   if (week7Tab === "prep") body = w7Prep();
   if (week7Tab === "imaginal") body = w7Imaginal();
-  if (week7Tab === "imgres") body = guidedProcessTab("imgres7", { icon: "🎬", title: "חשיפה בדמיון בשילוב משאבים",
-    desc: "חשיפה מודרכת בדמיון לתרחיש המפחיד — תוך שמירה על עוגן של ביטחון ומשאבים, כדי להישאר נוכח בלי להיסחף." });
+  if (week7Tab === "trance") body = tranceTab([
+    { id: "imgres7", icon: "🎬", title: "חשיפה בדמיון בשילוב משאבים",
+      desc: "חשיפה מודרכת בדמיון לתרחיש המפחיד — תוך שמירה על עוגן של ביטחון ומשאבים, כדי להישאר נוכח בלי להיסחף." },
+  ]);
   if (week7Tab === "ladder") body = w7Ladder();
   if (week7Tab === "internal") body = w4Table();
   if (week7Tab === "journal") body = w7Journal();
@@ -4138,7 +4154,7 @@ const W8_TABS = [
   { id: "schedule", label: "לוח שבועי" },
   { id: "relapse",  label: "טריגרים לנסיגה" },
   { id: "identity", label: "הזהות החדשה שלי" },
-  { id: "closing",  label: "סליחה ותודה" },
+  { id: "trance",   label: "טראנס" },
   { id: "bonus",    label: "בונוסים" },
 ];
 // דוגמאות לטריגרים שמסמנים נסיגה
@@ -4167,23 +4183,14 @@ function toolWeek8(c) {
   if (week8Tab === "schedule") body = w8Schedule();
   if (week8Tab === "relapse") body = w8Relapse();
   if (week8Tab === "identity") body = w8Identity();
-  if (week8Tab === "closing") body = w8Closing();
+  if (week8Tab === "trance") body = tranceTab([
+    { id: "forgive8", icon: "🕊️", title: "תהליך סליחה",
+      desc: "תהליך מודרך של סליחה — לעצמי ולאחרים — כדי להניח מה שנשאתי ולפנות מקום לחופש." },
+    { id: "futuregrat8", icon: "✨", title: "האני העתידי והכרת תודה",
+      desc: "מפגש בטראנס עם האני העתידי — מי שכבר עבר את המסע — יחד עם תרגול הכרת תודה על הדרך, על מי שאני, ועל מה שיש." },
+  ]);
   if (week8Tab === "bonus") body = w8Comm();
   return tabs + `<div id="w8body">${body}</div>`;
-}
-
-// --- תהליכי סגירה למסע: סליחה, חיבור לאני העתידי, הכרת תודה ---
-function w8Closing() {
-  return `
-    <div class="tool-block">
-      <p class="hint">שלושה תהליכים מודרכים לסגירת המסע — כל אחד בקצב שלך.</p>
-    </div>
-    ${guidedProcessTab("forgive8", { icon: "🕊️", title: "תהליך סליחה",
-      desc: "תהליך מודרך של סליחה — לעצמי ולאחרים — כדי להניח מה שנשאתי ולפנות מקום לחופש." })}
-    ${guidedProcessTab("futureself8", { icon: "✨", title: "חיבור לאני העתידי",
-      desc: "מפגש מדומיין עם האני העתידי — מי שכבר עבר את המסע — כדי לקבל ממנו כיוון, ביטחון וברכה." })}
-    ${guidedProcessTab("gratitude8", { icon: "🙏", title: "הכרת תודה",
-      desc: "תרגול מודרך של הכרת תודה — על הדרך, על מי שאני, ועל מה שיש." })}`;
 }
 
 // --- טריגרים לנסיגה + מענה עצמי ---

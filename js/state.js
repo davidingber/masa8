@@ -60,6 +60,9 @@ function load() {
     }
     // מיזוג מדיטציות חדשות שנוספו (לפי id), בלי לדרוס עריכות
     merged.meditations = merged.meditations || structuredClone(DEFAULT_MEDITATIONS);
+    // הסרת slot-ים שהוחלפו במבנה לשונית "טראנס" (v120→) — לפני המיזוג מחדש
+    const DEPRECATED_MEDS = ["selflove5", "futureself8", "gratitude8"];
+    merged.meditations = merged.meditations.filter(m => !DEPRECATED_MEDS.includes(m.id));
     for (const def of DEFAULT_MEDITATIONS) {
       if (!merged.meditations.some(m => m.id === def.id)) merged.meditations.push(structuredClone(def));
     }

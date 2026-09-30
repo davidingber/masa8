@@ -221,8 +221,8 @@ body{min-height:100vh}
 .ext-tool{display:block;color:var(--teal);font-weight:700;padding:8px 0;text-decoration:none}
 
 /* תתי-כלים בשבוע 1 */
-.subtool-tabs{display:flex;gap:6px;margin-bottom:14px;background:var(--bg2);padding:4px;border-radius:12px}
-.subtool-tab{flex:1;background:none;border:none;border-radius:9px;padding:8px 4px;font:inherit;font-size:12.5px;line-height:1.2;
+.subtool-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;background:var(--bg2);padding:4px;border-radius:12px}
+.subtool-tab{flex:1 1 auto;min-width:80px;background:none;border:none;border-radius:9px;padding:8px 4px;font:inherit;font-size:12.5px;line-height:1.2;
   font-size:13px;font-weight:700;color:var(--subtle);cursor:pointer}
 .subtool-tab.on{background:#fff;color:var(--teal);box-shadow:var(--shadow)}
 /* מתג דו-שלבי (חלק א / חלק ב) */

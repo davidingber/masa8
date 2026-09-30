@@ -1,5 +1,5 @@
 // Service Worker — קאשינג בסיסי לעבודה גם ללא אינטרנט
-const CACHE = "masa8-v120";
+const CACHE = "masa8-v121";
 const ASSETS = [
   "./", "./index.html", "./styles.css", "./manifest.webmanifest", "./content.json",
   "./js/app.js", "./js/data.js", "./js/state.js", "./js/partsMap.js",
