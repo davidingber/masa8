@@ -1514,15 +1514,21 @@ function toolWeek1(c) {
 
 // לשונית ראשונה — בחירת שם לחלק שעליו עובדים + מודל ששת השלבים (הכוונה החיובית)
 function w1Parts() {
+  return `
+    <div class="tool-block">
+      <p class="hint">בוחרים חלק אחד בנפש שנלווה אליו לאורך המסע. לכל חלק יש <b>כוונה חיובית</b> — גם כשהדרך שבה הוא פועל כבר לא משרתת אותנו. נלמד להנהיג אותו בחמלה, דרך מודל ששת השלבים.</p>
+    </div>
+    ${sixStepModel()}`;
+}
+
+// בורר שם לחלק — משולב בתוך שלב 1 של המודל (מגדירים את ההתנהגות ונותנים שם לחלק)
+function partNamePicker() {
   const st = S.getState();
   const exiles = ["פגוע", "דחוי", "מבוהל", "חסר אונים", "חסר שליטה", "חסר שפיות", "חלש", "פגום", "מקולקל", "לא מספיק טוב", "בודד", "לא נאהב"];
   const other = w1PartOther || (!!st.partName && !exiles.includes(st.partName));
   return `
-    <div class="tool-block">
-      <p class="hint">בוחרים חלק אחד בנפש שנלווה אליו לאורך המסע. לכל חלק יש <b>כוונה חיובית</b> — גם כשהדרך שבה הוא פועל כבר לא משרתת אותנו. נלמד להנהיג אותו בחמלה.</p>
-
-      <h4 style="margin-top:6px">איך קוראים לחלק שעליו נעבוד?</h4>
-      <p class="hint">לבחור שם שמדבר אליך, או לכתוב משלך.</p>
+    <div class="rf-namepick">
+      <p class="hint" style="margin:0 0 6px">לבחור שם לחלק — שם שמדבר אליך, או לכתוב משלך:</p>
       <div class="chip-row">
         ${exiles.map(p => `<button type="button" class="chip ${st.partName === p ? "on" : ""}" data-part="${esc(p)}">${esc(p)}</button>`).join("")}
         <button type="button" class="chip ${other ? "on" : ""}" data-part="__other__">אחר…</button>
@@ -1531,9 +1537,7 @@ function w1Parts() {
         <input class="inp" id="partOther" placeholder="לכתוב שם לחלק..." value="${esc(exiles.includes(st.partName) ? "" : (st.partName || ""))}">
         <button type="button" class="btn ghost2" id="partSave">שמירה</button></div>` : ""}
       ${st.partName ? `<p class="target-line">🧩 החלק שלי: <b>${esc(st.partName)}</b></p>` : ""}
-      <p class="tiny-note">✨ אחרי שיש לחלק שם — נחקור את הכוונה החיובית שלו במודל ששת השלבים כאן למטה, ואז נגדיר את מטרת התהליך בלשונית הבאה.</p>
-    </div>
-    ${sixStepModel()}`;
+    </div>`;
 }
 
 // מודל ששת השלבים (NLP) — חוקרים את הכוונה החיובית של החלק ואת הדרך לשמור עליה
@@ -1551,6 +1555,7 @@ function sixStepModel() {
               <div><div class="q-text">${s.q}</div>${s.hint ? `<div class="q-hint">${s.hint}</div>` : ""}</div>
             </div>
             <div class="reframe-a">
+              ${i === 1 ? partNamePicker() : ""}
               <textarea class="ta rf-input" data-i="${i}" placeholder="התשובה שלי...">${esc(saved[i] || "")}</textarea>
             </div>
           </div>`).join("")}
