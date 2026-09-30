@@ -98,7 +98,7 @@ function loadStoredToken() {
   } catch (e) {}
   return null;
 }
-function requestTokenWith(scope, prompt) {
+function requestTokenWith(scope, prompt, hint) {
   return new Promise((resolve, reject) => {
     if (!(window.google && window.google.accounts && window.google.accounts.oauth2)) return reject(new Error("no GIS"));
     const tc = window.google.accounts.oauth2.initTokenClient({
@@ -112,7 +112,7 @@ function requestTokenWith(scope, prompt) {
         } else reject(new Error((resp && resp.error) || "token error"));
       },
     });
-    try { tc.requestAccessToken({ prompt: prompt || "" }); }
+    try { tc.requestAccessToken({ prompt: prompt || "", ...(hint ? { hint } : {}) }); }
     catch (e) { reject(e); }
   });
 }
@@ -120,9 +120,9 @@ function requestTokenWith(scope, prompt) {
 // prompt="select_account" מכריח בחירת חשבון — כדי שהמשתמש יתחבר לחשבון הנכון
 // (ולא לחשבון הפעיל בדפדפן בטעות). מנסה סקופ מלא (עם זהות); אם ההרשאות עוד לא
 // הוגדרו — נופל ל-drive בלבד כדי שהחיבור עדיין יעבוד.
-async function requestToken(prompt) {
-  try { return await requestTokenWith(FULL_SCOPE, prompt); }
-  catch (e) { log("full scope failed → drive-only fallback", e.message); return await requestTokenWith(BASE_SCOPE, prompt); }
+async function requestToken(prompt, hint) {
+  try { return await requestTokenWith(FULL_SCOPE, prompt, hint); }
+  catch (e) { log("full scope failed → drive-only fallback", e.message); return await requestTokenWith(BASE_SCOPE, prompt, hint); }
 }
 // רענון שקט של האסימון — prompt:'' עם hint לחשבון. כשהמשתמש מחובר לגוגל
 // בדפדפן וכבר העניק הרשאה, מתקבל אסימון חדש דרך iframe מוסתר (בלי בורר חשבונות
@@ -309,7 +309,14 @@ async function foregroundPull() {
 // ---- API ציבורי ----
 export async function cloudConnect() {
   await loadGis();
-  await requestToken("select_account"); // בחירת חשבון מפורשת — כדי להתחבר לחשבון הנכון
+  // אם החשבון כבר מוכר (חובר בעבר) — קודם ניסיון חיבור שקט לאותו חשבון, בלי
+  // בורר חשבונות. כך שמי שכבר מחובר לגוגל בדפדפן ואישר בעבר — נכנס מיד, והחלון
+  // של גוגל לא נפתח שוב ושוב בכל כניסה. רק אם החיבור השקט נכשל (כניסה ראשונה,
+  // דפדפן אחר, או שהחשבון לא פעיל) — פותחים בורר חשבונות עם רמז לחשבון הנכון.
+  const known = storedEmail();
+  let tok = null;
+  if (known) { try { tok = await silentRefresh(); } catch (e) { tok = null; } }
+  if (!tok) await requestToken("select_account", known); // בחירת חשבון מפורשת — כדי להתחבר לחשבון הנכון
   // זהות מחשבון הגוגל — המייל והשם. אלה מזהים את המשתמש (המייל = הזהות הקבועה).
   const info = await getUserInfo();
   if (info) storeGoogle(info);
@@ -395,6 +402,9 @@ export function cloudBootIdentity() {
 
 export async function initCloud() {
   if (!CLOUD_ENABLED) return;
+  // טעינה מוקדמת של ספריית גוגל — כדי שגם בשער הכניסה (עוד לפני חיבור) הניסיון
+  // השקט/החלון ייפתחו מיד וברציפות, בלי המתנה לטעינת הסקריפט בזמן הלחיצה.
+  try { loadGis(); } catch (e) {}
   window.addEventListener("state:changed", schedulePush);
   // דחיפה בסגירה/מעבר-רקע — מאמץ אחרון לשמור לענן לפני יציאה
   const closePush = () => { if (isConnected()) push(); };
