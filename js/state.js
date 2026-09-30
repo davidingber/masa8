@@ -243,7 +243,8 @@ export function getMeditations() {
   return state.meditations;
 }
 export function getMeditationsByWeek(week) {
-  return getMeditations().filter(m => (m.week || 2) === week);
+  // slot=מדיטציה שמשויכת ללשונית ייעודית (מוצגת שם לפי id), לא לרשימת השבוע
+  return getMeditations().filter(m => (m.week || 2) === week && !m.slot);
 }
 export function setMeditationField(id, field, value) {
   const meds = getMeditations();

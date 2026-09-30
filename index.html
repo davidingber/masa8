@@ -17,8 +17,26 @@
   <script type="module" src="js/app.js"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () =>
-        navigator.serviceWorker.register("sw.js").catch(() => {}));
+      // כשגרסה חדשה של ה-Service Worker משתלטת — רענון אוטומטי פעם אחת,
+      // כדי שהעדכון יופיע מיד בלי צורך לרענן פעמיים. (רק כשכבר יש גרסה פעילה —
+      // לא בהתקנה הראשונה.)
+      let swReloading = false;
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (swReloading) return;
+          swReloading = true;
+          location.reload();
+        });
+      }
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").then(reg => {
+          reg.update(); // בדיקת עדכון יזומה בכל טעינה
+          // בחזרה לאפליקציה — לבדוק אם יצאה גרסה חדשה
+          document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") reg.update();
+          });
+        }).catch(() => {});
+      });
     }
   </script>
 </body>

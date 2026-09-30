@@ -650,6 +650,16 @@ export const DEFAULT_MEDITATIONS = [
     link: "https://youtu.be/CqKLt3zD1do", file: "", note: "" },
   { id: "gratitude", week: 5, name: "מדיטציית הכרת תודה", icon: "🙏",
     link: "https://youtu.be/vDwITNG0r84", file: "", note: "" },
+
+  // תהליכים מודרכים בלשוניות ייעודיות (slot=לא נסחף לרשימות המדיטציות של השבוע).
+  // הקישור/קובץ יתווספו במסך הניהול — "בהמשך אוסיף את המדיטציות".
+  { id: "relax3",      week: 3, slot: true, name: "כניסה להרפיה", icon: "🌿", link: "", file: "", note: "" },
+  { id: "resources4",  week: 4, slot: true, name: "חיבור למשאבים — אהבה וביטחון", icon: "💗", link: "", file: "", note: "" },
+  { id: "selflove5",   week: 5, slot: true, name: "מי אני בלי הבעיה + היזכרות באהבה", icon: "🌟", link: "", file: "", note: "" },
+  { id: "imgres7",     week: 7, slot: true, name: "חשיפה בדמיון בשילוב משאבים", icon: "🎬", link: "", file: "", note: "" },
+  { id: "forgive8",    week: 8, slot: true, name: "תהליך סליחה", icon: "🕊️", link: "", file: "", note: "" },
+  { id: "futureself8", week: 8, slot: true, name: "חיבור לאני העתידי", icon: "✨", link: "", file: "", note: "" },
+  { id: "gratitude8",  week: 8, slot: true, name: "הכרת תודה", icon: "🙏", link: "", file: "", note: "" },
 ];
 
 // ============================================================
