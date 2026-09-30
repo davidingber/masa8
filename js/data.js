@@ -657,6 +657,7 @@ export const DEFAULT_MEDITATIONS = [
   { id: "resources4",   week: 4, slot: true, name: "חיבור למשאבים — אהבה וביטחון", icon: "💗", link: "", file: "", note: "" },
   { id: "selfregress5", week: 5, slot: true, name: "מי אני בלי הבעיה (רגרסיה)", icon: "🌟", link: "", file: "", note: "" },
   { id: "parttrance5",  week: 5, slot: true, name: "מפגש חומל עם החלק (טראנס)", icon: "💗", link: "", file: "", note: "" },
+  { id: "loverecall5",  week: 5, slot: true, name: "היזכרות באהבה", icon: "❤️", link: "", file: "", note: "" },
   { id: "imgres7",      week: 7, slot: true, name: "חשיפה בדמיון בשילוב משאבים", icon: "🎬", link: "", file: "", note: "" },
   { id: "forgive8",     week: 8, slot: true, name: "תהליך סליחה", icon: "🕊️", link: "", file: "", note: "" },
   { id: "futuregrat8",  week: 8, slot: true, name: "האני העתידי והכרת תודה", icon: "✨", link: "", file: "", note: "" },
