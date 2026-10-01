@@ -127,6 +127,14 @@ export function buildPartsMap(S) {
   // כל מדיטציה שהאזנו לה (כולל כלי הוויסות של פרק 4) — בשמה, כמענה מיטיב לחלק
   (st.activities || []).filter(a => a.type === "meditation").forEach(a =>
     add(resource, "behavior", "מדיטציה", `🎧 ${(a.note || "").trim() || "מדיטציה"}`, 4));
+  // גירוי דו-צדדי (פרק 4) — פעולה חומלת: תיפוף דו-צדדי להורדת עוצמת התחושה
+  const bls = td(4, "bilateral") || {};
+  if ((bls.sensation || "").trim()) {
+    const before = (bls.rounds && bls.rounds[0] && bls.rounds[0].before) || null;
+    const lastAfter = (() => { const rs = (bls.rounds || []).filter(r => r && r.after != null); return rs.length ? rs[rs.length - 1].after : null; })();
+    const trend = (before != null && lastAfter != null) ? ` · ${before}→${lastAfter}` : "";
+    add(resource, "behavior", "גירוי דו-צדדי", `👐 גירוי דו-צדדי · ${bls.sensation.trim()}${trend}`, 4);
+  }
   // חשיפה תוך-גופנית (פרק 4) — פעולה חומלת: להישאר עם קצה התחושה
   (S.getToolEntries(4, "sensations") || []).forEach(e => {
     const what = [...(e.sens || []), ...(e.locations || [])].filter(Boolean).join(", ") || (e.note || "").trim();

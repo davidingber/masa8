@@ -349,6 +349,14 @@ body{min-height:100vh}
 .timer-step{font-size:12px;color:var(--subtle);margin-top:6px}
 .timer-idle,.timer-done{font-size:16px;font-weight:700;color:var(--subtle);padding:12px}
 .timer-done{color:var(--teal)}
+/* גירוי דו-צדדי (BLS) */
+.bls-round{border:1px solid var(--line);border-radius:14px;padding:12px;margin:12px 0;background:#fbfdfc}
+.bls-round-h{font-weight:800;color:var(--teal);font-size:14px;margin-bottom:6px}
+.bls-pacer{display:flex;gap:10px;margin:8px 0}
+.bls-knee{flex:1;text-align:center;padding:14px 6px;border-radius:12px;border:1px solid var(--line);
+  background:var(--bg2);font-weight:700;font-size:14px;color:var(--subtle);transition:transform .12s,background .12s,color .12s}
+.bls-knee.tap{background:var(--teal);color:#fff;border-color:var(--teal);transform:scale(1.06)}
+.bls-timer{min-height:64px;display:flex;flex-direction:column;justify-content:center}
 .hidden{display:none}
 .sens-chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 

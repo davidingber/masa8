@@ -175,7 +175,7 @@ function successDonut(m) {
 
 // התנהגות חומלת = רק פעולות/התנהגות: מדיטציות וכלי ויסות (פרק 4),
 // חשיפה תוך-גופנית (פרק 4), ומפגש החמלה (פרק 5) — לא מחשבות/רגשות/צרכים
-const COMPASSION_LABELS = ["מדיטציה", "חשיפה תוך-גופנית", "מפגש החמלה"];
+const COMPASSION_LABELS = ["מדיטציה", "חשיפה תוך-גופנית", "מפגש החמלה", "גירוי דו-צדדי"];
 // זוגות ערך → איך מגשימים אותו בפועל (מחבר את הגשמת הערך לבחירת הערך)
 function pairedValues() {
   const values = S.getToolData(8, "values") || [];
@@ -2190,6 +2190,7 @@ const W4_TABS = [
   { id: "contract",   label: "החוזה שלי" },
   { id: "exposure",   label: "חשיפה תוך-גופנית" },
   { id: "regulation", label: "כלי ויסות" },
+  { id: "bilateral",  label: "גירוי דו-צדדי" },
   { id: "trance",     label: "טראנס" },
 ];
 // שדות "החוזה שלי עם התחושות"
@@ -2215,6 +2216,7 @@ function toolWeek4(c) {
   if (week4Tab === "contract") body = w4Contract();
   if (week4Tab === "exposure") body = w4Exposure();
   if (week4Tab === "regulation") body = w4Regulation();
+  if (week4Tab === "bilateral") body = w4Bilateral();
   if (week4Tab === "trance") body = tranceTab([
     { id: "resources4", icon: "💗", title: "חיבור למשאבים — אהבה וביטחון",
       desc: "דמיון מודרך שמחזק את המשאבים הפנימיים — תחושת אהבה וביטחון בגוף, שאפשר לחזור אליהם בכל רגע של מצוקה." },
@@ -2305,6 +2307,93 @@ function w4Regulation() {
         לבחור כלי אחד שמתאים לך עכשיו ולתרגל אותו.</p>
       ${meds.length ? meds.map(medCard).join("") : `<p class="tiny-note">טרם הוגדרו כלים — ניתן להוסיף במסך הניהול.</p>`}
     </div>`;
+}
+
+// --- תת-כלי: גירוי דו-צדדי (BLS) — תיפוף לסירוגין על הברכיים, ~תיפוף אחד בשנייה ---
+function w4Bilateral() {
+  const d = S.getToolData(4, "bilateral") || {};
+  const rounds = Array.isArray(d.rounds) ? d.rounds : [];
+  const roundCard = (i) => {
+    const r = rounds[i] || {};
+    const bv = r.before ?? 5, av = r.after ?? 5;
+    return `
+      <div class="bls-round">
+        <div class="bls-round-h">סבב ${i + 1}</div>
+        <label class="mini-label">עוצמת התחושה <b>לפני</b> (1–10)</label>
+        <div class="rating-row">
+          <input type="range" class="bls-before" data-i="${i}" min="1" max="10" value="${bv}">
+          <span class="rate-val bls-before-v" data-i="${i}">${bv}</span>
+        </div>
+        <div class="bls-pacer" id="blsPacer${i}">
+          <span class="bls-knee bls-r">👋 ימין</span>
+          <span class="bls-knee bls-l">שמאל 👋</span>
+        </div>
+        <div class="timer-display bls-timer" id="blsTimer${i}"><div class="timer-idle">3 דקות תיפוף</div></div>
+        <button type="button" class="btn ghost2 bls-start" data-i="${i}">▶ תיפוף 3 דקות</button>
+        <label class="mini-label" style="margin-top:10px">עוצמת התחושה <b>אחרי</b> (1–10)</label>
+        <div class="rating-row">
+          <input type="range" class="bls-after" data-i="${i}" min="1" max="10" value="${av}">
+          <span class="rate-val bls-after-v" data-i="${i}">${av}</span>
+        </div>
+      </div>`;
+  };
+  return `
+    <div class="tool-block">
+      <p class="hint">גירוי דו-צדדי — תיפוף עדין לסירוגין על הברכיים, בקצב של <b>תיפוף אחד בשנייה</b> (ימין–שמאל–ימין–שמאל).
+        מתמקדים בתחושה, מדרגים את עוצמתה, מתופפים 3 דקות ובודקים שוב — כך 3 פעמים. <b>לתת לכל מה שעולה לעלות.</b></p>
+      <label class="mini-label">על איזו תחושה אני עובד/ת?</label>
+      <input class="inp" id="blsSensation" value="${esc(d.sensation || "")}" placeholder="למשל: כיווץ בחזה, חרדה בבטן...">
+      ${[0, 1, 2].map(roundCard).join("")}
+      <label class="mini-label" style="margin-top:6px">מה עלה במהלך התיפוף?</label>
+      <textarea class="ta" id="blsNotes" placeholder="מחשבות, זיכרונות, תחושות שעלו...">${esc(d.notes || "")}</textarea>
+      <button type="button" class="btn" id="saveBls">שמירה + טעינת האווטר</button>
+    </div>`;
+}
+
+// טיימר סבב תיפוף — 3 דקות, עם מד-קצב דו-צדדי שמתחלף כל שנייה (ימין/שמאל)
+function runBilateralRound(i) {
+  stopActiveTimer();
+  const disp = app.querySelector("#blsTimer" + i);
+  const pacer = app.querySelector("#blsPacer" + i);
+  if (!disp) return;
+  let remaining = 180, side = 0;
+  const flip = () => {
+    if (!pacer) return;
+    const r = pacer.querySelector(".bls-r"), l = pacer.querySelector(".bls-l");
+    if (r) r.classList.toggle("tap", side === 0);
+    if (l) l.classList.toggle("tap", side === 1);
+    side = 1 - side;
+  };
+  const paint = () => {
+    const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
+    const ss = String(remaining % 60).padStart(2, "0");
+    disp.innerHTML = `<div class="timer-count">${mm}:${ss}</div>
+      <div class="timer-cue">להתמקד בתחושה · לתת לכל מה שעולה לעלות</div>`;
+  };
+  paint(); flip();
+  activeTimer = setInterval(() => {
+    remaining--;
+    flip();
+    if (remaining <= 0) {
+      stopActiveTimer();
+      disp.innerHTML = `<div class="timer-done">✓ סיימת סבב ${i + 1} — דרגו את העוצמה אחרי</div>`;
+      if (pacer) pacer.querySelectorAll(".bls-knee").forEach(k => k.classList.remove("tap"));
+      return;
+    }
+    paint();
+  }, 1000);
+}
+
+function collectBilateral() {
+  const rounds = [0, 1, 2].map(i => ({
+    before: Number(app.querySelector(`.bls-before[data-i="${i}"]`)?.value) || null,
+    after: Number(app.querySelector(`.bls-after[data-i="${i}"]`)?.value) || null,
+  }));
+  return {
+    sensation: (app.querySelector("#blsSensation")?.value || "").trim(),
+    notes: (app.querySelector("#blsNotes")?.value || "").trim(),
+    rounds,
+  };
 }
 
 // --- בלוק נשימה מונחית + מד-קצב + קובץ הנשימה (משותף לפרק 1 ולכלי הוויסות) ---
@@ -2550,6 +2639,24 @@ function mountWeek4Handlers() {
     toast("החוזה נשמר ✓");
   });
 
+  // גירוי דו-צדדי — סליידרים, טיימרי סבב ושמירה
+  app.querySelectorAll(".bls-before, .bls-after").forEach(r =>
+    r.addEventListener("input", () => {
+      const cls = r.classList.contains("bls-before") ? "bls-before-v" : "bls-after-v";
+      const v = app.querySelector(`.${cls}[data-i="${r.dataset.i}"]`);
+      if (v) v.textContent = r.value;
+    }));
+  app.querySelectorAll(".bls-start").forEach(b =>
+    b.addEventListener("click", () => runBilateralRound(Number(b.dataset.i))));
+  const sbls = app.querySelector("#saveBls");
+  if (sbls) sbls.addEventListener("click", () => {
+    const data = collectBilateral();
+    S.setToolData(4, "bilateral", data);
+    if (data.sensation) S.logActivity("exercise", "גירוי דו-צדדי");
+    toast("נשמר ✓");
+    renderChapter(4);
+  });
+
   // תת-כלי 2 — טיימרים מונחים
   const handPhases = [];
   for (let cyc = 1; cyc <= 3; cyc++) {
@@ -2611,6 +2718,7 @@ function stashWeek4Drafts() {
     const d = {}; app.querySelectorAll(".contract-ta").forEach(t => d[t.dataset.c] = t.value.trim());
     S.setToolData(4, "contract", d);
   }
+  if (app.querySelector("#blsSensation")) S.setToolData(4, "bilateral", collectBilateral());
 }
 
 function openExposurePrint(rows) {
