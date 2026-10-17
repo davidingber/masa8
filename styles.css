@@ -1115,3 +1115,9 @@ body{font-size:15.5px;line-height:1.5}
 .cm-h{font-size:12.5px;font-weight:800;color:var(--subtle);margin-bottom:6px;text-align:center}
 .cm-list{margin:0;padding-inline-start:18px}
 .cm-list li{font-size:12.5px;margin-bottom:3px;color:var(--ink)}
+
+/* מצב הטמעה (?embed=1) — בתוך שיעור ברב-מסר: בלי ניווט תחתון ובלי כפתורי חזרה */
+body[data-embed="1"] .bottom-nav{display:none}
+body[data-embed="1"] .view{padding-bottom:24px}
+body[data-embed="1"] .chapter-head .back-btn,
+body[data-embed="1"] .back-all{display:none}

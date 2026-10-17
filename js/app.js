@@ -5655,6 +5655,30 @@ async function loadPublishedContent() {
   } catch (e) { /* אין קובץ תוכן / אופליין — ממשיכים עם ברירות המחדל */ }
 }
 
+// ============================================================
+//  קישורים ישירים + מצב הטמעה (למשל בתוך שיעור ברב-מסר)
+//  ?v=week3 | dashboard | meditations | coach | home   (או #/week/3, #/dashboard ...)
+//  ?embed=1 — מסתיר ניווט תחתון וכפתורי חזרה, כדי שייראה כחלק מהשיעור
+// ============================================================
+function parseDeepLink() {
+  const q = new URLSearchParams(location.search);
+  let v = (q.get("v") || "").trim().toLowerCase();
+  let embed = q.get("embed") === "1";
+  let h = location.hash.replace(/^#\/?/, "");
+  const qi = h.indexOf("?");
+  if (qi >= 0) { if (new URLSearchParams(h.slice(qi + 1)).get("embed") === "1") embed = true; h = h.slice(0, qi); }
+  if (!v && h && h !== "admin") v = h.replace(/\//g, "").toLowerCase();
+  if (embed) { try { document.body.dataset.embed = "1"; } catch (e) {} }
+  if (!v) return false;
+  const wk = v.match(/^(?:week|chapter|w)?([1-8])$/);
+  if (wk) { route = "chapter"; routeParam = Number(wk[1]); return true; }
+  const map = { dashboard: "self", self: "self", meditations: "library", library: "library", coach: "coach", home: "home", chapters: "chapters" };
+  if (map[v]) { route = map[v]; routeParam = null; return true; }
+  return false;
+}
+window.addEventListener("hashchange", () => { if (location.hash !== "#admin" && parseDeepLink()) render(); });
+
+parseDeepLink();
 applyTheme(S.getTheme());
 mountSOS();
 startReminderLoop();
