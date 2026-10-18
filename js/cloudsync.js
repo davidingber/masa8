@@ -27,6 +27,7 @@ const FLAG_SYNC = "masa8_cloud_sync"; // modifiedTime אחרון שסונכרן
 const FLAG_TOK = "masa8_cloud_tok";   // אסימון גישה שמור (תקף ~שעה) — מונע חלון גוגל בכל רענון
 const FLAG_EMAIL = "masa8_cloud_email"; // המייל של החשבון המחובר
 const FLAG_GNAME = "masa8_cloud_gname"; // השם מחשבון הגוגל
+const FLAG_OWNER = "masa8_data_owner"; // המייל שהנתונים המקומיים שייכים לו — מונע ירושת נתונים בין חשבונות באותו דפדפן
 const FLAG_RELOADED = "masa8_cloud_reloaded"; // מונע רענון כפול באותה טעינה (sessionStorage)
 
 export const CLOUD_ENABLED = !!CLIENT_ID;
@@ -60,6 +61,9 @@ function storeGoogle(info) {
     if (info && info.name) localStorage.setItem(FLAG_GNAME, info.name);
   } catch (e) {}
 }
+
+function dataOwner() { try { return localStorage.getItem(FLAG_OWNER) || ""; } catch (e) { return ""; } }
+function setDataOwner(email) { try { if (email) localStorage.setItem(FLAG_OWNER, email); } catch (e) {} }
 
 export function cloudStatus() {
   return { enabled: CLOUD_ENABLED, connected: isConnected(), lastSync: getLastSync(), syncing, email: storedEmail(), needsAuth };
@@ -353,6 +357,18 @@ export async function cloudConnect() {
   // זהות מחשבון הגוגל — המייל והשם. אלה מזהים את המשתמש (המייל = הזהות הקבועה).
   const info = await getUserInfo();
   if (info) storeGoogle(info);
+  // הנתונים המקומיים שייכים לחשבון מסוים. אם מתחבר חשבון אחר באותו דפדפן (למשל כניסה אחרת ברב-מסר) —
+  // לא יורשים ולא מעלים את הנתונים של הקודם: מאפסים מקומית וממשיכים כמו מכשיר חדש (טוענים מהענן של החשבון החדש).
+  const who = info && info.email;
+  if (who) {
+    const owner = dataOwner();
+    if (owner && owner !== who) {
+      log("different account on this browser — clearing local data of previous owner");
+      S.resetAll();
+      try { localStorage.removeItem(FLAG_SYNC); } catch (e) {}
+    }
+    setDataOwner(who);
+  }
   // בדיקת רשימת מאושרים (אם הוגדרה) — לפני שמחברים
   if (ALLOWLIST_CSV_URL) {
     const email = await getUserEmail();
@@ -416,7 +432,16 @@ export function cloudDisconnect() {
 // סנכרון יזום (בלחיצת כפתור) — מרענן אסימון ומסנכרן. משמש כשהאסימון השמור פג.
 export async function cloudSyncNow() {
   await loadGis();
-  await requestToken();   // אינטראקטיבי (בתגובה ללחיצה)
+  await requestToken("", storedEmail() || undefined);   // אינטראקטיבי (בתגובה ללחיצה), עם רמז לחשבון הנכון
+  // אימות שהחשבון שנבחר הוא החשבון שהנתונים המקומיים שייכים לו — אחרת לא דוחפים (לא מערבבים חשבונות)
+  const who = await getUserInfo();
+  const owner = dataOwner();
+  if (who && who.email && owner && who.email !== owner) {
+    accessToken = null; tokenExp = 0;
+    try { localStorage.removeItem(FLAG_TOK); } catch (e) {}
+    const err = new Error("account_mismatch"); err.code = "account_mismatch"; err.owner = owner;
+    throw err;
+  }
   needsAuth = false;
   const reloaded = await doPull(reloadNow);    // משיכת גרסה חדשה יותר אם יש
   if (reloaded) return true;   // הדף מתרענן עם מה שנמשך — לא דוחפים את המצב הישן שבזיכרון
@@ -451,6 +476,7 @@ export async function initCloud() {
     else if (document.visibilityState === "visible") foregroundPull(); // חזרה לאפליקציה → משיכת עדכונים מהענן
   });
   if (isConnected()) {
+    if (!dataOwner() && storedEmail()) setDataOwner(storedEmail());   // התקנות קיימות: הנתונים שייכים לחשבון המחובר
     // השם נקבע ע"י חשבון הגוגל — לא ע"י בחירה. אם שמור שם מהחשבון, מיישמים אותו.
     try {
       const gn = storedGName();

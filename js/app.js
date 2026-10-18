@@ -5703,7 +5703,12 @@ function updateSyncBanner() {
   el.querySelector("button").addEventListener("click", async (e) => {
     const b = e.currentTarget; b.disabled = true; b.textContent = "מתחבר...";
     try { await cloudSyncNow(); toast("סונכרן ✓"); }
-    catch (err) { b.disabled = false; b.textContent = "🔗 התחברות וסנכרון"; toast("לא הצלחנו להתחבר — אפשר לנסות שוב"); }
+    catch (err) {
+      b.disabled = false; b.textContent = "🔗 התחברות וסנכרון";
+      toast(err && err.code === "account_mismatch"
+        ? `נבחר חשבון אחר מהחשבון המחובר (${err.owner}). יש לבחור את אותו חשבון, או ללחוץ 🚪 ולהתחבר עם החשבון החדש.`
+        : "לא הצלחנו להתחבר — אפשר לנסות שוב");
+    }
   });
 }
 window.addEventListener("cloud:changed", updateSyncBanner);
