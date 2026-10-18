@@ -1127,3 +1127,13 @@ body[data-embed="1"] .back-all{display:none}
   gap:10px;flex-wrap:wrap;padding:10px 14px;background:#fff7e6;border-bottom:1px solid #f0d9a8;
   color:#5a4a1a;font-size:13.5px;line-height:1.4;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.08)}
 .sync-banner .btn{padding:7px 14px;font-size:13.5px}
+
+/* חלון אישור משלנו (במקום confirm שנחסם בהטמעה) */
+.dlg-overlay{position:fixed;inset:0;z-index:400;background:rgba(20,30,26,.5);display:flex;align-items:center;justify-content:center;padding:18px}
+.dlg-box{background:#fff;border-radius:18px;padding:20px 18px;max-width:420px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25);text-align:center}
+.dlg-msg{white-space:pre-line;line-height:1.6;font-size:15px;color:#20353a;margin-bottom:16px}
+.dlg-actions{display:flex;flex-direction:column;gap:8px}
+.dlg-actions .btn{width:100%}
+[data-theme="dark"] .dlg-box{background:#16201d;color:#e8efe9}[data-theme="dark"] .dlg-msg{color:#e8efe9}
+
+.ver-line{text-align:center;font-size:11px;color:var(--subtle);opacity:.65;margin:14px 0 6px;direction:ltr;unicode-bidi:plaintext}

@@ -11,6 +11,7 @@ import { COURSE, ACTIVITY_TYPES, EMOTION_ALTERNATIVES, ALT_EMOTION_POOL,
          CENTRAL_QUESTION, WEEK_FRAMING, METHODS_SUBTEXT,
          JOURNEY_PROMISE, RESPONSE_PROTOCOL, MAP_PHASES } from "./data.js";
 import * as S from "./state.js";
+import { askConfirm } from "./dialog.js";
 import { renderAvatar, renderAvatarPhoto, avatarMessage } from "./avatar.js";
 import { buildPartsMap } from "./partsMap.js";
 import { askAI } from "./ai.js";
@@ -70,13 +71,24 @@ function renderNav() {
 // ============================================================
 //  ראוטר
 // ============================================================
+const APP_VERSION = "v129";
+// שורת אבחון קטנה: גרסה + החשבון המחובר + של מי הנתונים (לבירור תקלות הטמעה/חשבונות)
+function appendVersionLine() {
+  try {
+    const st = CLOUD_ENABLED ? cloudStatus() : {};
+    const el = document.createElement("div");
+    el.className = "ver-line";
+    el.textContent = `גרסה ${APP_VERSION}` + (st.email ? ` · מחובר כ: ${st.email}` : "") + (st.owner && st.owner !== st.email ? ` · נתונים של: ${st.owner}` : "");
+    app.appendChild(el);
+  } catch (e) {}
+}
 function render() {
   updateSOSVisibility();
   try { document.body.dataset.route = route; } catch (e) {}
   if (CLOUD_ENABLED && !cloudStatus().connected) { navEl.innerHTML = ""; return renderGate(); }
   if (!S.isOnboarded()) { navEl.innerHTML = ""; return renderOnboarding(); }
   renderNav();
-  if (route === "home") return renderHome();
+  if (route === "home") { renderHome(); return appendVersionLine(); }
   if (route === "chapters") return renderChapters();
   if (route === "chapter") return renderChapter(routeParam);
   if (route === "library") return renderLibrary();
@@ -978,10 +990,10 @@ function renderHome() {
 
   // מאזינים — מסך בית ממוקד
   app.querySelector("#themeToggle").addEventListener("click", toggleTheme);
-  app.querySelector("#logoutBtn")?.addEventListener("click", () => {
+  app.querySelector("#logoutBtn")?.addEventListener("click", async () => {
     const st = cloudStatus();
     const warn = st.needsAuth ? "\n\n⚠️ ייתכן ששינויים אחרונים עוד לא סונכרנו לענן — מומלץ לסנכרן לפני היציאה." : "";
-    if (confirm("לצאת מהחשבון? ההתקדמות שמורה בענן — כניסה חוזרת עם אותו חשבון גוגל תחזיר הכול. העותק במכשיר הזה יימחק." + warn)) {
+    if (await askConfirm("לצאת מהחשבון? ההתקדמות שמורה בענן — כניסה חוזרת עם אותו חשבון גוגל תחזיר הכול. העותק במכשיר הזה יימחק." + warn, "יציאה")) {
       cloudDisconnect(); render();
     }
   });
@@ -4115,8 +4127,8 @@ function mountWeek7Handlers() {
   const pe = app.querySelector("#pdfExp");
   if (pe) pe.addEventListener("click", () => { S.setToolData(4, "exposures", collectExposures()); openExposurePrint(collectExposures()); });
   const re = app.querySelector("#resetExp");
-  if (re) re.addEventListener("click", () => {
-    if (confirm("לשחזר את טבלת ברירת המחדל? השינויים שלך יימחקו.")) {
+  if (re) re.addEventListener("click", async () => {
+    if (await askConfirm("לשחזר את טבלת ברירת המחדל? השינויים שלך יימחקו.", "שחזור")) {
       S.setToolData(4, "exposures", structuredClone(INTEROCEPTIVE_EXPOSURES)); renderChapter(7);
     }
   });
@@ -5255,8 +5267,8 @@ function renderSettings() {
     catch (e) { toast("הסנכרון לא הושלם. נסה שוב."); csBtn.disabled = false; csBtn.textContent = "🔄 סנכרן עכשיו"; }
   });
   const cdBtn = app.querySelector("#cloudDisconnect");
-  if (cdBtn) cdBtn.addEventListener("click", () => {
-    if (confirm("לנתק את הסנכרון? הנתונים יישארו במכשיר ובדרייב, אבל לא יסתנכרנו יותר עד חיבור מחדש.")) {
+  if (cdBtn) cdBtn.addEventListener("click", async () => {
+    if (await askConfirm("לנתק את הסנכרון? ההתקדמות נשארת בענן, והעותק במכשיר הזה יימחק. אפשר להתחבר שוב בכל עת.", "ניתוק")) {
       cloudDisconnect(); renderSettings(); toast("נותק מהדרייב");
     }
   });
@@ -5304,8 +5316,8 @@ function renderSettings() {
     if (!name) return toast("הזן שם נושא");
     S.addMedTopic(name); renderSettings();
   });
-  app.querySelectorAll(".del-topic").forEach(b => b.addEventListener("click", () => {
-    if (confirm("למחוק את הנושא וכל המדיטציות שבו?")) { S.deleteMedTopic(+b.dataset.ti); renderSettings(); }
+  app.querySelectorAll(".del-topic").forEach(b => b.addEventListener("click", async () => {
+    if (await askConfirm("למחוק את הנושא וכל המדיטציות שבו?", "מחיקה")) { S.deleteMedTopic(+b.dataset.ti); renderSettings(); }
   }));
   app.querySelectorAll(".add-item").forEach(b => b.addEventListener("click", () => {
     S.addMedItem(+b.dataset.ti); renderSettings();
@@ -5336,8 +5348,8 @@ function renderSettings() {
     app.querySelector("#extName").value = ""; app.querySelector("#extUrl").value = "";
     toast("הכלי חובר לשבוע " + week);
   });
-  app.querySelector("#reset").addEventListener("click", () => {
-    if (confirm("לאפס את כל ההתקדמות? אין חזרה.")) { S.resetAll(); go("home"); }
+  app.querySelector("#reset").addEventListener("click", async () => {
+    if (await askConfirm("לאפס את כל ההתקדמות? אין חזרה.", "איפוס")) { S.resetAll(); go("home"); }
   });
 
   // גיבוי ושחזור
@@ -5351,10 +5363,10 @@ function renderSettings() {
   });
   const backupFile = app.querySelector("#backupFile");
   app.querySelector("#backupRestore").addEventListener("click", () => backupFile.click());
-  backupFile.addEventListener("change", () => {
+  backupFile.addEventListener("change", async () => {
     const file = backupFile.files[0];
     if (!file) return;
-    if (!confirm("שחזור יחליף את כל ההתקדמות הנוכחית בקובץ הגיבוי. להמשיך?")) { backupFile.value = ""; return; }
+    if (!(await askConfirm("שחזור יחליף את כל ההתקדמות הנוכחית בקובץ הגיבוי. להמשיך?", "שחזור"))) { backupFile.value = ""; return; }
     const reader = new FileReader();
     reader.onload = () => {
       try { S.importState(reader.result); toast("שוחזר בהצלחה ✓"); setTimeout(() => location.reload(), 600); }

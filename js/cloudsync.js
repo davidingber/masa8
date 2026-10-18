@@ -5,6 +5,7 @@
 //  אין שרת משלנו: הכול רץ מהדפדפן מול ה-API של גוגל.
 // ============================================================
 import * as S from "./state.js";
+import { askChoice } from "./dialog.js";
 
 // מזהה הלקוח מ-Google Cloud (לא סוד — מיועד לדפדפן)
 const CLIENT_ID = "816880058586-v7t2us1vbjq9g8rm1tfb8du2vok5408n.apps.googleusercontent.com";
@@ -66,7 +67,7 @@ function dataOwner() { try { return localStorage.getItem(FLAG_OWNER) || ""; } ca
 function setDataOwner(email) { try { if (email) localStorage.setItem(FLAG_OWNER, email); } catch (e) {} }
 
 export function cloudStatus() {
-  return { enabled: CLOUD_ENABLED, connected: isConnected(), lastSync: getLastSync(), syncing, email: storedEmail(), needsAuth };
+  return { enabled: CLOUD_ENABLED, connected: isConnected(), lastSync: getLastSync(), syncing, email: storedEmail(), needsAuth, owner: dataOwner() };
 }
 
 // ---- טעינת ספריית Google Identity Services ----
@@ -386,9 +387,12 @@ export async function cloudConnect() {
   needsAuth = false;
   if (f) {
     if (hasLocalData()) {
-      const loadCloud = window.confirm(
-        "נמצאה גרסה שמורה בענן.\n\nאישור = לטעון אותה למכשיר הזה (יחליף את מה שיש כאן)\nביטול = להעלות את מה שיש כאן לענן");
-      if (loadCloud) {
+      // חלון משלנו (confirm נחסם בהטמעה). ברירת המחדל הבטוחה — טעינה מהענן; העלאה רק בבחירה מפורשת.
+      const choice = await askChoice(
+        "נמצאה גרסה שמורה בענן, ויש גם נתונים במכשיר הזה.\n\nמה לעשות?",
+        [{ id: "cloud", label: "לטעון את הגרסה מהענן (מחליף את מה שיש כאן)", primary: true },
+         { id: "local", label: "להעלות את מה שיש כאן לענן (מחליף את הענן)" }]);
+      if (choice !== "local") {
         const text = await driveDownload(f.id);
         S.importState(text);
         setLastSync(f.modifiedTime);
