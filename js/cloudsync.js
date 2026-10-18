@@ -113,6 +113,8 @@ function requestTokenWith(scope, prompt, hint) {
           resolve(accessToken);
         } else reject(new Error((resp && resp.error) || "token error"));
       },
+      // חלון ההתחברות נחסם / נסגר לפני סיום — בלי זה ההבטחה לא הייתה נפתרת והכפתור נתקע על "מתחבר..."
+      error_callback: (err) => reject(new Error(/^popup_/.test((err && err.type) || "") ? err.type : "popup_" + ((err && err.type) || "error"))),
     });
     try { tc.requestAccessToken({ prompt: prompt || "", ...(hint ? { hint } : {}) }); }
     catch (e) { reject(e); }
@@ -124,7 +126,12 @@ function requestTokenWith(scope, prompt, hint) {
 // הוגדרו — נופל ל-drive בלבד כדי שהחיבור עדיין יעבוד.
 async function requestToken(prompt, hint) {
   try { return await requestTokenWith(FULL_SCOPE, prompt, hint); }
-  catch (e) { log("full scope failed → drive-only fallback", e.message); return await requestTokenWith(BASE_SCOPE, prompt, hint); }
+  catch (e) {
+    // נסיגה ל-drive בלבד רק כשבעיית ההרשאות (scope) — לא כשהמשתמש סגר/דחה את החלון (אחרת נפתח חלון שני)
+    if (/^popup_|access_denied/.test(e.message || "")) throw e;
+    log("full scope failed → drive-only fallback", e.message);
+    return await requestTokenWith(BASE_SCOPE, prompt, hint);
+  }
 }
 // רענון שקט של האסימון — prompt:'' עם hint לחשבון. כשהמשתמש מחובר לגוגל
 // בדפדפן וכבר העניק הרשאה, מתקבל אסימון חדש דרך iframe מוסתר (בלי בורר חשבונות
