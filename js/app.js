@@ -979,7 +979,9 @@ function renderHome() {
   // מאזינים — מסך בית ממוקד
   app.querySelector("#themeToggle").addEventListener("click", toggleTheme);
   app.querySelector("#logoutBtn")?.addEventListener("click", () => {
-    if (confirm("לצאת מהחשבון? ההתקדמות שמורה בענן — כניסה חוזרת עם אותו חשבון גוגל תחזיר הכול.")) {
+    const st = cloudStatus();
+    const warn = st.needsAuth ? "\n\n⚠️ ייתכן ששינויים אחרונים עוד לא סונכרנו לענן — מומלץ לסנכרן לפני היציאה." : "";
+    if (confirm("לצאת מהחשבון? ההתקדמות שמורה בענן — כניסה חוזרת עם אותו חשבון גוגל תחזיר הכול. העותק במכשיר הזה יימחק." + warn)) {
       cloudDisconnect(); render();
     }
   });

@@ -420,13 +420,19 @@ export async function cloudConnect() {
 }
 
 export function cloudDisconnect() {
-  accessToken = null; tokenExp = 0; fileId = null;
+  clearTimeout(pushTimer); pushTimer = null;
+  accessToken = null; tokenExp = 0; fileId = null; syncChecked = false; needsAuth = false;
   try {
     localStorage.removeItem(FLAG_TOK);
     localStorage.removeItem(FLAG_EMAIL);
     localStorage.removeItem(FLAG_GNAME);
+    localStorage.removeItem(FLAG_OWNER);
+    localStorage.removeItem(FLAG_SYNC);
   } catch (e) {}
   setConnected(false);
+  // יציאה = ההתקדמות נשארת בענן של החשבון, והעותק המקומי נמחק מהדפדפן הזה —
+  // כך שחשבון אחר שייכנס כאן לא יראה (ולא יקבל) את הנתונים של הקודם.
+  try { S.resetAll(); } catch (e) {}
 }
 
 // סנכרון יזום (בלחיצת כפתור) — מרענן אסימון ומסנכרן. משמש כשהאסימון השמור פג.
