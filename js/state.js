@@ -110,7 +110,12 @@ function fresh() {
   return s;
 }
 
+// אחרי ייבוא (מהענן/מגיבוי) הדף עומד להתרענן עם המצב החדש. עד אז אסור לשמור את המצב הישן
+// שבזיכרון — אחרת הוא ידרוס את מה שנקלט הרגע (ואחר כך גם יידחף לענן).
+let frozen = false;
+export function isFrozen() { return frozen; }
 export function save() {
+  if (frozen) return;
   localStorage.setItem(KEY, JSON.stringify(state));
   window.dispatchEvent(new CustomEvent("state:changed"));
 }
@@ -418,5 +423,6 @@ export function importState(json) {
   const parsed = JSON.parse(json); // זורק אם לא תקין
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("קובץ לא תקין");
   localStorage.setItem(KEY, JSON.stringify(parsed)); // load() ימזג ברירות מחדל בטעינה הבאה
+  frozen = true;
   return true;
 }

@@ -38,6 +38,8 @@ let fileId = null;
 let gisReady = null;
 let pushTimer = null;
 let syncing = false;
+let syncChecked = false;  // בוצעה בדיקה מוצלחת מול הענן בטעינה הזו — עד אז אסור לדחוף (מונע דריסת הענן ממכשיר ריק)
+let needsAuth = false;    // אין אסימון תקף והרענון השקט נכשל (למשל בהטמעה) — נדרשת לחיצה להתחברות
 
 const log = (...a) => { try { console.log("[cloud]", ...a); } catch (e) {} };
 
@@ -60,7 +62,7 @@ function storeGoogle(info) {
 }
 
 export function cloudStatus() {
-  return { enabled: CLOUD_ENABLED, connected: isConnected(), lastSync: getLastSync(), syncing, email: storedEmail() };
+  return { enabled: CLOUD_ENABLED, connected: isConnected(), lastSync: getLastSync(), syncing, email: storedEmail(), needsAuth };
 }
 
 // ---- טעינת ספריית Google Identity Services ----
@@ -224,28 +226,36 @@ async function driveUpdate(id, text) {
   return res.json();
 }
 
-// ---- רענון פעם אחת (החלת נתונים שנמשכו מהענן) ----
-function reloadOnce() {
-  try {
-    if (sessionStorage.getItem(FLAG_RELOADED)) return;
-    sessionStorage.setItem(FLAG_RELOADED, "1");
-  } catch (e) {}
+// ---- רענון אחרי ייבוא ----
+// ייבוא מהענן מקפיא שמירה עד הרענון, ולכן חייבים לרענן. מונה בלשונית (sessionStorage) חוסם לולאה
+// אינסופית במקרה חריג: אחרי 4 רענונים כאלה בלשונית אחת — מפסיקים לייבא.
+const FLAG_RELOADS = "masa8_cloud_reloads";
+function reloadsLeft() { try { return Number(sessionStorage.getItem(FLAG_RELOADS) || 0) < 4; } catch (e) { return true; } }
+function reloadNow() {
+  try { sessionStorage.setItem(FLAG_RELOADS, String(Number(sessionStorage.getItem(FLAG_RELOADS) || 0) + 1)); } catch (e) {}
   location.reload();
 }
 
-function hasLocalData() {
+// האם המצב מכיל תוכן אמיתי של המשתמש (ולא רק "הושלמה קליטה" + שם מהחשבון)
+function stateHasRealData(st) {
   try {
-    const st = S.getState();
-    return !!(st.onboarded || (st.activities && st.activities.length) ||
-      (st.chapters && Object.keys(st.chapters).length) || (st.emotion && st.emotion.name));
+    if (!st || typeof st !== "object") return false;
+    const hasCh = st.chapters && Object.values(st.chapters).some(c => c &&
+      ((c.data && Object.keys(c.data).length) || (c.tools && Object.keys(c.tools).length)));
+    return !!((st.emotion && st.emotion.name) || (st.activities && st.activities.length) || hasCh ||
+      (st.partName || "").trim() || (st.goalPlan && Object.keys(st.goalPlan).length));
   } catch (e) { return false; }
 }
+function hasLocalData() { try { return stateHasRealData(S.getState()); } catch (e) { return false; } }
 
 // ---- דחיפה לענן (נשמר את המצב הנוכחי) ----
 async function push() {
   if (!isConnected()) return;
+  if (S.isFrozen && S.isFrozen()) { log("push skipped — import pending reload"); return; }
   const tok = await ensureToken();
-  if (!tok) { log("push skipped — no token"); return; }
+  if (!tok) { log("push skipped — no token"); if (!needsAuth) { needsAuth = true; emitChanged(); } return; }
+  // הגנה: לא דוחפים לענן לפני שנבדק מה יש שם (אחרת מכשיר חדש/ריק יכול לדרוס את ההתקדמות)
+  if (!syncChecked) { log("push skipped — cloud not checked yet (protected)"); return; }
   // הגנה קריטית: מכשיר ריק לא ידרוס גיבוי ענן קיים
   if (!hasLocalData()) {
     try { const f0 = await driveFind(); if (f0) { log("push skipped — local empty, cloud has data (protected)"); return; } }
@@ -279,30 +289,46 @@ function schedulePush() {
 let lastPullAt = 0;
 async function doPull(reloadFn) {
   const tok = await ensureToken();
-  if (!tok) { log("pull — no token (will sync after reconnect)"); return; }
+  if (!tok) { log("pull — no token (will sync after reconnect)"); if (!needsAuth) { needsAuth = true; emitChanged(); } return; }
+  if (needsAuth) { needsAuth = false; emitChanged(); }
   lastPullAt = Date.now();
   const f = await driveFind();
-  if (!f) { await push(); return; }            // אין קובץ בענן — ניצור מהמקומי
+  if (!f) { syncChecked = true; await push(); return; }            // אין קובץ בענן — ניצור מהמקומי
   const cloudMs = Date.parse(f.modifiedTime || 0) || 0;
   const lastMs = Date.parse(getLastSync() || 0) || 0;
-  if (cloudMs > lastMs) {
-    const text = await driveDownload(f.id);
-    try { JSON.parse(text); } catch (e) { log("cloud file invalid"); return; }
+  const newer = cloudMs > lastMs;
+  const localReal = hasLocalData();
+  // מכשיר ללא תוכן אמיתי (למשל הטמעה חדשה) — מושכים מהענן גם אם חותמת הזמן "עדכנית"
+  if (!newer && localReal) { syncChecked = true; log("local up to date"); return; }
+  const text = await driveDownload(f.id);
+  let parsed;
+  try { parsed = JSON.parse(text); } catch (e) { log("cloud file invalid"); return; }
+  const cloudReal = stateHasRealData(parsed);
+  if (!cloudReal && localReal) {
+    // הענן ריק אבל במכשיר יש התקדמות — לא מחליפים את המקומי; מתקנים את הענן מהמקומי
+    log("cloud has no data but local does — keeping local, repairing cloud");
+    syncChecked = true; await push(); return;
+  }
+  if (cloudReal && !reloadsLeft()) { log("too many reloads in this tab — skipping import"); syncChecked = true; return; }
+  if (cloudReal) {
     S.importState(text);
     setLastSync(f.modifiedTime);   // מעדכן קודם — כדי שלא ייווצר לולאת רענון
-    log("pulled newer from cloud — reloading");
+    syncChecked = true;
+    log("pulled from cloud — reloading");
     reloadFn();
+    return true;
   } else {
-    log("local up to date");
+    syncChecked = true;            // גם הענן וגם המקומי ריקים — אין מה למשוך
+    log("both empty");
   }
 }
 // בהעלאת האפליקציה — עם שמירה מפני רענון-כפול באותה טעינה
-async function startupSync() { return doPull(reloadOnce); }
+async function startupSync() { return doPull(reloadNow); }
 // בחזרה לפורגראונד — מושך שינויים שנעשו במכשיר אחר בזמן שהאפליקציה ברקע
 async function foregroundPull() {
   if (!isConnected()) return;
   if (Date.now() - lastPullAt < 20000) return;   // לא לתקוף את הרשת
-  try { await loadGis(); await doPull(() => location.reload()); }
+  try { await loadGis(); await doPull(reloadNow); }
   catch (e) { log("foreground pull failed", e.message); }
 }
 
@@ -333,6 +359,8 @@ export async function cloudConnect() {
     }
   }
   const f = await driveFind();
+  syncChecked = true;      // נבדק מה יש בענן — מכאן אפשר לדחוף (אחרי ההכרעה למטה)
+  needsAuth = false;
   if (f) {
     if (hasLocalData()) {
       const loadCloud = window.confirm(
@@ -342,7 +370,7 @@ export async function cloudConnect() {
         S.importState(text);
         setLastSync(f.modifiedTime);
         setConnected(true);
-        reloadOnce();
+        reloadNow();
         return { action: "loaded" };
       }
       setConnected(true);
@@ -354,7 +382,7 @@ export async function cloudConnect() {
     S.importState(text);
     setLastSync(f.modifiedTime);
     setConnected(true);
-    reloadOnce();
+    reloadNow();
     return { action: "loaded" };
   }
   // אין קובץ בענן — חשבון חדש. השם נקבע אוטומטית מחשבון הגוגל,
@@ -382,7 +410,9 @@ export function cloudDisconnect() {
 export async function cloudSyncNow() {
   await loadGis();
   await requestToken();   // אינטראקטיבי (בתגובה ללחיצה)
-  await startupSync();    // משיכת גרסה חדשה יותר אם יש
+  needsAuth = false;
+  const reloaded = await doPull(reloadNow);    // משיכת גרסה חדשה יותר אם יש
+  if (reloaded) return true;   // הדף מתרענן עם מה שנמשך — לא דוחפים את המצב הישן שבזיכרון
   await push();           // דחיפת המצב הנוכחי
   return true;
 }

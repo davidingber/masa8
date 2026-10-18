@@ -5679,6 +5679,26 @@ function parseDeepLink() {
 window.addEventListener("hashchange", () => { if (location.hash !== "#admin" && parseDeepLink()) render(); });
 
 parseDeepLink();
+// באנר "צריך להתחבר מחדש" — כשחסר אסימון והרענון השקט נחסם (למשל בתוך הטמעה).
+// כך המשתמש לא רואה מסך ריק בלי הסבר, ויכול ללחוץ כדי לטעון ולשמור את ההתקדמות.
+function updateSyncBanner() {
+  const st = CLOUD_ENABLED ? cloudStatus() : {};
+  let el = document.getElementById("syncBanner");
+  if (!(st.connected && st.needsAuth)) { if (el) el.remove(); return; }
+  if (el) return;
+  el = document.createElement("div");
+  el.id = "syncBanner"; el.className = "sync-banner";
+  el.innerHTML = `<span>כדי לטעון ולשמור את ההתקדמות שלך — צריך להתחבר מחדש לגוגל.</span>
+    <button type="button" class="btn">🔗 התחברות וסנכרון</button>`;
+  document.body.appendChild(el);
+  el.querySelector("button").addEventListener("click", async (e) => {
+    const b = e.currentTarget; b.disabled = true; b.textContent = "מתחבר...";
+    try { await cloudSyncNow(); toast("סונכרן ✓"); }
+    catch (err) { b.disabled = false; b.textContent = "🔗 התחברות וסנכרון"; toast("לא הצלחנו להתחבר — אפשר לנסות שוב"); }
+  });
+}
+window.addEventListener("cloud:changed", updateSyncBanner);
+
 applyTheme(S.getTheme());
 mountSOS();
 startReminderLoop();
