@@ -253,7 +253,8 @@ function stateHasRealData(st) {
   try {
     if (!st || typeof st !== "object") return false;
     const hasCh = st.chapters && Object.values(st.chapters).some(c => c &&
-      ((c.data && Object.keys(c.data).length) || (c.tools && Object.keys(c.tools).length)));
+      ((c.data && Object.keys(c.data).length) || (c.tools && Object.keys(c.tools).length) ||
+        (c.tasks && Object.values(c.tasks).some(Boolean))));
     return !!((st.emotion && st.emotion.name) || (st.activities && st.activities.length) || hasCh ||
       (st.partName || "").trim() || (st.goalPlan && Object.keys(st.goalPlan).length));
   } catch (e) { return false; }

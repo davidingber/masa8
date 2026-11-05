@@ -208,6 +208,15 @@ function pairedValues() {
 }
 function pairedValueText(x, sep = " · ") { return x.ways.length ? `${x.value} — ${x.ways.join(sep)}` : x.value; }
 
+// סיכום המשימות שסומנו בכל השבועות (לדשבורד ול-PDF)
+function tasksSummary() {
+  const rows = COURSE.chapters.map(c => {
+    const items = c.tasks.map((t, i) => ({ text: t, done: S.isTaskDone(c.week, i) }));
+    return { week: c.week, title: c.title, icon: c.icon, items, n: items.filter(x => x.done).length, total: items.length };
+  });
+  return { rows, done: rows.reduce((a, r) => a + r.n, 0), total: rows.reduce((a, r) => a + r.total, 0) };
+}
+
 function partsDashCards(m, opts = {}) {
   const pct = Math.round(m.balance * 100);
   const resPct = pct, sufPct = 100 - pct;
@@ -264,6 +273,18 @@ function partsDashCards(m, opts = {}) {
   const contractCard = contractRows
     ? `<section class="card contract-dash"><div class="exp-dash-head">📜 החוזה שלי עם התחושות<span class="dchip-wk">פרק 4</span></div>${contractRows}</section>`
     : "";
+  // המשימות שבוצעו — מסונכרן מסימוני המשימות בכל שבוע
+  const tk = tasksSummary();
+  const tasksCard = tk.done ? `
+    <section class="card tasks-dash">
+      <div class="exp-dash-head">✅ המשימות שביצעתי<span class="dchip-wk">${tk.done}/${tk.total}</span></div>
+      <div class="tk-total"><i style="width:${Math.round(tk.done / tk.total * 100)}%"></i></div>
+      ${tk.rows.filter(r => r.n).map(r => `
+        <details class="tk-wk">
+          <summary><span class="tk-wk-name">${r.icon || ""} שבוע ${r.week} · ${esc(r.title)}</span><span class="tk-wk-n">${r.n}/${r.total}</span></summary>
+          <ul class="tk-list">${r.items.map(x => `<li class="${x.done ? "done" : "todo"}">${x.done ? "✓" : "○"} ${esc(x.text)}</li>`).join("")}</ul>
+        </details>`).join("")}
+    </section>` : "";
   const expChips = (m.exposures || []).length
     ? `<div class="dmini">${m.exposures.map(e => `<span class="dchip d-parent${e.done ? " exp-done" : ""}">${e.done ? "✅" : "🎯"} ${esc(clip(e.fear))}<span class="dchip-wk">פרק 7</span></span>`).join("")}</div>`
     : `<div class="d-empty">—</div>`;
@@ -392,6 +413,7 @@ function partsDashCards(m, opts = {}) {
       </div>
     </section>` : ""}`}
     ${contractCard}
+    ${tasksCard}
     ${m.target ? `<div class="target-anchor">🌱 היעד שלי: <b>${esc(m.target)}</b></div>` : ""}`;
 }
 
@@ -3141,6 +3163,9 @@ function openDashPrint(m) {
   const expLi = (m.exposures || []).length
     ? m.exposures.map(e => `<li>${e.done ? "✅" : "🎯"} ${esc(e.fear)}${e.learned ? " — " + esc(e.learned) : ""} <span class="wk">פרק 7</span></li>`).join("")
     : `<li class="empty">—</li>`;
+  const tkS = tasksSummary();
+  const tkPdf = tkS.done ? `<h3 style="color:#45614f;margin:16px 0 6px">✅ המשימות שביצעתי (${tkS.done}/${tkS.total})</h3>` +
+    tkS.rows.filter(r => r.n).map(r => `<div class="cl">שבוע ${r.week} · ${esc(r.title)} — ${r.n}/${r.total}</div><ul>${r.items.filter(x => x.done).map(x => `<li>✓ ${esc(x.text)}</li>`).join("")}</ul>`).join("") : "";
   const row = (lblP, painHtml, lblR, resHtml) => `<tr><td><div class="cl">${lblP}</div><ul>${painHtml}</ul></td><td class="res"><div class="cl">${lblR}</div><ul>${resHtml}</ul></td></tr>`;
   const html = `<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
     <title>מפת החלקים שלי — מסע 8</title>
@@ -3174,6 +3199,7 @@ function openDashPrint(m) {
       ${valB.length ? `<tr><td colspan="2"><div class="cl">ערכים</div><ul>${li(valB)}</ul></td></tr>` : ""}
       ${compassion.length ? `<tr><td colspan="2"><div class="cl">התנהגות חומלת</div><ul>${li(compassion)}</ul></td></tr>` : ""}
     </tbody></table>
+    ${tkPdf}
     ${m.target ? `<p style="margin-top:12px"><b>🌱 היעד שלי:</b> ${esc(m.target)}</p>` : ""}
     <button class="btn noprint" onclick="window.print()">הדפסה / שמירה כ-PDF</button>
     <script>setTimeout(()=>window.print(),400)<\/script>
