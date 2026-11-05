@@ -3607,7 +3607,7 @@ const W7_PARTS = [
   { id: "b", label: "חלק ב · ביצוע ומעקב", tabs: [
     { id: "journal",  label: "יומן חשיפות" },
     { id: "internal", label: "חשיפות פנימיות" },
-    { id: "after",    label: "אחרי חשיפה" },
+    { id: "after",    label: "למידה מהחשיפה" },
     { id: "advisor",  label: "יועץ חשיפות" },
   ]},
 ];
@@ -3732,7 +3732,7 @@ function w7After() {
     <textarea class="ta afterf" data-f="${key}" placeholder="${esc(ph)}">${esc(d[key] || "")}</textarea>`;
   return `
     <div class="tool-block">
-      <p class="hint">טופס אחרי חשיפה — לבחור על איזו חשיפה מדובר, וממלאים כדי לעגן את הלמידה החדשה.</p>
+      <p class="hint">טופס למידה מהחשיפה — לבחור על איזו חשיפה מדובר, וממלאים כדי לעגן את הלמידה החדשה.</p>
       <div class="exp-picker">
         <div class="prior-t">על איזו חשיפה מדובר?</div>
         <div class="chip-row">${items.map((it, i) => `<button type="button" class="chip after-sel ${i === sel ? "on" : ""}" data-i="${i}">${esc(expLabel(it, i))}${it.done ? " ✓" : ""}</button>`).join("")}</div>
@@ -4062,7 +4062,7 @@ function mountWeek7Handlers() {
   if (spf) spf.addEventListener("click", () => {
     setExpItems(collectPrepInto(getExpItems(), week7PrepSel));
     S.logActivity("exercise", "הכנה לחשיפה");
-    toast("נשמר ✓ — החשיפה תופיע ביומן ובאחרי חשיפה");
+    toast("נשמר ✓ — החשיפה תופיע ביומן ובלמידה מהחשיפה");
   });
   // טופס אחרי חשיפה — בחירת החשיפה
   app.querySelectorAll(".after-sel").forEach(b => b.addEventListener("click", () => {
@@ -4072,7 +4072,7 @@ function mountWeek7Handlers() {
   const saf = app.querySelector("#saveAfterForm");
   if (saf) saf.addEventListener("click", () => {
     setExpItems(collectAfterInto(getExpItems(), week7AfterSel));
-    S.logActivity("exposure", "אחרי חשיפה — למידה");
+    S.logActivity("exposure", "למידה מהחשיפה");
     toast("נשמר ✓");
   });
 
